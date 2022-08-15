@@ -1,3 +1,4 @@
+using Another_Mirai_Native.Native;
 using System.Diagnostics;
 
 namespace Another_Mirai_Native

@@ -11,8 +11,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="TaskDialog.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="WebSocket4Net" Version="0.15.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="TaskDialog">
+      <HintPath>TaskDialog.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
