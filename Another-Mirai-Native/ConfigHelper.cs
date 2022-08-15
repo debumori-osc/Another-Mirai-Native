@@ -40,7 +40,7 @@ namespace Another_Mirai_Native
                 return (T)(object)new { };
             throw new Exception("无法默认返回");
         }
-        public static void WriteConfig<T>(string sectionName, T value)
+        public static void SetConfig<T>(string sectionName, T value)
         {
             if (File.Exists(ConfigFileName) is false)
                 File.WriteAllText(ConfigFileName, "{}");
@@ -54,6 +54,13 @@ namespace Another_Mirai_Native
                 o.Add(sectionName, JToken.FromObject(value));
             }
             File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
+        }
+        public static bool ConfigHasKey(string sectionName)
+        {
+            if (File.Exists(ConfigFileName) is false)
+                File.WriteAllText(ConfigFileName, "{}");
+            var o = JObject.Parse(File.ReadAllText(ConfigFileName));
+            return o.ContainsKey(sectionName);
         }
     }
 }
