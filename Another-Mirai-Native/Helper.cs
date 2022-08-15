@@ -13,6 +13,7 @@ namespace Another_Mirai_Native
     public static class Helper
     {
         public static string QQ { get; set; }
+        public static string NickName { get; set; }
         public static string WsURL { get; set; }
         public static string WsAuthKey { get; set; }
         public static int MaxLogCount { get; set; } = 500;

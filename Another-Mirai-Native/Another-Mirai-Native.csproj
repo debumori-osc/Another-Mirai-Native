@@ -236,7 +236,7 @@
   <ItemGroup>
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DB\LogModel.cs" />
-    <Compile Include="Enums\EventFunction.cs" />
+    <Compile Include="Enums\FunctionEnums.cs" />
     <Compile Include="Enums\LogLevel.cs" />
     <Compile Include="Enums\WsServerFunction.cs" />
     <Compile Include="Forms\FloatWindow.cs">
@@ -272,6 +272,7 @@
     <Compile Include="Helper.cs" />
     <Compile Include="DB\LogHelper.cs" />
     <Compile Include="MiraiAdapter.cs" />
+    <Compile Include="Native\AppInfo.cs" />
     <Compile Include="Native\CQPlugin.cs" />
     <Compile Include="Native\Error_TaskDialog.cs" />
     <Compile Include="Native\PluginManagment.cs" />
