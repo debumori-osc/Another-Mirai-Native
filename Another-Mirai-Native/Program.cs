@@ -17,13 +17,13 @@ namespace Another_Mirai_Native
         [STAThread]
         static void Main(string[] args)
         {
-            Process[] process = Process.GetProcessesByName("OPQBot-Native");
+            Process[] process = Process.GetProcessesByName("AnotherMiraiNative");
             if (args.Length != 0 && args[0] == "-r")
             {
                 int initialNum = process.Length;
                 if (initialNum != 1)
                 {
-                    while (Process.GetProcessesByName("OPQBot-Native").Length != initialNum - 1)
+                    while (Process.GetProcessesByName("AnotherMiraiNative").Length != initialNum - 1)
                     {
                         Thread.Sleep(1000);
                     }
@@ -32,7 +32,7 @@ namespace Another_Mirai_Native
             else if(args.Length != 0 && args[0] == "-i")
             {
                 // Save.IgnoreProcessChecking = true;
-                //D o nothing. Ignore Process Checking
+                // Do nothing. Ignore Process Checking
             }
             else
             {
@@ -53,7 +53,7 @@ namespace Another_Mirai_Native
         {
             if (e.ExceptionObject is Exception ex)
             {
-                var b = Error_TaskDialog.ShowErrorDialog(Login.Instance_Handle,$"{ex.Message}\n{ex.StackTrace}", false);
+                var b = Error_TaskDialog.ShowErrorDialog(Login.Instance_Handle, ex.Message, ex.StackTrace, false);
                 if (b == Error_TaskDialog.TaskDialogResult.ReloadApp)
                 {
                     //Login.pluginManagment.ReLoad();
@@ -76,7 +76,7 @@ namespace Another_Mirai_Native
         {
             if (e.Exception != null)
             {
-                var b = Error_TaskDialog.ShowErrorDialog(Login.Instance_Handle, $"{e.Exception.Message}\n{e.Exception.StackTrace}");
+                var b = Error_TaskDialog.ShowErrorDialog(Login.Instance_Handle, e.Exception.Message, e.Exception.StackTrace);
                 if (b == Error_TaskDialog.TaskDialogResult.ReloadApp)
                 {
                     // Login.pluginManagment.ReLoad();
