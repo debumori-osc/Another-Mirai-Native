@@ -10,20 +10,20 @@ namespace Another_Mirai_Native.Native
         /// <summary>
         /// 显示TaskDialog风格窗口
         /// </summary>
-        /// <param name="msg">需要折叠的错误</param>
+        /// <param name="exception">需要折叠的错误</param>
         /// <returns>true 表示重载 false 表示退出</returns>
-        public static TaskDialogResult ShowErrorDialog(IntPtr owner, string msg, bool Startable = true)
+        public static TaskDialogResult ShowErrorDialog(IntPtr owner, string exception, string detail, bool Startable = true)
         {
             string[] buttons = new string[] { };
             string content;
             if (Startable)
             {
-                content = $"很抱歉，应用发生错误，但是这个错误可以被忽略。\n点击底部折叠面板展示错误信息";
+                content = $"很抱歉，应用发生错误，但是这个错误可以被忽略。\n{exception}\n点击底部折叠面板展示错误信息";
                 buttons = new string[] { "复制错误详情信息", "重新载入应用", "忽略此次错误\n如果此问题频繁出现，可停用所有应用便于排查", "关闭 Another-Mirai-Native" };
             }
             else
             {
-                content = $"很抱歉，应用发生错误，需要关闭框架后重新启动。\n点击底部折叠面板展示错误信息";
+                content = $"很抱歉，应用发生错误，需要关闭框架后重新启动。\n{exception}\n点击底部折叠面板展示错误信息";
                 buttons = new string[] { "复制错误详情信息\n之后会关闭程序", "重启 Another-Mirai-Native", "退出 Another-Mirai-Native" };
             }
             TaskDialogOptions config = new()
@@ -34,7 +34,7 @@ namespace Another_Mirai_Native.Native
                 Content = content,
                 CommandButtons = buttons,
                 MainIcon = VistaTaskDialogIcon.BigError,
-                ExpandedInfo = msg,
+                ExpandedInfo = detail,
             };
             //System.Media.SystemSounds.Hand.Play();
 
@@ -42,7 +42,7 @@ namespace Another_Mirai_Native.Native
             switch (res.CommandButtonResult)
             {
                 case 0:
-                    Clipboard.SetText(msg);
+                    Clipboard.SetText(exception);
                     return TaskDialogResult.Copy;
                 case 1:
                     if (Startable)
