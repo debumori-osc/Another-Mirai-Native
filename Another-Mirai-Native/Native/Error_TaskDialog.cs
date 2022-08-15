@@ -10,7 +10,7 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         /// <param name="msg">需要折叠的错误</param>
         /// <returns>true 表示重载 false 表示退出</returns>
-        public static TaskDialogResult ShowErrorDialog(string msg, bool Startable = true)
+        public static TaskDialogResult ShowErrorDialog(IntPtr owner, string msg, bool Startable = true)
         {
             string[] buttons = new string[] { };
             string content;
@@ -26,6 +26,7 @@ namespace Another_Mirai_Native.Native
             }
             TaskDialogOptions config = new()
             {
+                Owner = owner,   
                 Title = $"Another-Mirai-Native {Application.ProductVersion}",
                 MainInstruction = "Another-Mirai-Native 发生错误",
                 Content = content,
@@ -33,7 +34,7 @@ namespace Another_Mirai_Native.Native
                 MainIcon = VistaTaskDialogIcon.BigError,
                 ExpandedInfo = msg,
             };
-            System.Media.SystemSounds.Hand.Play();
+            //System.Media.SystemSounds.Hand.Play();
 
             var res = TaskDialog.Show(config);
             switch (res.CommandButtonResult)

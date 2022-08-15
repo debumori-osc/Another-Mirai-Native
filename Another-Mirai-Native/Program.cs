@@ -48,7 +48,7 @@ namespace Another_Mirai_Native
         {
             if (e.ExceptionObject is Exception ex)
             {
-                var b = Error_TaskDialog.ShowErrorDialog($"{ex.Message}\n{ex.StackTrace}", false);
+                var b = Error_TaskDialog.ShowErrorDialog(Login.Instance_Handle, $"{ex.Message}\n{ex.StackTrace}", false);
                 if (b == Error_TaskDialog.TaskDialogResult.ReloadApp)
                 {
                     //Login.pluginManagment.ReLoad();
@@ -71,7 +71,7 @@ namespace Another_Mirai_Native
         {
             if (e.Exception != null)
             {
-                var b = Error_TaskDialog.ShowErrorDialog($"{e.Exception.Message}\n{e.Exception.StackTrace}");
+                var b = Error_TaskDialog.ShowErrorDialog(Login.Instance_Handle, $"{e.Exception.Message}\n{e.Exception.StackTrace}");
                 if (b == Error_TaskDialog.TaskDialogResult.ReloadApp)
                 {
                     //Login.pluginManagment.ReLoad();
