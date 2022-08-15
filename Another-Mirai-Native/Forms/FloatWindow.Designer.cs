@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FloatWindow));
             this.pictureBox_Main = new System.Windows.Forms.PictureBox();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_Main)).BeginInit();
@@ -38,7 +37,6 @@
             // pictureBox_Main
             // 
             this.pictureBox_Main.BackColor = System.Drawing.Color.Transparent;
-            this.pictureBox_Main.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox_Main.Image")));
             this.pictureBox_Main.Location = new System.Drawing.Point(-1, 0);
             this.pictureBox_Main.Name = "pictureBox_Main";
             this.pictureBox_Main.Size = new System.Drawing.Size(50, 50);
@@ -48,9 +46,6 @@
             // notifyIcon
             // 
             this.notifyIcon.Text = "OPQBot 酷Q兼容框架";
-            // 
-            // MainForm
-            //             
             // 
             // FloatWindow
             // 
@@ -66,8 +61,10 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "FloatWindow";
             this.TopMost = true;
+            this.Load += new System.EventHandler(this.FloatWindow_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_Main)).EndInit();
             this.ResumeLayout(false);
+
         }
 
         #endregion
