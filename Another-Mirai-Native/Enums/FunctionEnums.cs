@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Another_Mirai_Native.Enums
 {
-    public enum FunctionsEnums
+    public enum FunctionEnums
     {
         /// <summary>
         /// 私聊消息事件

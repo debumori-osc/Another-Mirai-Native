@@ -1,4 +1,5 @@
 ﻿using Another_Mirai_Native.DB;
+using Another_Mirai_Native.Native;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -31,7 +33,7 @@ namespace Another_Mirai_Native.Forms
         #endregion
         /// <summary>
         /// 圆形图片框, 来自CSDN
-        /// </summary>
+        /// </summary>        
         public class RoundPictureBox : PictureBox
         {
             protected override void OnCreateControl()
@@ -43,10 +45,14 @@ namespace Another_Mirai_Native.Forms
                 base.OnCreateControl();
             }
         }
-
+        public static FloatWindow Instance { get; set; }
+        public bool TopMostFlag { get { return Instance.TopMost; } set { Instance.TopMost = value; ConfigHelper.SetConfig("FloatWindow_TopMost", value); } }
+        public bool ShowFlag { get { return Instance.Visible; } set { Instance.Visible = value; ConfigHelper.SetConfig("FloatWindow_Visible", value); } }
+        
         private static string DefaultIcon = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAA4AEMDASIAAhEBAxEB/8QAGwAAAwEBAQEBAAAAAAAAAAAAAAcIBgUDAQn/xAA+EAAABAQDBAYHBAsAAAAAAAABAwQFAAIGEQcTFAghIzESFUNRU3MWIjNBYWPwFzSBoSQyRHGRlKOxs8Hj/8QAGgEAAgMBAQAAAAAAAAAAAAAAAAYBBAUHAv/EACYRAAIBAwQBAwUAAAAAAAAAAAABAwQFEQITITEUBiIjMjNBQ1L/2gAMAwEAAhEDEQA/AP1QgHlBcO+MnWlcttFsaxydJjQKLAeESXmGm28IvtIANKM9xGw/nAE4994SDBtMU1WxSn0ZROK9am9qlUpdJpvME3lHaDFJ9CQOlTcg/uXf8oxpLpTRSbcmsuaKWSRcIaQF333j2llCULBCQctqqkGF7lY10jsLjyNKRoDVWm83LvaHMlVyLUsikmYDiTJOmWYHLfF6CaKZZieSo4nG+Sfseqzrmmms01ApaqZazJdKWuWXUr9Tm8LSkle18qNXs74eVTQlGTem1VONTVE5GapSKoy5ST5RXy49toDDaocR6Rbi6UeE7HUDQ5pnVCerKzSc0oeRoRkV2P1e0q0rlTzhC5ZSP7ysKe2wlMIeKXmqr5cWyChQkG3dBCJZtrWmVLWmNV0vXyBRPJedN6EOg5Y919LBAA8REcsYS9UrvtBTlT9dAgbpfX0BfFNM83LH+lDXqFZomZco8Mq8SjSiYRkL9f6GEX1Fd/AjjjX7Bis9u8xSSfwbF0dDKPqmm0rVTRz2ldjRSqV5BWn6tKL8XM7PiwxJAL04mhy+G+M1TwijKAoRHl3xpUywZAt7oQnUxyvLNXXFtI4znRzGULoZJIjs5m5qkC0QG5nCyo4mGGJb7PU7nTbpTbinaUSnJRPStSWGqKzcoqxXu+vLjZO5MrunyjJzAD5e4YXjqHUTmgMTqDJpylBXu5Rv0NxcMi23wU9VNvRlMSetfd6v94n9HRRWImOdS+maLUk0+pTG06lNHhAVpSs0y3mw97nCllGT2tolTFOjMd6jdU9SNTPSjC7Ik2WV1fUio3Vd5RpWgsaX8I6unlZFVlZaYvuGCJMQbeLO2oyktS0JWyCoCg6C9M002qVJSzg/XAs3K9cL++CJIKadEuublJIBcDCuQxHoFLmA04vQ6p0aOEak7UxN8r5sWlJJ0AALfCJF2yyxok+m6qZJVM1VObmlYUreBvBXZpna/DKA3+PmQpXq0q6RZX1o3rTW+K8Sfk69G18hfUma3rs7objSwGxpXwNK7KNskfQEsN1/xhKP6duJXj6VMZjC8mhcxwSmmJjf5oqOIU0U0l4oVnVBpXhnVKqyo5s6B0vxyDnq1Qzr2jqqbE9Aw5SeYzrB2MD9Fakv3oyMzRzcpqapULYoMAxfOq61XZPYh4Y/4vo2FjU1Ul0HSy93pilBNzTSkqlUA7zOLws003imxWmDGFgYesMkzipBe/KrGqlmX74ZLLaZdcm7J9swq2pjptG3G+zyx5xbadnvC17rx+RrF7O0TJswtvkLMUhmnFpgHiDYd5ofnDalAJQsG4InbbXpYyuNnKp6dnbnlxlWHIM1JT6EVys0C1yY2xRWaVfl9Wiio6iuhMfeQ6EEEEGSD5YLcomXaFcErjtM7OrAsATSRdHRfl9+U1qv9wQR7AotexonYsZFacs78Iz8mE9KlGibIxpgMHvCCCKjSfaJTa6F7tYN6Zt2eal05BZcshqAbcv28mHan6IlSDYL2ggizjgG89nrBBBHggIIIIAP/9k=";
         private void FloatWindow_Load(object sender, EventArgs e)
         {
+            Instance = this;
             if (File.Exists(LogHelper.GetLogFilePath()) is false)
             {
                 LogHelper.CreateDB();
@@ -70,18 +76,18 @@ namespace Another_Mirai_Native.Forms
             logForm.Show();
             logForm.Visible = false;
             //初始化托盘
-            //NotifyIconHelper._NotifyIcon = notifyIcon;
-            //NotifyIconHelper.Init();
-            //NotifyIconHelper.ShowNotifyIcon();
+            NotifyIconHelper.Instance = notifyIcon;
+            NotifyIconHelper.Init();
+            NotifyIconHelper.ShowNotifyIcon();
             //载入插件
-            //pluginManagment = new PluginManagment();
-            //Thread thread = new Thread(() =>
-            //{
-            //    pluginManagment.Init();
-            //});
-            //thread.Start();
+            PluginManagment manage = new PluginManagment();
+            Thread thread = new Thread(() =>
+            {
+                manage.Init();
+            });
+            thread.Start();
             //将托盘右键菜单复制一份
-            //pictureBox_Main.ContextMenu = notifyIcon.ContextMenu;
+            pictureBox_Main.ContextMenu = notifyIcon.ContextMenu;
             //默认头像,防止网络问题造成空头像出现
             Image image = Helper.Base642Image(DefaultIcon);
             try
@@ -100,8 +106,6 @@ namespace Another_Mirai_Native.Forms
             {
                 Size = new Size(50, 50),
                 SizeMode = PictureBoxSizeMode.StretchImage,
-                Left = -1,
-                Top = 0,
                 ContextMenu = notifyIcon.ContextMenu
             };
             if (image != null)
@@ -114,7 +118,7 @@ namespace Another_Mirai_Native.Forms
             RoundpictureBox.BringToFront();
         }
         //防抖
-        Timer Debounce = null;
+        System.Windows.Forms.Timer Debounce = null;
         private void FloatWindow_LocationChanged(object sender, EventArgs e)
         {
             Debounce = new();
