@@ -16,5 +16,10 @@ namespace Another_Mirai_Native.Forms
         {
             InitializeComponent();
         }
+        public static LogForm Instance { get; set; }
+        private void LogForm_Load(object sender, EventArgs e)
+        {
+            Instance = this;
+        }
     }
 }
