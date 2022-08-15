@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
-using WebSocket4Net;
+using WebSocketSharp;
 
 namespace Another_Mirai_Native
 {
@@ -22,21 +22,21 @@ namespace Another_Mirai_Native
             QQ = qq;
             string connect_url = $"{WsURL}/all?verifyKey={AuthKey}&qq={QQ}";
             websocket = new WebSocket(connect_url);
-            websocket.Opened += Websocket_Opened;
-            websocket.MessageReceived += Websocket_MessageReceived;
-            websocket.Closed += Websocket_Closed;
+            websocket.OnOpen += Websocket_OnOpen;
+            websocket.OnMessage += Websocket_OnMessage;
+            websocket.OnClose += Websocket_OnClose;
         }
-        
-        private void Websocket_Closed(object? sender, EventArgs e)
+
+        private void Websocket_OnClose(object sender, CloseEventArgs e)
         {
             Debug.WriteLine("Closed");
             // ConnectedStateChanged?.Invoke(false, "连接断开");
         }
 
-        private void Websocket_MessageReceived(object? sender, MessageReceivedEventArgs e)
+        private void Websocket_OnMessage(object sender, MessageEventArgs e)
         {
-            JObject json = JObject.Parse(e.Message);
-            if(string.IsNullOrWhiteSpace(SessionKey))
+            JObject json = JObject.Parse(e.Data);
+            if (string.IsNullOrWhiteSpace(SessionKey))
             {
                 if (json["data"]["code"].ToString() == "0")
                 {
@@ -56,17 +56,16 @@ namespace Another_Mirai_Native
                     websocket.Close();
                 }
             }
-            
         }
 
-        private void Websocket_Opened(object? sender, EventArgs e)
+        private void Websocket_OnOpen(object sender, EventArgs e)
         {
             Debug.WriteLine("Connect");
         }
 
         public bool Connect()
         {
-            websocket.Open();
+            websocket.Connect();
             return false;
         }
     }
