@@ -1,7 +1,9 @@
+using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Forms;
 using Another_Mirai_Native.Native;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Another_Mirai_Native
@@ -27,10 +29,10 @@ namespace Another_Mirai_Native
             try
             {
                 LoginBtn.Enabled = false;
-                ConfigHelper.WriteConfig("AutoLogin", AutoLoginCheck.Checked);
-                ConfigHelper.WriteConfig("QQ", QQText.Text);
-                ConfigHelper.WriteConfig("Ws_Url", WSUrl.Text);
-                ConfigHelper.WriteConfig("Ws_AuthKey", AuthKeyText.Text);
+                ConfigHelper.SetConfig("AutoLogin", AutoLoginCheck.Checked);
+                ConfigHelper.SetConfig("QQ", QQText.Text);
+                ConfigHelper.SetConfig("Ws_Url", WSUrl.Text);
+                ConfigHelper.SetConfig("Ws_AuthKey", AuthKeyText.Text);
                 adapter = new(WSUrl.Text, QQText.Text, AuthKeyText.Text);
                 adapter.ConnectedStateChanged += Adapter_ConnectedStateChanged;
                 adapter.Connect();
@@ -65,10 +67,43 @@ namespace Another_Mirai_Native
             QQText.Text = ConfigHelper.GetConfig<string>("QQ");
             WSUrl.Text = ConfigHelper.GetConfig<string>("Ws_Url");
             AuthKeyText.Text = ConfigHelper.GetConfig<string>("Ws_AuthKey");
+            Helper.QQ = QQText.Text;
+            Helper.WsURL = WSUrl.Text;
+            Helper.WsAuthKey = AuthKeyText.Text;
+            Helper.MaxLogCount = ConfigHelper.GetConfig<int>("MaxLogCount");
+            if(Helper.MaxLogCount == 0)
+            {
+                Helper.MaxLogCount = 500;
+                ConfigHelper.SetConfig("MaxLogCount", 500);
+            }
             if (AutoLoginCheck.Checked)
             {
                 LoginBtn.PerformClick();
             }
+            int wsServerPort = ConfigHelper.GetConfig<int>("Ws_ServerPort");
+            if(wsServerPort == 0)
+            {
+                wsServerPort = 30303;
+                ConfigHelper.SetConfig("Ws_ServerPort", 30303);
+            }
+            try
+            {
+                WsServer.Init(wsServerPort);
+            }
+            catch
+            {
+                MessageBox.Show($"WebSocket服务器端口({wsServerPort})被占用，请更改为其他端口");
+                Environment.Exit(0);
+            }
+            Directory.CreateDirectory("conf");
+            Directory.CreateDirectory("logs");
+            Directory.CreateDirectory("data"); 
+            Directory.CreateDirectory(@"data/app");
+            Directory.CreateDirectory(@"data/plugins");
+            Directory.CreateDirectory(@"data/plugins/tmp");
+            Directory.CreateDirectory(@"data/image");
+            Directory.CreateDirectory(@"data/record");
+           
             Instance_Handle = this.Handle;
         }
 
