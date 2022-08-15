@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32602.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Another-Mirai-Native", "Another-Mirai-Native\Another-Mirai-Native.csproj", "{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Debug|x86.ActiveCfg = Debug|x86
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Debug|x86.Build.0 = Debug|x86
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Release|x86.ActiveCfg = Release|x86
+		{0EA7BE14-7DC5-4842-BBBD-B3A09138F219}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5FDB1FC0-36EE-4CC3-8319-EB6AAFF0D962}
+	EndGlobalSection
+EndGlobal
