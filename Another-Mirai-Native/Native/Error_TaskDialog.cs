@@ -1,4 +1,6 @@
-﻿using TaskDialogInterop;
+﻿using System;
+using System.Windows.Forms;
+using TaskDialogInterop;
 using TaskDialog = TaskDialogInterop.TaskDialog;
 
 namespace Another_Mirai_Native.Native

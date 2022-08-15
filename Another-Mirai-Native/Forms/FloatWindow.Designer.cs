@@ -54,7 +54,7 @@
             // 
             // FloatWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(50, 50);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;

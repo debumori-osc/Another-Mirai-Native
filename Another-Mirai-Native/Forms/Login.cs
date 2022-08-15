@@ -1,6 +1,8 @@
 using Another_Mirai_Native.Forms;
 using Another_Mirai_Native.Native;
+using System;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace Another_Mirai_Native
 {
@@ -19,7 +21,7 @@ namespace Another_Mirai_Native
             if (string.IsNullOrWhiteSpace(WSUrl.Text) || string.IsNullOrWhiteSpace(AuthKeyText.Text)
                 || string.IsNullOrWhiteSpace(QQText.Text))
             {
-                MessageBox.Show("ÇëÊäÈëËùÓÐ×Ö¶Î");
+                MessageBox.Show("è¯·å®Œæˆæ‰€æœ‰å­—æ®µ");
                 return;
             }
             try
@@ -42,7 +44,8 @@ namespace Another_Mirai_Native
 
         private void Adapter_ConnectedStateChanged(bool status, string msg)
         {
-            
+            LoginBtn.BeginInvoke(new MethodInvoker(() =>
+            {
                 if (status)
                 {
                     Hide();
@@ -52,9 +55,8 @@ namespace Another_Mirai_Native
                 {
                     MessageBox.Show(msg);
                 }
-                LoginBtn.Invoke(() =>
-            {LoginBtn.Enabled = true;
-            });
+                LoginBtn.Enabled = true;
+            }));
         }
 
         private void Login_Load(object sender, EventArgs e)
@@ -68,7 +70,6 @@ namespace Another_Mirai_Native
                 LoginBtn.PerformClick();
             }
             Instance_Handle = this.Handle;
-            new Thread(() => Hide()).Start();
         }
 
         private void AuthKeyText_KeyUp(object sender, KeyEventArgs e)
