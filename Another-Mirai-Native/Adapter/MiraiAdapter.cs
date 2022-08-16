@@ -21,6 +21,7 @@ namespace Another_Mirai_Native.Adapter
 {
     public class MiraiAdapter
     {
+        public static MiraiAdapter Instance { get; set; }
         public string WsURL { get; set; }
         public string AuthKey { get; set; }
         public string QQ { get; set; }
@@ -36,6 +37,7 @@ namespace Another_Mirai_Native.Adapter
         static Encoding GB18030 = Encoding.GetEncoding("GB18030");
         public MiraiAdapter(string url, string qq, string authkey)
         {
+            Instance = this;
             if (url.EndsWith("/")) url = url[..^1];
             WsURL = url;
             AuthKey = authkey;
@@ -428,6 +430,102 @@ namespace Another_Mirai_Native.Adapter
             MessageSocket.Connect();
             EventSocket.Connect();
             return false;
+        }
+        public void CallMiraiAPI(object data)
+        {
+            MessageSocket.Send(new { syncId=-1, data=data.ToJson() }.ToJson());
+        }
+        public int CallMiraiAPI(MiraiApiType type, params object[] args)
+        {
+            switch (type)
+            {
+                case MiraiApiType.about:
+                    break;
+                case MiraiApiType.botList:
+                    break;
+                case MiraiApiType.messageFromId:
+                    break;
+                case MiraiApiType.friendList:
+                    break;
+                case MiraiApiType.groupList:
+                    break;
+                case MiraiApiType.memberList:
+                    break;
+                case MiraiApiType.botProfile:
+                    break;
+                case MiraiApiType.friendProfile:
+                    break;
+                case MiraiApiType.memberProfile:
+                    break;
+                case MiraiApiType.userProfile:
+                    break;
+                case MiraiApiType.sendFriendMessage:
+                    
+                    break;
+                case MiraiApiType.sendGroupMessage:
+                    break;
+                case MiraiApiType.sendTempMessage:
+                    break;
+                case MiraiApiType.sendNudge:
+                    break;
+                case MiraiApiType.recall:
+                    break;
+                case MiraiApiType.roamingMessages:
+                    break;
+                case MiraiApiType.file_list:
+                    break;
+                case MiraiApiType.file_info:
+                    break;
+                case MiraiApiType.file_mkdir:
+                    break;
+                case MiraiApiType.file_delete:
+                    break;
+                case MiraiApiType.file_move:
+                    break;
+                case MiraiApiType.file_rename:
+                    break;
+                case MiraiApiType.deleteFriend:
+                    break;
+                case MiraiApiType.mute:
+                    break;
+                case MiraiApiType.unmute:
+                    break;
+                case MiraiApiType.kick:
+                    break;
+                case MiraiApiType.quit:
+                    break;
+                case MiraiApiType.muteAll:
+                    break;
+                case MiraiApiType.unmuteAll:
+                    break;
+                case MiraiApiType.setEssence:
+                    break;
+                case MiraiApiType.groupConfig_get:
+                    break;
+                case MiraiApiType.groupConfig_update:
+                    break;
+                case MiraiApiType.memberInfo_get:
+                    break;
+                case MiraiApiType.memberInfo_update:
+                    break;
+                case MiraiApiType.memberAdmin:
+                    break;
+                case MiraiApiType.anno_list:
+                    break;
+                case MiraiApiType.anno_publish:
+                    break;
+                case MiraiApiType.anno_delete:
+                    break;
+                case MiraiApiType.resp_newFriendRequestEvent:
+                    break;
+                case MiraiApiType.resp_memberJoinRequestEvent:
+                    break;
+                case MiraiApiType.resp_botInvitedJoinGroupRequestEvent:
+                    break;
+                default:
+                    break;
+            }
+            return 0;
         }
     }
 }
