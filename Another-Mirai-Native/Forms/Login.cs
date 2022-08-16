@@ -5,6 +5,7 @@ using Another_Mirai_Native.Native;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Another_Mirai_Native
@@ -44,9 +45,11 @@ namespace Another_Mirai_Native
                 LoginBtn.Enabled = true;
             }
         }
-
+        private bool loaded = false;
         private void Adapter_ConnectedStateChanged(bool status, string msg)
         {
+            if (!loaded) loaded = true;
+            else return;
             LoginBtn.BeginInvoke(new MethodInvoker(() =>
             {
                 if (status)
@@ -81,10 +84,6 @@ namespace Another_Mirai_Native
                 Helper.MaxLogCount = 500;
                 ConfigHelper.SetConfig("MaxLogCount", 500);
             }
-            if (AutoLoginCheck.Checked)
-            {
-                LoginBtn.PerformClick();
-            }
             int wsServerPort = ConfigHelper.GetConfig<int>("Ws_ServerPort");
             if(wsServerPort == 0)
             {
@@ -110,12 +109,34 @@ namespace Another_Mirai_Native
             Directory.CreateDirectory(@"data/record");
            
             Instance_Handle = this.Handle;
+
+            LoginBtn.Text = "初始化...";
+            LoginBtn.Enabled = false;
+            new Thread(() =>
+            {
+                CQP_Init();
+                LoginBtn.BeginInvoke(new MethodInvoker(() =>
+                {
+                    LoginBtn.Text = "连接";
+                    LoginBtn.Enabled = true;
+
+                    if (AutoLoginCheck.Checked)
+                    {
+                        LoginBtn.PerformClick();
+                    }
+                }));
+            }).Start();
         }
 
         private void AuthKeyText_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
                 LoginBtn.PerformClick();
+        }
+        private void CQP_Init()
+        {
+            Dll.LoadLibrary("CQP.dll");
+            Dll.ConnectServer();
         }
     }
 }
