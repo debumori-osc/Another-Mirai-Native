@@ -297,6 +297,7 @@
     <Compile Include="CQCode\Model\BasisModel.cs" />
     <Compile Include="CQCode\Model\BasisStreamModel.cs" />
     <Compile Include="CQCode\Model\CQCodeModel.cs" />
+    <Compile Include="Enums\MiraiApiType.cs" />
     <Compile Include="Enums\MiraiMessageType.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DB\LogModel.cs" />
