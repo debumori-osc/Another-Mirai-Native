@@ -16,7 +16,7 @@ namespace Another_Mirai_Native
         /// <summary>
         /// 配置文件路径
         /// </summary>
-        public static string ConfigFileName = @"Config.json";
+        public static string ConfigFileName = @"conf/Config.json";
         /// <summary>
         /// 读取配置
         /// </summary>
@@ -25,6 +25,8 @@ namespace Another_Mirai_Native
         /// <returns>目标类型的配置</returns>
         public static T GetConfig<T>(string sectionName)
         {
+            if (Directory.Exists("conf") is false) 
+                Directory.CreateDirectory("conf");
             if (File.Exists(ConfigFileName) is false)
                 File.WriteAllText(ConfigFileName, "{}");
             var o = JObject.Parse(File.ReadAllText(ConfigFileName));

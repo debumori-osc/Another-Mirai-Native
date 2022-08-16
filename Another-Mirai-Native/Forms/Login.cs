@@ -52,6 +52,10 @@ namespace Another_Mirai_Native
                 {
                     Hide();
                     new FloatWindow().Show();
+                    //不直接给Visable赋值是因为外部调用Show函数会覆盖对Visable的赋值
+                    //所以在调用Show之后需要用配置恢复对Visable的变化值
+                    if (ConfigHelper.ConfigHasKey("FloatWindow_Visible"))
+                        FloatWindow.Instance.Visible = ConfigHelper.GetConfig<bool>("FloatWindow_Visible");
                 }
                 else
                 {

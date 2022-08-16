@@ -66,9 +66,7 @@ namespace Another_Mirai_Native.Forms
             {
                 Left = int.Parse(position[0]);
                 Top = int.Parse(position[1]);
-            }
-            if(ConfigHelper.ConfigHasKey("FloatWindow_Visible"))
-                Visible = ConfigHelper.GetConfig<bool>("FloatWindow_Visible");
+            }            
             TopMost = ConfigHelper.GetConfig<bool>("FloatWindow_TopMost");
             //日志窗口初始化
             LogForm logForm = new();
@@ -80,12 +78,8 @@ namespace Another_Mirai_Native.Forms
             NotifyIconHelper.Init();
             NotifyIconHelper.ShowNotifyIcon();
             //载入插件
-            PluginManagment manage = new PluginManagment();
-            Thread thread = new Thread(() =>
-            {
-                manage.Init();
-            });
-            thread.Start();
+            PluginManagment manage = new();
+            new Thread(() => manage.Init()).Start();
             //将托盘右键菜单复制一份
             pictureBox_Main.ContextMenu = notifyIcon.ContextMenu;
             //默认头像,防止网络问题造成空头像出现
