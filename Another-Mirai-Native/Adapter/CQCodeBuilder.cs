@@ -101,7 +101,7 @@ namespace Another_Mirai_Native.Adapter
         }
         public static List<MiraiMessageBase> BuildMessageChains(string message)
         {
-            List<MiraiMessageBase> result = new List<MiraiMessageBase>();
+            List<MiraiMessageBase> result = new();
             var list = CQCodeModel.Parse(message);
             foreach (var item in list)
             {
@@ -118,6 +118,7 @@ namespace Another_Mirai_Native.Adapter
                     tmp = "";
                 }
             }
+            p.Add(tmp);
             int cqcode_index = 0;
             for (int i = 0; i < p.Count; i++)
             {
