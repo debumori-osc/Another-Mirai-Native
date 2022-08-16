@@ -18,32 +18,31 @@ namespace CQP
             new Clinet();
         }
         [DllExport(ExportName = "CQ_sendGroupMsg", CallingConvention = CallingConvention.StdCall)]
-        public static int CQ_sendGroupMsg(int authcode, long groupid, IntPtr msg)
+        public static int CQ_sendGroupMsg(int authCode, long groupid, IntPtr msg)
         {
             string text = msg.ToString(GB18030);
-            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type=MiraiApiType.sendGroupMessage, args=new { authcode, groupid, text } });
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type=MiraiApiType.sendGroupMessage, args=new { authCode, groupid, text } });
             return (int)r.json["callResult"];
         }
 
         [DllExport(ExportName = "CQ_sendPrivateMsg", CallingConvention = CallingConvention.StdCall)]
-        public static int CQ_sendPrivateMsg(int authcode, long qqId, IntPtr msg)
+        public static int CQ_sendPrivateMsg(int authCode, long qqId, IntPtr msg)
         {
             string text = msg.ToString(GB18030);
-            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.sendFriendMessage, args = new { authcode, qqId, text } });
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.sendFriendMessage, args = new { authCode, qqId, text } });
             return (int)r.json["callResult"];
         }
 
         [DllExport(ExportName = "CQ_deleteMsg", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_deleteMsg(int authCode, long msgId)
         {
-            
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.recall, args = new { authCode, msgId } });
+            return (int)r.json["callResult"];
         }
 
         [DllExport(ExportName = "CQ_sendLikeV2", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_sendLikeV2(int authCode, long qqId, int count)
         {
-            
             return 0;
         }
 
@@ -56,64 +55,79 @@ namespace CQP
         [DllExport(ExportName = "CQ_getRecordV2", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getRecordV2(int authCode, IntPtr file, IntPtr format)
         {
-            //待补充Record CQ码
             return IntPtr.Zero;
         }
 
         [DllExport(ExportName = "CQ_getCsrfToken", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_getCsrfToken(int authCode)
         {
-            //未找到实现接口
             return -1;
         }
 
         [DllExport(ExportName = "CQ_getAppDirectory", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getAppDirectory(int authCode)
         {
-            return IntPtr.Zero;
+            var r = Clinet.Instance.Send(WsServerFunction.CallCQFunction, new { type = "GetAppDirectory", args = new { authCode } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
 
         [DllExport(ExportName = "CQ_getLoginQQ", CallingConvention = CallingConvention.StdCall)]
         public static long CQ_getLoginQQ(int authCode)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallCQFunction, new { type = "GetLoginQQ", args = new { authCode } });
+            return (long)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_getLoginNick", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getLoginNick(int authCode)
         {
-            return IntPtr.Zero;
+            var r = Clinet.Instance.Send(WsServerFunction.CallCQFunction, new { type = "GetLoginNick", args = new { authCode } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
 
         [DllExport(ExportName = "CQ_setGroupKick", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupKick(int authCode, long groupId, long qqId, bool refuses)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.kick, args = new { authCode, groupId, qqId } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupBan", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupBan(int authCode, long groupId, long qqId, long time)
         {
-            return 0;
+            MiraiApiType type = MiraiApiType.mute;
+            if(time == 0)
+            {
+                type = MiraiApiType.unmute;
+            }
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type, args = new { authCode, groupId, qqId, time } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupAdmin", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupAdmin(int authCode, long groupId, long qqId, bool isSet)
         {
-            //未找到实现接口
-            return -1;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.memberAdmin, args = new { authCode, groupId, qqId, isSet } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupSpecialTitle", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupSpecialTitle(int authCode, long groupId, long qqId, IntPtr title, long durationTime)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.memberInfo_update, args = new { authCode, groupId, qqId, title=title.ToString(GB18030) } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupWholeBan", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupWholeBan(int authCode, long groupId, bool isOpen)
         {
-            return 0;
+            MiraiApiType type = MiraiApiType.unmuteAll;
+            if (isOpen)
+            {
+                type = MiraiApiType.muteAll;
+            }
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type, args = new { authCode, groupId } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupAnonymousBan", CallingConvention = CallingConvention.StdCall)]
@@ -133,13 +147,15 @@ namespace CQP
         [DllExport(ExportName = "CQ_setGroupCard", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupCard(int authCode, long groupId, long qqId, IntPtr newCard)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.memberInfo_update, args = new { authCode, groupId, qqId, newCard = newCard.ToString(GB18030) } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupLeave", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupLeave(int authCode, long groupId, bool isDisband)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.quit, args = new { authCode, groupId } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setDiscussLeave", CallingConvention = CallingConvention.StdCall)]
@@ -151,44 +167,55 @@ namespace CQP
         [DllExport(ExportName = "CQ_setFriendAddRequest", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setFriendAddRequest(int authCode, IntPtr identifying, int requestType, IntPtr appendMsg)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.resp_newFriendRequestEvent, args = new { authCode, eventId=identifying.ToString(GB18030), requestType, message=appendMsg.ToString(GB18030) } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setGroupAddRequestV2", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setGroupAddRequestV2(int authCode, IntPtr identifying, int requestType, int responseType, IntPtr appendMsg)
         {
-            return 0;
+            MiraiApiType apiType = MiraiApiType.resp_memberJoinRequestEvent;
+            if(requestType == 2)
+            {
+                apiType = MiraiApiType.resp_botInvitedJoinGroupRequestEvent;
+            }
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = apiType, args = new { authCode, eventId = identifying.ToString(GB18030), responseType, message = appendMsg.ToString(GB18030) } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_addLog", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_addLog(int authCode, int priority, IntPtr type, IntPtr msg)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { args = new { authCode, type = type.ToString(GB18030), priority, msg = msg.ToString(GB18030) } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_setFatal", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setFatal(int authCode, IntPtr errorMsg)
         {
-            return 0;
+            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { args = new { authCode, priority = 40, msg = errorMsg.ToString(GB18030) } });
+            return (int)(r.json["callResult"]);
         }
 
         [DllExport(ExportName = "CQ_getGroupMemberInfoV2", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getGroupMemberInfoV2(int authCode, long groupId, long qqId, bool isCache)
         {
-            return IntPtr.Zero;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.groupConfig_get, args = new { authCode, groupId, qqId  } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
 
         [DllExport(ExportName = "CQ_getGroupMemberList", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getGroupMemberList(int authCode, long groupId)
         {
-            return IntPtr.Zero;
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.memberList, args = new { authCode, groupId } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
 
         [DllExport(ExportName = "CQ_getGroupList", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getGroupList(int authCode)
         {
-            return IntPtr.Zero;
-
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.groupList, args = new { authCode } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
 
         [DllExport(ExportName = "CQ_getStrangerInfo", CallingConvention = CallingConvention.StdCall)]
@@ -219,17 +246,16 @@ namespace CQP
         public static IntPtr CQ_getGroupInfo(int authCode, long groupId, bool notCache)
         {
             return IntPtr.Zero;
-
         }
 
         [DllExport(ExportName = "CQ_getFriendList", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getFriendList(int authCode, bool reserved)
         {
-            return IntPtr.Zero;
-
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.friendList, args = new { authCode } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
         [DllExport(ExportName = "cq_start", CallingConvention = CallingConvention.StdCall)]
-        public static bool cq_start(IntPtr path, int authcode)
+        public static bool cq_start(IntPtr path, int authCode)
         {            
             return true;
         }
