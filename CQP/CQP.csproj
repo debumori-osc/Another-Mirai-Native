@@ -205,7 +205,15 @@
     <Compile Include="Clinet.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DllMain.cs" />
+    <Compile Include="Enums\FunctionEnums.cs" />
+    <Compile Include="Enums\LogLevel.cs" />
+    <Compile Include="Enums\MiraiApiType.cs" />
+    <Compile Include="Enums\MiraiEvents.cs" />
+    <Compile Include="Enums\MiraiMessageEvents.cs" />
+    <Compile Include="Enums\MiraiMessageType.cs" />
+    <Compile Include="Enums\WsServerFunction.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="Kernel32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WsServerFunction.cs" />
   </ItemGroup>
