@@ -85,6 +85,7 @@
             this.listView_PluginList.TabIndex = 0;
             this.listView_PluginList.UseCompatibleStateImageBehavior = false;
             this.listView_PluginList.View = System.Windows.Forms.View.Details;
+            this.listView_PluginList.SelectedIndexChanged += new System.EventHandler(this.listView_PluginList_SelectedIndexChanged);
             // 
             // columnHeader1
             // 
@@ -136,6 +137,7 @@
             this.button_Close.TabIndex = 4;
             this.button_Close.Text = "关闭";
             this.button_Close.UseVisualStyleBackColor = true;
+            this.button_Close.Click += new System.EventHandler(this.button_Close_Click);
             // 
             // linkLabel_MoreApps
             // 
@@ -160,6 +162,8 @@
             this.button_AppDir.TabIndex = 2;
             this.button_AppDir.Text = "应用目录";
             this.button_AppDir.UseVisualStyleBackColor = true;
+            this.button_AppDir.Click += new System.EventHandler(this.button_AppDir_Click);
+            // 
             // button_AddPlugin
             // 
             this.button_AddPlugin.Location = new System.Drawing.Point(96, 12);
@@ -169,6 +173,7 @@
             this.button_AddPlugin.TabIndex = 1;
             this.button_AddPlugin.Text = "添加插件";
             this.button_AddPlugin.UseVisualStyleBackColor = true;
+            this.button_AddPlugin.Click += new System.EventHandler(this.button_AddPlugin_Click);
             // 
             // button_Reload
             // 
@@ -179,6 +184,7 @@
             this.button_Reload.TabIndex = 0;
             this.button_Reload.Text = "重载插件";
             this.button_Reload.UseVisualStyleBackColor = true;
+            this.button_Reload.Click += new System.EventHandler(this.button_Reload_Click);
             // 
             // groupBox_Desc
             // 
@@ -290,6 +296,7 @@
             this.button_ReloadPlugin.TabIndex = 10;
             this.button_ReloadPlugin.Text = "重载";
             this.button_ReloadPlugin.UseVisualStyleBackColor = true;
+            this.button_ReloadPlugin.Click += new System.EventHandler(this.button_ReloadPlugin_Click);
             // 
             // button_Dev
             // 
@@ -300,6 +307,7 @@
             this.button_Dev.TabIndex = 9;
             this.button_Dev.Text = "开发";
             this.button_Dev.UseVisualStyleBackColor = true;
+            this.button_Dev.Click += new System.EventHandler(this.button_Dev_Click);
             // 
             // button_Menu
             // 
@@ -310,6 +318,7 @@
             this.button_Menu.TabIndex = 8;
             this.button_Menu.Text = "菜单";
             this.button_Menu.UseVisualStyleBackColor = true;
+            this.button_Menu.Click += new System.EventHandler(this.button_Menu_Click);
             // 
             // button_Disable
             // 
@@ -320,6 +329,7 @@
             this.button_Disable.TabIndex = 7;
             this.button_Disable.Text = "停用";
             this.button_Disable.UseVisualStyleBackColor = true;
+            this.button_Disable.Click += new System.EventHandler(this.button_Disable_Click);
             // 
             // label_Auth
             // 
@@ -400,6 +410,18 @@
             this.Name = "PluginForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "应用";
+            this.Load += new System.EventHandler(this.PluginForm_Load);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            this.groupBox_Desc.ResumeLayout(false);
+            this.groupBox_Desc.PerformLayout();
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }

@@ -103,7 +103,7 @@ namespace Another_Mirai_Native.Native
             dll.DoInitialize(authcode);
             //获取插件的appinfo,返回示例 9,me.cqp.luohuaming.Sign,分别为ApiVer以及AppID
             KeyValuePair<int, string> appInfotext = dll.GetAppInfo();
-            AppInfo appInfo = new AppInfo(appInfotext.Value, 0, appInfotext.Key
+            AppInfo appInfo = new(appInfotext.Value, 0, appInfotext.Key
                 , json["name"].ToString(), json["version"].ToString(), Convert.ToInt32(json["version_id"].ToString())
                 , json["author"].ToString(), json["description"].ToString(), authcode);
             bool enabled = GetPluginState(appInfo);//获取插件启用状态
@@ -159,7 +159,7 @@ namespace Another_Mirai_Native.Native
                 File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
                 statesArray = PluginStatus["Status"] as JArray;
             }
-            //没有此插件的配置,新建一个并返回true
+            //没有此插件的配置,新建一个并返回false
             if (!statesArray.Any(x => x["Name"].ToString() == appInfo.Id))
             {
                 JObject CQPlugin = new()
@@ -169,7 +169,7 @@ namespace Another_Mirai_Native.Native
                 };
                 statesArray.Add(CQPlugin);
                 File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
-                return true;
+                return false;
             }
             else
             {
@@ -336,5 +336,6 @@ namespace Another_Mirai_Native.Native
             CallFunction(FunctionEnums.Enable);
             this.Loading = false;
         }
+        public static CQPlugin GetPluginByID(string id) => Instance.Plugins.FirstOrDefault(x => x.appinfo.Id == id);
     }
 }
