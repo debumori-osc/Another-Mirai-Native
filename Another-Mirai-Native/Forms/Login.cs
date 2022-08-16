@@ -112,9 +112,8 @@ namespace Another_Mirai_Native
 
             LoginBtn.Text = "初始化...";
             LoginBtn.Enabled = false;
-            new Thread(() =>
+            WsServer.Instance.CQPConnected += () => 
             {
-                CQP_Init();
                 LoginBtn.BeginInvoke(new MethodInvoker(() =>
                 {
                     LoginBtn.Text = "连接";
@@ -125,6 +124,10 @@ namespace Another_Mirai_Native
                         LoginBtn.PerformClick();
                     }
                 }));
+            };
+            new Thread(() =>
+            {
+                CQP_Init();                
             }).Start();
         }
 
