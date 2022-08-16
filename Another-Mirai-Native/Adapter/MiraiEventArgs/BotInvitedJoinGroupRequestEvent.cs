@@ -9,9 +9,9 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     public class BotInvitedJoinGroupRequestEvent
     {
         public string type { get; set; }
-        public int eventId { get; set; }
-        public int fromId { get; set; }
-        public int groupId { get; set; }
+        public long eventId { get; set; }
+        public long fromId { get; set; }
+        public long groupId { get; set; }
         public string groupName { get; set; }
         public string nick { get; set; }
         public string message { get; set; }

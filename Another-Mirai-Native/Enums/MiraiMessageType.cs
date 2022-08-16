@@ -197,7 +197,7 @@ namespace Another_Mirai_Native.Enums
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.File;
             public string id { get; set; }
             public string name { get; set; }
-            public int size { get; set; }
+            public long size { get; set; }
         }
 
         public class MiraiCode : MiraiMessageBase

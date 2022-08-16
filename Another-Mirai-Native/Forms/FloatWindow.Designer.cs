@@ -45,7 +45,7 @@
             // 
             // notifyIcon
             // 
-            this.notifyIcon.Text = "OPQBot 酷Q兼容框架";
+            this.notifyIcon.Text = "AMN 酷Q兼容框架";
             // 
             // FloatWindow
             // 

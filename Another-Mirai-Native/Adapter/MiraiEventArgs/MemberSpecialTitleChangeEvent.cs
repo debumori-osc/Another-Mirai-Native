@@ -14,7 +14,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
         public Member member { get; set; }
         public class Member
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string memberName { get; set; }
             public string permission { get; set; }
             public Group group { get; set; }
@@ -22,7 +22,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
 
         public class Group
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string name { get; set; }
             public string permission { get; set; }
         }

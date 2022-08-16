@@ -9,6 +9,6 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     public class BotOfflineEventDropped
     {
         public string type { get; set; }
-        public int qq { get; set; }
+        public long qq { get; set; }
     }
 }

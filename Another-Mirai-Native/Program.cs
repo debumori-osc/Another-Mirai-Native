@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Another_Mirai_Native.Enums;
 using Another_Mirai_Native.Native;
 
 namespace Another_Mirai_Native

@@ -13,7 +13,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
         public object _operator { get; set; }
         public class Group
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string name { get; set; }
             public string permission { get; set; }
         }

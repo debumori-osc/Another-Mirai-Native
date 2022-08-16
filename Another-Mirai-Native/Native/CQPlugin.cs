@@ -62,6 +62,8 @@ namespace Another_Mirai_Native.Native
 
         [DllImport("kernel32.dll")]
         private extern static bool FreeLibrary(IntPtr lib);
+        [DllImport("CQP.dll")]
+        public extern static void ConnectServer();
 
         private IntPtr hLib;
         #endregion

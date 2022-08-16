@@ -12,7 +12,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
         public Client client { get; set; }
         public class Client
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string platform { get; set; }
         }
     }

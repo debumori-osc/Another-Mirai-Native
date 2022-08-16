@@ -13,7 +13,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
         public bool inputting { get; set; }
         public class Friend
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string nickname { get; set; }
             public string remark { get; set; }
         }

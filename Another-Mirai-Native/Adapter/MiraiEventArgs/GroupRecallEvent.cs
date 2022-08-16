@@ -9,27 +9,27 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     public class GroupRecallEvent
     {
         public string type { get; set; }
-        public int authorId { get; set; }
-        public int messageId { get; set; }
-        public int time { get; set; }
+        public long authorId { get; set; }
+        public long messageId { get; set; }
+        public long time { get; set; }
         public Group group { get; set; }
         public Operator _operator { get; set; }
         public class Group
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string name { get; set; }
             public string permission { get; set; }
         }
 
         public class Operator
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string memberName { get; set; }
             public string permission { get; set; }
             public string specialTitle { get; set; }
-            public int joinTimestamp { get; set; }
-            public int lastSpeakTimestamp { get; set; }
-            public int muteTimeRemaining { get; set; }
+            public long jolongimestamp { get; set; }
+            public long lastSpeakTimestamp { get; set; }
+            public long muteTimeRemaining { get; set; }
             public Group group { get; set; }
         }
     }

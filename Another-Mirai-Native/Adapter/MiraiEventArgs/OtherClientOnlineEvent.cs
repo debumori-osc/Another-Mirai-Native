@@ -10,10 +10,10 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     {
         public string type { get; set; }
         public Client client { get; set; }
-        public int kind { get; set; }
+        public long kind { get; set; }
         public class Client
         {
-            public int id { get; set; }
+            public long id { get; set; }
             public string platform { get; set; }
         }
     }
