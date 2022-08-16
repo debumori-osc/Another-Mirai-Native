@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,7 +18,7 @@ namespace Another_Mirai_Native
         public static string WsURL { get; set; }
         public static string WsAuthKey { get; set; }
         public static int MaxLogCount { get; set; } = 500;
-        public static long TimeStamp => (long)(DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local)).TotalSeconds;
+        public static long TimeStamp => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
         public static DateTime TimeStamp2DateTime(long timestamp) => new DateTime(1970, 1, 1, 8, 0, 0, DateTimeKind.Local).AddSeconds(timestamp);
         public static bool ContainsKey(this JToken json, string key)
         {
@@ -61,9 +62,14 @@ namespace Another_Mirai_Native
                 return null;
             }
         }
-        public static T String2Enum<T>(object value)
+        public static T String2Enum<T>(string value)
+        {
+            return (T)Enum.Parse(typeof(T), value);
+        }       
+        public static T Int2Enum<T>(int value)
         {
             return (T)Enum.Parse(typeof(T), Enum.GetName(typeof(T), value));
-        }       
+        }
+        public static string ToJson(this object obj) => JsonConvert.SerializeObject(obj);
     }
 }
