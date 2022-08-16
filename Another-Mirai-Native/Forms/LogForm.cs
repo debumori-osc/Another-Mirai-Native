@@ -62,7 +62,7 @@ namespace Another_Mirai_Native.Forms
         }
         private static Color GetLogColor(int value)
         {
-            LogLevel loglevel = Value2Enum(value);
+            LogLevel loglevel = Helper.String2Enum<LogLevel>(value);
             return GetLogColor(loglevel);
         }
         /// <summary>
@@ -104,10 +104,6 @@ namespace Another_Mirai_Native.Forms
                     break;
             }
             return LogColor;
-        }
-        private static LogLevel Value2Enum(int value)
-        {
-            return (LogLevel)Enum.Parse(typeof(LogLevel), Enum.GetName(typeof(LogLevel), value));
         }
         private LogLevel GetLogPriority(int selectIndex)
         {
@@ -159,7 +155,7 @@ namespace Another_Mirai_Native.Forms
             }
             try
             {
-                switch (Value2Enum(log.priority))
+                switch (Helper.String2Enum<LogLevel>(log.priority))
                 {
                     case LogLevel.Warning:
                         NotifyIconHelper.Instance.ShowBalloonTip(2000, log.source, log.detail, ToolTipIcon.Warning);

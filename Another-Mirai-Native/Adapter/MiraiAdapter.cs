@@ -245,6 +245,7 @@ namespace Another_Mirai_Native.Adapter
                         break;
                 }
             }
+            
             string parsedMsg = CQCodeBuilder.Parse(chainMsg);
             DispatchMessage(events, parsedMsg);
         }
