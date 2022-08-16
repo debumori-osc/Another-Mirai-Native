@@ -1,3 +1,4 @@
+using Another_Mirai_Native.Adapter;
 using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Forms;
 using Another_Mirai_Native.Native;

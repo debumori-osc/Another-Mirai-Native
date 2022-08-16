@@ -61,5 +61,9 @@ namespace Another_Mirai_Native
                 return null;
             }
         }
+        public static T String2Enum<T>(object value)
+        {
+            return (T)Enum.Parse(typeof(T), Enum.GetName(typeof(T), value));
+        }       
     }
 }
