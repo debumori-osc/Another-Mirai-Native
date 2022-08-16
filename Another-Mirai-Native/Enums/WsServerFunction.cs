@@ -2,8 +2,10 @@
 {
     public enum WsServerFunction
     {
+        Info,
         AddLog,
         GetLog,        
+        CallMiraiAPI,
         CallCQFunction,
         Exit,
         Restart,
@@ -14,6 +16,13 @@
         GetBotInfo,
         GetGroupList,
         GetFriendList,
-        GetStatus
+        GetStatus,
+        UnAuth
+    }
+    public enum WsClientType
+    {
+        CQP,
+        WebUI,
+        UnAuth
     }
 }
