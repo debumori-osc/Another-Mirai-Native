@@ -24,11 +24,7 @@ namespace Another_Mirai_Native
         {
             try
             {
-                foreach (JProperty item in json.Children())
-                {
-                    if (item.Name == key) return true;
-                }
-                return false;
+                return json[key] != null;
             }
             catch
             {
