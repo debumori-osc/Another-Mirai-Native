@@ -37,7 +37,7 @@ namespace Another_Mirai_Native.Enums
     {
         public class Source : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Source";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Source;
             public int id { get; set; }
             public int time { get; set; }
@@ -45,7 +45,7 @@ namespace Another_Mirai_Native.Enums
 
         public class Quote : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Quote";
             public int id { get; set; }
             public int groupId { get; set; }
             public int senderId { get; set; }
@@ -62,21 +62,21 @@ namespace Another_Mirai_Native.Enums
 
         public class At : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "At";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.At;
-            public int target { get; set; }
+            public long target { get; set; }
             public string display { get; set; }
         }
 
         public class AtAll : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "AtAll";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.AtAll;
         }
 
         public class Face : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Face";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Face;
             public int faceId { get; set; }
             public string name { get; set; }
@@ -84,14 +84,14 @@ namespace Another_Mirai_Native.Enums
 
         public class Plain : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Plain";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Plain;
             public string text { get; set; }
         }
 
         public class Image : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Image";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Image;
             public string imageId { get; set; }
             public string url { get; set; }
@@ -101,7 +101,7 @@ namespace Another_Mirai_Native.Enums
 
         public class FlashImage : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "FlashImage";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.FlashImage;
             public string imageId { get; set; }
             public string url { get; set; }
@@ -111,7 +111,7 @@ namespace Another_Mirai_Native.Enums
 
         public class Voice : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Voice";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Voice;
             public string voiceId { get; set; }
             public string url { get; set; }
@@ -122,42 +122,42 @@ namespace Another_Mirai_Native.Enums
 
         public class Xml : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Xml";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Xml;
             public string xml { get; set; }
         }
 
         public class Json : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Json";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Json;
             public string json { get; set; }
         }
 
         public class App : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "App";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.App;
             public string content { get; set; }
         }
 
         public class Poke : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Poke";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Poke;
             public string name { get; set; }
         }
 
         public class Dice : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Dice";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Dice;
             public int value { get; set; }
         }
 
         public class MarketFace : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "MarketFace";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.MarketFace;
             public int id { get; set; }
             public string name { get; set; }
@@ -165,7 +165,7 @@ namespace Another_Mirai_Native.Enums
 
         public class MusicShare : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "MusicShare";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.MusicShare;
             public string kind { get; set; }
             public string title { get; set; }
@@ -178,7 +178,7 @@ namespace Another_Mirai_Native.Enums
 
         public class Forward : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "Forward";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Forward;
             public Nodelist[] nodeList { get; set; }
             public class Nodelist
@@ -193,7 +193,7 @@ namespace Another_Mirai_Native.Enums
 
         public class File : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "File";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.File;
             public string id { get; set; }
             public string name { get; set; }
@@ -202,7 +202,7 @@ namespace Another_Mirai_Native.Enums
 
         public class MiraiCode : MiraiMessageBase
         {
-            public string type { get; set; }
+            public string type { get; set; } = "MiraiCode";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.MiraiCode;
             public string code { get; set; }
         }
