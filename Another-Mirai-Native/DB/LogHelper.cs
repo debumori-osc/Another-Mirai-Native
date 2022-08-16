@@ -1,6 +1,4 @@
-﻿using Another_Mirai_Native.DB;
-using Another_Mirai_Native.Enums;
-using Newtonsoft.Json.Linq;
+﻿using Another_Mirai_Native.Enums;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -11,6 +9,10 @@ namespace Another_Mirai_Native.DB
 {
     public static class LogHelper
     {
+        public delegate void AddLogHandler(int logid, LogModel log);
+        public static event AddLogHandler LogAdded;
+        public delegate void UpdateLogStatusHandler(int logid, string status);
+        public static event UpdateLogStatusHandler LogStatusUpdated;
         public static string GetLogFileName()
         {
             var fileinfo = new DirectoryInfo($@"logs\{Helper.QQ}").GetFiles("*.db");
@@ -85,45 +87,18 @@ namespace Another_Mirai_Native.DB
                 model.name = "异常捕获";
                 model.detail = model.name;
             }
-            using (var db = GetInstance())
+            using var db = GetInstance();
+            var result = db.Ado.UseTran(() =>
             {
-                var result = db.Ado.UseTran(() =>
-                {
-                    db.Insertable(model).ExecuteCommand();
-                });
-                if (result.IsSuccess is false)
-                {
-                    throw new Exception("执行错误，发生位置 WriteLog " + result.ErrorMessage);
-                }
+               int logid = db.Insertable(model).ExecuteReturnIdentity();
+                LogAdded?.Invoke(logid, model);
+                return logid;
+            });
+            if (result.IsSuccess is false)
+            {
+                throw new Exception("执行错误，发生位置 WriteLog " + result.ErrorMessage);
             }
-            int logid = GetLastLog().id;
-            SendBroadcast(GetLogBroadcastContent(logid));
-            return logid;
-        }
-        private static string GetLogBroadcastContent(int logid)
-        {
-            JObject json = new()
-            {
-                new JProperty("Type","Log"),
-                new JProperty("QQ",Helper.QQ),
-                new JProperty("LogID",logid),
-            };
-            return json.ToString();
-        }
-        private static string GetUpdateBroadcastContent(int logid, string msg)
-        {
-            JObject json = new()
-            {
-                new JProperty("Type","Update"),
-                new JProperty("QQ",Helper.QQ),
-                new JProperty("LogID",logid),
-                new JProperty("Msg",msg)
-            };
-            return json.ToString();
-        }
-        private static void SendBroadcast(string msg)
-        {
-
+            return -1;
         }
         public static int WriteLog(int level, string logOrigin, string type, string messages, string status = "")
         {
@@ -166,12 +141,9 @@ namespace Another_Mirai_Native.DB
             {
                 db.Updateable<LogModel>().SetColumns(x => x.status == status).Where(x => x.id == id)
                   .ExecuteCommand();
+                LogStatusUpdated?.Invoke(id, status);
             });
-            if (result.IsSuccess)
-            {
-                SendBroadcast(GetUpdateBroadcastContent(id, status));
-            }
-            else
+            if (!result.IsSuccess)
             {
                 throw new Exception("执行错误，发生位置 UpdateLogStatus " + result.ErrorMessage);
             }

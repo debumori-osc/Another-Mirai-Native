@@ -62,6 +62,8 @@
             this.listView_LogMain.TabIndex = 0;
             this.listView_LogMain.UseCompatibleStateImageBehavior = false;
             this.listView_LogMain.View = System.Windows.Forms.View.Details;
+            this.listView_LogMain.ItemMouseHover += new System.Windows.Forms.ListViewItemMouseHoverEventHandler(this.listView_LogMain_ItemMouseHover);
+            this.listView_LogMain.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listView_LogMain_MouseUp);
             // 
             // columnHeader1
             // 
@@ -101,6 +103,7 @@
             this.comboBox_LogLevel.Name = "comboBox_LogLevel";
             this.comboBox_LogLevel.Size = new System.Drawing.Size(99, 20);
             this.comboBox_LogLevel.TabIndex = 1;
+            this.comboBox_LogLevel.SelectedIndexChanged += new System.EventHandler(this.comboBox_LogLevel_SelectedIndexChanged);
             // 
             // linkLabel1
             // 
@@ -126,6 +129,7 @@
             this.checkBox_Update.TabIndex = 3;
             this.checkBox_Update.Text = "实时模式";
             this.checkBox_Update.UseVisualStyleBackColor = true;
+            this.checkBox_Update.CheckedChanged += new System.EventHandler(this.checkBox_Update_CheckedChanged);
             // 
             // checkBox_AboveAll
             // 
@@ -136,6 +140,7 @@
             this.checkBox_AboveAll.TabIndex = 4;
             this.checkBox_AboveAll.Text = "窗口置顶";
             this.checkBox_AboveAll.UseVisualStyleBackColor = true;
+            this.checkBox_AboveAll.CheckedChanged += new System.EventHandler(this.checkBox_AboveAll_CheckedChanged);
             // 
             // button_Close
             // 
@@ -145,6 +150,7 @@
             this.button_Close.TabIndex = 5;
             this.button_Close.Text = "关闭";
             this.button_Close.UseVisualStyleBackColor = true;
+            this.button_Close.Click += new System.EventHandler(this.button_Close_Click);
             // 
             // label_Desc
             // 
@@ -172,6 +178,7 @@
             this.Name = "LogForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "运行日志 - ";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LogForm_FormClosing);
             this.Load += new System.EventHandler(this.LogForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
