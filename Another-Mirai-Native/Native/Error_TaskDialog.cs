@@ -12,7 +12,7 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         /// <param name="exception">需要折叠的错误</param>
         /// <returns>true 表示重载 false 表示退出</returns>
-        public static TaskDialogResult ShowErrorDialog(IntPtr owner, string exception, string detail, bool Startable = true)
+        public static TaskDialogResult ShowErrorDialog(string exception, string detail, bool Startable = true)
         {
             string[] buttons = new string[] { };
             string content;
@@ -28,7 +28,6 @@ namespace Another_Mirai_Native.Native
             }
             TaskDialogOptions config = new()
             {
-                Owner = owner,   
                 Title = $"Another-Mirai-Native {Application.ProductVersion}",
                 MainInstruction = "Another-Mirai-Native 发生错误",
                 Content = content,

@@ -305,7 +305,7 @@ namespace Another_Mirai_Native.Native
                     LogHelper.WriteLog(LogLevel.Error, "函数执行异常", $"插件 {item.appinfo.Name} {ApiName} 函数发生错误，错误信息:{e.Message} {e.StackTrace}");
                     Thread thread = new(() =>
                     {
-                        var b = Error_TaskDialog.ShowErrorDialog(FloatWindow.Instance.Handle, $"错误模块：{item.appinfo.Name}\n{ApiName} 函数发生错误\n", "错误信息:\n{e.Message} {e.StackTrace}");
+                        var b = Error_TaskDialog.ShowErrorDialog($"错误模块：{item.appinfo.Name}\n{ApiName} 函数发生错误\n", $"错误信息:\n{e.Message} {e.StackTrace}");
                         switch (b)
                         {
                             case Error_TaskDialog.TaskDialogResult.ReloadApp:
