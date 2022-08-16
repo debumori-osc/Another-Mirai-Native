@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +13,12 @@ namespace CQP
 {
     public class Clinet
     {
+        public class ApiResult
+        {
+            public bool success { get; set; }
+            public string data { get; set; }
+            public JObject json { get; set; }
+        }
         public WebSocket ServerConnection;
         public static Clinet Instance;
         public Clinet()
@@ -38,20 +46,47 @@ namespace CQP
 
         private void ServerConnection_OnMessage(object sender, MessageEventArgs e)
         {
-            throw new NotImplementedException();
+            if (ApiQueue.Count != 0)
+            {
+                ApiQueue.Dequeue().result = e.Data;
+            }
         }
 
         private void ServerConnection_OnOpen(object sender, EventArgs e)
         {
             File.AppendAllLines("logs/cqp/log.txt", new string[] { $"[{DateTime.Now:G}] 连接成功" });
-            Send(WsServerFunction.Info, new { role = WsClientType.CQP, key = ConfigHelper.GetConfig<string>("WsServer_Key") });
+            Send(WsServerFunction.Info, new { role = WsClientType.CQP, key = ConfigHelper.GetConfig<string>("WsServer_Key") }, false);
         }
-        public void Send(WsServerFunction type, object data)
+        Queue<QueueObject> ApiQueue = new();
+        class QueueObject
+        {
+            public string request { get; set; }
+            public string result { get; set; } = "";
+        }
+        public ApiResult Send(WsServerFunction type, object data, bool queue = true)
         {
             if(ServerConnection.ReadyState == WebSocketState.Open)
             {
-                ServerConnection.Send(new { type, data }.ToJson());
+                if (!queue)
+                {
+                    ServerConnection.Send(new { type, data }.ToJson());
+                    return null;
+                }
+                QueueObject queueObject = new() { request = new { type, data }.ToJson() };
+                ApiQueue.Enqueue(queueObject);
+                if (ApiQueue.Count == 1)
+                    ServerConnection.Send(queueObject.request);
+                while (queueObject.result == "")
+                {
+                    Thread.Sleep(10);
+                }
+                if (ApiQueue.Count != 0)
+                    ServerConnection.Send(ApiQueue.Peek().request);
+                var r = JsonConvert.DeserializeObject<ApiResult>(queueObject.result);
+                r.json = JObject.Parse(r.data);
+                return r;
             }
+            return null;
         }
     }
 }
