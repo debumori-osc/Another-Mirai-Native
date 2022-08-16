@@ -117,7 +117,18 @@ namespace Another_Mirai_Native.Adapter
                 }
                 return;
             }
-
+            if (json.ContainsKey("code"))
+            {
+                ApiQueue.Dequeue().result = json.ToString();
+                Debug.WriteLine(e.Data);
+                return;
+            }
+            if (json.ContainsKey("data") && json["data"].ContainsKey("code"))
+            {
+                ApiQueue.Dequeue().result = json["data"].ToString();
+                Debug.WriteLine(e.Data);
+                return;
+            }
             ParseMessage(json);
         }
 
@@ -145,7 +156,11 @@ namespace Another_Mirai_Native.Adapter
                 }
                 return;
             }
-
+            if (json["data"].ContainsKey("code"))
+            {
+                ApiQueue.Dequeue().result = json["data"].ToString();
+                return;
+            }
             ParseEvent(json);
         }
 
@@ -431,9 +446,25 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.Connect();
             return false;
         }
-        public void CallMiraiAPI(object data)
+        class QueueObject
         {
-            MessageSocket.Send(new { syncId=-1, data=data.ToJson() }.ToJson());
+            public string request { get; set; }
+            public string result { get; set; } = "";
+        }
+        Queue<QueueObject> ApiQueue = new();
+        public string CallMiraiAPI(MiraiApiType type, object data)
+        {
+            QueueObject queueObject = new() { request= new { syncId=-1, command = Enum.GetName(typeof(MiraiApiType), type), content = data  }.ToJson() };
+            ApiQueue.Enqueue(queueObject);
+            if(ApiQueue.Count == 1)
+                MessageSocket.Send(queueObject.request);
+            while (queueObject.result == "")
+            {
+                Thread.Sleep(10);
+            }
+            if (ApiQueue.Count != 0)
+                MessageSocket.Send(ApiQueue.Peek().request);
+            return queueObject.result;
         }
         public int CallMiraiAPI(MiraiApiType type, params object[] args)
         {
