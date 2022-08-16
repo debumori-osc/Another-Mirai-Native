@@ -1,5 +1,8 @@
 ﻿using Another_Mirai_Native.Adapter.CQCode;
+using Another_Mirai_Native.Adapter.CQCode.Expand;
+using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
+using Another_Mirai_Native.Native;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +14,7 @@ namespace Another_Mirai_Native.Adapter
 {
     public static class CQCodeBuilder
     {
-        public static string Parse (List<MiraiMessageBase> chainMsg)
+        public static string Parse(List<MiraiMessageBase> chainMsg)
         {
             StringBuilder Result = new();
             foreach (var item in chainMsg)
@@ -39,14 +42,14 @@ namespace Another_Mirai_Native.Adapter
                         break;
                     case MiraiMessageType.Image:
                         var image = (MiraiMessageTypeDetail.Image)item;
-                        string imgId = image.imageId.Replace("-", "");
+                        string imgId = image.imageId.Replace("-", "").Replace("{", "").Replace("}", "").Split('.').First();
                         Directory.CreateDirectory("data/image");
                         File.WriteAllText($"data/image/{imgId}.cqimg", $"[image]\nmd5=0\nsize=0\nurl={image.url}");
                         Result.Append($"[CQ:image,file={imgId}]");
                         break;
                     case MiraiMessageType.FlashImage:
                         var flashImage = (MiraiMessageTypeDetail.FlashImage)item;
-                        string flashImgId = flashImage.imageId.Replace("-", "");
+                        string flashImgId = flashImage.imageId.Replace("-", "").Replace("{", "").Replace("}", "").Split('.').First();
                         Directory.CreateDirectory("data/image");
                         File.WriteAllText($"data/image/{flashImgId}.cqimg", $"[image]\nmd5=0\nsize=0\nurl={flashImage.url}");
                         Result.Append($"[CQ:image,file={flashImgId},flash=true]");
@@ -87,13 +90,8 @@ namespace Another_Mirai_Native.Adapter
                         Result.Append(CQApi.CQCode_DIYMusic(musicShare.jumpUrl, musicShare.musicUrl, musicShare.title, musicShare.brief, musicShare.pictureUrl));
                         break;
                     case MiraiMessageType.Forward:
-                        break;
                     case MiraiMessageType.File:
-                        var file = (MiraiMessageTypeDetail.File)item;
-                        Result.Append($"[CQ:file,]");
-                        break;
                     case MiraiMessageType.MiraiCode:
-                        break;
                     default:
                         break;
                 }
