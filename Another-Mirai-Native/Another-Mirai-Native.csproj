@@ -234,6 +234,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Adapter\CQCodeBuilder.cs" />
     <Compile Include="Adapter\MiraiAPI.cs" />
     <Compile Include="Adapter\MiraiEventArgs\BotGroupPermissionChangeEvent.cs" />
     <Compile Include="Adapter\MiraiEventArgs\BotInvitedJoinGroupRequestEvent.cs" />
@@ -278,7 +279,25 @@
     <Compile Include="Adapter\MiraiMessageEventArgs\OtherClientMessage.cs" />
     <Compile Include="Adapter\MiraiMessageEventArgs\StrangerMessage.cs" />
     <Compile Include="Adapter\MiraiMessageEventArgs\TempMessage.cs" />
-    <Compile Include="Adapter\MiraiMessageType.cs" />
+    <Compile Include="CQCode\Core\CQP.cs" />
+    <Compile Include="CQCode\Core\Kernel32.cs" />
+    <Compile Include="CQCode\CQApi.cs" />
+    <Compile Include="CQCode\Enum\CQAudioFormat.cs" />
+    <Compile Include="CQCode\Enum\CQFace.cs" />
+    <Compile Include="CQCode\Enum\CQFunction.cs" />
+    <Compile Include="CQCode\Enum\CQLogLevel.cs" />
+    <Compile Include="CQCode\Enum\CQMusicStyle.cs" />
+    <Compile Include="CQCode\Enum\CQMusicType.cs" />
+    <Compile Include="CQCode\Enum\CQResponseType.cs" />
+    <Compile Include="CQCode\Expand\BinaryReaderExpand.cs" />
+    <Compile Include="CQCode\Expand\BinaryWriterExpand.cs" />
+    <Compile Include="CQCode\Expand\SystemExpand.cs" />
+    <Compile Include="CQCode\Interface\IToSendString.cs" />
+    <Compile Include="CQCode\Model\AppInfo.cs" />
+    <Compile Include="CQCode\Model\BasisModel.cs" />
+    <Compile Include="CQCode\Model\BasisStreamModel.cs" />
+    <Compile Include="CQCode\Model\CQCodeModel.cs" />
+    <Compile Include="Enums\MiraiMessageType.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DB\LogModel.cs" />
     <Compile Include="Enums\FunctionEnums.cs" />
