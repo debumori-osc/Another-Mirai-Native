@@ -454,7 +454,15 @@ namespace Another_Mirai_Native.Adapter
         Queue<QueueObject> ApiQueue = new();
         public string CallMiraiAPI(MiraiApiType type, object data)
         {
-            QueueObject queueObject = new() { request= new { syncId=-1, command = Enum.GetName(typeof(MiraiApiType), type), content = data  }.ToJson() };
+            string apiType = Enum.GetName(typeof(MiraiApiType), type);
+            string command=apiType, subCommand="";
+            if (apiType.Contains("_"))
+            {
+                var c = apiType.Split('_');
+                command = c[0];
+                subCommand = c[1];
+            }
+            QueueObject queueObject = new() { request= new { syncId=-1, command, subCommand, content = data  }.ToJson() };
             ApiQueue.Enqueue(queueObject);
             if(ApiQueue.Count == 1)
                 MessageSocket.Send(queueObject.request);
