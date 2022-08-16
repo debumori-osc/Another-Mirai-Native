@@ -87,18 +87,13 @@ namespace Another_Mirai_Native.DB
                 model.name = "异常捕获";
                 model.detail = model.name;
             }
-            using var db = GetInstance();
-            var result = db.Ado.UseTran(() =>
+            using (var db = GetInstance())
             {
-               int logid = db.Insertable(model).ExecuteReturnIdentity();
+                int logid = db.Insertable(model).ExecuteReturnIdentity();
+                model.id = logid;
                 LogAdded?.Invoke(logid, model);
                 return logid;
-            });
-            if (result.IsSuccess is false)
-            {
-                throw new Exception("执行错误，发生位置 WriteLog " + result.ErrorMessage);
             }
-            return -1;
         }
         public static int WriteLog(int level, string logOrigin, string type, string messages, string status = "")
         {
@@ -120,66 +115,34 @@ namespace Another_Mirai_Native.DB
 
         public static LogModel GetLogByID(int id)
         {
-            using var db = GetInstance();
-            var result = db.Ado.UseTran(() =>
+            using (var db = GetInstance())
             {
                 return db.Queryable<LogModel>().First(x => x.id == id);
-            });
-            if (result.IsSuccess)
-            {
-                return result.Data;
-            }
-            else
-            {
-                throw new Exception("执行错误，发生位置 GetLogByID " + result.ErrorMessage);
             }
         }
         public static void UpdateLogStatus(int id, string status)
         {
-            using var db = GetInstance();
-            var result = db.Ado.UseTran(() =>
+            using (var db = GetInstance())
             {
                 db.Updateable<LogModel>().SetColumns(x => x.status == status).Where(x => x.id == id)
                   .ExecuteCommand();
                 LogStatusUpdated?.Invoke(id, status);
-            });
-            if (!result.IsSuccess)
-            {
-                throw new Exception("执行错误，发生位置 UpdateLogStatus " + result.ErrorMessage);
             }
         }
         public static List<LogModel> GetDisplayLogs(int priority)
         {
-            using var db = GetInstance();
-            var result = db.Ado.UseTran(() =>
+            using (var db = GetInstance())
             {
                 var c = db.SqlQueryable<LogModel>($"select * from log where priority>= {priority} order by id desc limit {Helper.MaxLogCount}").ToList();
                 c.Reverse();
                 return c;
-            });
-            if (result.IsSuccess)
-            {
-                return result.Data;
-            }
-            else
-            {
-                throw new Exception("执行错误，发生位置 UpdateLogStatus " + result.ErrorMessage);
             }
         }
         public static LogModel GetLastLog()
         {
-            using var db = GetInstance();
-            var result = db.Ado.UseTran(() =>
+            using (var db = GetInstance())
             {
                 return db.SqlQueryable<LogModel>("select * from log order by id desc limit 1").First();
-            });
-            if (result.IsSuccess)
-            {
-                return result.Data;
-            }
-            else
-            {
-                throw new Exception("执行错误，发生位置 GetLastLog " + result.ErrorMessage);
             }
         }
     }
