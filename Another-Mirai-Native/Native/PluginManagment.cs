@@ -245,7 +245,6 @@ namespace Another_Mirai_Native.Native
         {
             if (Directory.Exists(@"data\plugins\tmp"))
                 Directory.Delete(@"data\plugins\tmp", true);
-            Dll.LoadLibrary("CQP.dll");
             if (PluginStatus.Count == 0)
             {
                 PluginStatus.Add(new JProperty("Status", new JArray()));
@@ -267,7 +266,7 @@ namespace Another_Mirai_Native.Native
         /// <param name="ApiName">调用的事件名称，前端统一名称，或许应该写成枚举</param>
         /// <param name="args">参数表</param>
         [HandleProcessCorruptedStateExceptions]
-        public int CallFunction(FunctionEnums ApiName, params object[] args)
+        public CQPlugin CallFunction(FunctionEnums ApiName, params object[] args)
         {
             JObject json = new JObject
             {
@@ -279,7 +278,7 @@ namespace Another_Mirai_Native.Native
                 && Loading)
             {
                 LogHelper.WriteLog(LogLevel.Warning, "AMN框架", "插件逻辑处理", "插件模块处理中...", "x 不处理");
-                return -1;
+                return null;
             }
             //遍历插件列表,遇到标记消息阻断则跳出
             foreach (var item in Plugins)
@@ -298,7 +297,7 @@ namespace Another_Mirai_Native.Native
                     //调用函数, 返回 1 表示消息阻塞, 跳出后续
                     if (result == 1)
                     {
-                        return Plugins.IndexOf(item) + 1;
+                        return item;
                     }
                 }
                 catch (Exception e)
@@ -322,7 +321,7 @@ namespace Another_Mirai_Native.Native
                     thread.Start();
                 }
             }
-            return 0;
+            return null;
         }
         /// <summary>
         /// 重载应用
