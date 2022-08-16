@@ -21,7 +21,7 @@ namespace Another_Mirai_Native.Native
         /// <summary>
         /// 内存句柄
         /// </summary>
-        public IntPtr iLib;
+        public IntPtr handle;
         /// <summary>
         /// 插件的AppInfo
         /// </summary>
@@ -36,9 +36,10 @@ namespace Another_Mirai_Native.Native
         /// 标记插件是否启用
         /// </summary>
         public bool Enable;
-        public CQPlugin(IntPtr iLib, AppInfo appinfo, string json, Dll dll, bool enable, string path)
+        public bool Testing;
+        public CQPlugin(IntPtr handle, AppInfo appinfo, string json, Dll dll, bool enable, string path)
         {
-            this.iLib = iLib;
+            this.handle = handle;
             this.appinfo = appinfo;
             this.json = json;
             this.dll = dll;
