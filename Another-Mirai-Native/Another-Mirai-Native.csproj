@@ -234,10 +234,57 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Adapter\MiraiAPI.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotGroupPermissionChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotInvitedJoinGroupRequestEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotJoinGroupEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotLeaveEventActive.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotLeaveEventDisband.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotLeaveEventKick.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotMuteEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotOfflineEventActive.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotOfflineEventDropped.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotOfflineEventForce.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotOnlineEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotReloginEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\BotUnmuteEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\CommandExecutedEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\FriendInputStatusChangedEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\FriendNickChangedEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\FriendRecallEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupAllowAnonymousChatEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupAllowConfessTalkEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupAllowMemberInviteEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupEntranceAnnouncementChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupMuteAllEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupNameChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\GroupRecallEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberCardChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberHonorChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberJoinEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberJoinRequestEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberLeaveEventKick.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberLeaveEventQuit.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberMuteEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberPermissionChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberSpecialTitleChangeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\MemberUnmuteEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\NewFriendRequestEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\NudgeEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\OtherClientOfflineEvent.cs" />
+    <Compile Include="Adapter\MiraiEventArgs\OtherClientOnlineEvent.cs" />
+    <Compile Include="Adapter\MiraiMessageEventArgs\FriendMessage.cs" />
+    <Compile Include="Adapter\MiraiMessageEventArgs\GroupMessage.cs" />
+    <Compile Include="Adapter\MiraiMessageEventArgs\OtherClientMessage.cs" />
+    <Compile Include="Adapter\MiraiMessageEventArgs\StrangerMessage.cs" />
+    <Compile Include="Adapter\MiraiMessageEventArgs\TempMessage.cs" />
+    <Compile Include="Adapter\MiraiMessageType.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DB\LogModel.cs" />
     <Compile Include="Enums\FunctionEnums.cs" />
     <Compile Include="Enums\LogLevel.cs" />
+    <Compile Include="Enums\MiraiEvents.cs" />
+    <Compile Include="Enums\MiraiMessageEvents.cs" />
     <Compile Include="Enums\WsServerFunction.cs" />
     <Compile Include="Forms\FloatWindow.cs">
       <SubType>Form</SubType>
@@ -271,7 +318,7 @@
     </Compile>
     <Compile Include="Helper.cs" />
     <Compile Include="DB\LogHelper.cs" />
-    <Compile Include="MiraiAdapter.cs" />
+    <Compile Include="Adapter\MiraiAdapter.cs" />
     <Compile Include="Native\AppInfo.cs" />
     <Compile Include="Native\CQPlugin.cs" />
     <Compile Include="Native\Error_TaskDialog.cs" />
