@@ -44,7 +44,7 @@ namespace Another_Mirai_Native
         public static void LoadMenu(JObject json)//初始化,遍历json的menu节点
         {
             MenuItem menu = Instance.ContextMenu.MenuItems.Find("PluginMenu", false).First();
-            MenuItem menuItem = new MenuItem//一级菜单,插件的名称
+            MenuItem menuItem = new()//一级菜单,插件的名称
             {
                 Name = json["name"].ToString(),
                 Text = json["name"].ToString()
@@ -53,7 +53,7 @@ namespace Another_Mirai_Native
                 return;
             foreach (var item in JArray.Parse(json["menu"].ToString()))
             {
-                MenuItem childmenu = new MenuItem//二级菜单,窗口的名称
+                MenuItem childmenu = new()//二级菜单,窗口的名称
                 {
                     Text = item["name"].ToString(),
                     Tag = new KeyValuePair<string, string>(json["name"].ToString(), item["name"].ToString())//插件名称与窗口函数名称,保存于这个菜单的tag中
@@ -84,10 +84,12 @@ namespace Another_Mirai_Native
                         LogForm.Instance.Show();
                         return;
                     case "Displaywindow":
-                        FloatWindow.Instance.ShowFlag = !targetItem.Checked;
+                        targetItem.Checked = !targetItem.Checked;
+                        FloatWindow.Instance.ShowFlag = targetItem.Checked;
                         return;
                     case "TopMost":
-                        FloatWindow.Instance.TopMostFlag = !targetItem.Checked;
+                        targetItem.Checked = !targetItem.Checked;
+                        FloatWindow.Instance.TopMostFlag = targetItem.Checked;
                         return;
                 }
                 KeyValuePair<string, string> pair = (KeyValuePair<string, string>)(sender as MenuItem).Tag;
@@ -130,9 +132,9 @@ namespace Another_Mirai_Native
         }
         public static void Quit()
         {
-            PluginManagment.CallFunction(FunctionEnums.Disable);
-            PluginManagment.CallFunction(FunctionEnums.Exit);
-            PluginManagment.UnLoad();
+            PluginManagment.Instance.CallFunction(FunctionEnums.Disable);
+            PluginManagment.Instance.CallFunction(FunctionEnums.Exit);
+            PluginManagment.Instance.UnLoad();
             HideNotifyIcon();
             Environment.Exit(0);
         }
