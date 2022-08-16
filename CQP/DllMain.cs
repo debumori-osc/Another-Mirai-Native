@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Another_Mirai_Native.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,21 +16,21 @@ namespace CQP
         public static void ConnectServer()
         {
             new Clinet();
-            while (Clinet.Instance.ServerConnection.ReadyState != WebSocketSharp.WebSocketState.Open)
-            {
-                Thread.Sleep(100);
-            }
         }
         [DllExport(ExportName = "CQ_sendGroupMsg", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_sendGroupMsg(int authcode, long groupid, IntPtr msg)
         {
-            return 0;
+            string text = msg.ToString(GB18030);
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type=MiraiApiType.sendGroupMessage, args=new { authcode, groupid, text } });
+            return (int)r.json["callResult"];
         }
 
         [DllExport(ExportName = "CQ_sendPrivateMsg", CallingConvention = CallingConvention.StdCall)]
-        public static int CQ_sendPrivateMsg(int authCode, long qqId, IntPtr msg)
+        public static int CQ_sendPrivateMsg(int authcode, long qqId, IntPtr msg)
         {
-            return 0;
+            string text = msg.ToString(GB18030);
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.sendFriendMessage, args = new { authcode, qqId, text } });
+            return (int)r.json["callResult"];
         }
 
         [DllExport(ExportName = "CQ_deleteMsg", CallingConvention = CallingConvention.StdCall)]
