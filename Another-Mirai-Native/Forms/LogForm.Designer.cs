@@ -174,6 +174,7 @@
             this.Controls.Add(this.linkLabel1);
             this.Controls.Add(this.comboBox_LogLevel);
             this.Controls.Add(this.listView_LogMain);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "LogForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
