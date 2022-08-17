@@ -48,7 +48,7 @@ namespace CQP
         {
             if (ApiQueue.Count != 0)
             {
-                ApiQueue.Dequeue().result = e.Data;
+                ApiQueue.Peek().result = e.Data;
             }
         }
 
@@ -76,10 +76,19 @@ namespace CQP
                 ApiQueue.Enqueue(queueObject);
                 if (ApiQueue.Count == 1)
                     ServerConnection.Send(queueObject.request);
+                // 超时脱出
+                int timoutCountMax = 1000;
+                int timoutCount = 0;
                 while (queueObject.result == "")
                 {
+                    if (timoutCount > timoutCountMax)
+                    {
+                        queueObject.result = "{\"data\": \"\"callResult\": null\"}";
+                    }
                     Thread.Sleep(10);
+                    timoutCount++;
                 }
+                ApiQueue.Dequeue();
                 if (ApiQueue.Count != 0)
                     ServerConnection.Send(ApiQueue.Peek().request);
                 var r = JsonConvert.DeserializeObject<ApiResult>(queueObject.result);

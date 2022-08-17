@@ -119,13 +119,14 @@ namespace Another_Mirai_Native.Adapter
             }
             if (json.ContainsKey("code"))
             {
-                ApiQueue.Dequeue().result = json.ToString();
+                ApiQueue.Peek().result = json.ToString();
                 Debug.WriteLine(e.Data);
                 return;
             }
-            if (json.ContainsKey("data") && json["data"].ContainsKey("code"))
+            if ((json.ContainsKey("data") && json["data"].ContainsKey("code")) 
+                || (json["data"].ContainsKey("nickname") && json["data"].ContainsKey("sex")))
             {
-                ApiQueue.Dequeue().result = json["data"].ToString();
+                ApiQueue.Peek().result = json["data"].ToString();
                 Debug.WriteLine(e.Data);
                 return;
             }
@@ -207,13 +208,15 @@ namespace Another_Mirai_Native.Adapter
                     break;
                 case MiraiEvents.GroupRecallEvent:
                     var groupRecall = raw.ToObject<GroupRecallEvent>();
-                    // TODO: 获取消息内容
-                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群撤回", $"群:{groupRecall.group.id}({groupRecall.group.name}) QQ:{groupRecall.authorId} 内容:...", "处理中...");
+                    string groupRecallMsg = MiraiAPI.GetMessageByMsgId(groupRecall.messageId);
+                    if (string.IsNullOrEmpty(groupRecallMsg)) groupRecallMsg = "消息拉取失败";
+                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群撤回", $"群:{groupRecall.group.id}({groupRecall.group.name}) QQ:{groupRecall.authorId} 内容:{groupRecallMsg}", "处理中...");
                     break;
                 case MiraiEvents.FriendRecallEvent:
-                    var friendRecall = raw.ToObject<FriendRecallEvent>();
-                    // TODO: 获取消息内容
-                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "私聊撤回", $"QQ:{friendRecall.authorId} 内容:...", "处理中...");
+                    var friendRecall = raw.ToObject<FriendRecallEvent>();                    
+                    string friendRecallMsg = MiraiAPI.GetMessageByMsgId(friendRecall.messageId);
+                    if (string.IsNullOrEmpty(friendRecallMsg)) friendRecallMsg = "消息拉取失败";
+                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "私聊撤回", $"QQ:{friendRecall.authorId} 内容:{friendRecallMsg}", "处理中...");
                     break;
                 case MiraiEvents.NudgeEvent:
                 case MiraiEvents.GroupNameChangeEvent:
@@ -266,11 +269,13 @@ namespace Another_Mirai_Native.Adapter
                 case MiraiEvents.NewFriendRequestEvent:
                     var newFriendRequestEvent = raw.ToObject<NewFriendRequestEvent>();
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "添加好友请求", $"QQ:{newFriendRequestEvent.fromId}({newFriendRequestEvent.nick}) 备注:{newFriendRequestEvent.message} 来源群:{newFriendRequestEvent.groupId}", "处理中...");
+                    Cache.FriendRequset.Add(newFriendRequestEvent.eventId, (newFriendRequestEvent.fromId, newFriendRequestEvent.nick));
                     handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.FriendRequest, 1, Helper.TimeStamp, newFriendRequestEvent.fromId, newFriendRequestEvent.nick, newFriendRequestEvent.eventId.ToString());
                     break;
                 case MiraiEvents.MemberJoinRequestEvent:
                     var memberJoinRequestEvent = raw.ToObject<MemberJoinRequestEvent>();
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "添加群请求", $"QQ:{memberJoinRequestEvent.fromId}({memberJoinRequestEvent.nick}) 备注:{memberJoinRequestEvent.message} 群:{memberJoinRequestEvent.groupId}({memberJoinRequestEvent.groupName})", "处理中...");
+                    Cache.GroupRequset.Add(memberJoinRequestEvent.eventId, (memberJoinRequestEvent.fromId, memberJoinRequestEvent.nick, memberJoinRequestEvent.groupId, memberJoinRequestEvent.groupName));
                     handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupAddRequest, 1, Helper.TimeStamp, memberJoinRequestEvent.groupId, memberJoinRequestEvent.fromId, memberJoinRequestEvent.message, memberJoinRequestEvent.eventId.ToString());
                     break;
                 case MiraiEvents.BotInvitedJoinGroupRequestEvent:
@@ -294,76 +299,10 @@ namespace Another_Mirai_Native.Adapter
         private void ParseMessage(JObject msg)
         {
             MiraiMessageEvents events = Helper.String2Enum<MiraiMessageEvents>(msg["data"]["type"].ToString());
-            List<MiraiMessageBase> chainMsg = new();
-            MiraiMessageTypeDetail.Source source = null;
-            foreach (var item in msg["data"]["messageChain"] as JArray)
-            {
-                MiraiMessageType msgType = Helper.String2Enum<MiraiMessageType>(item["type"].ToString());
-                switch (msgType)
-                {
-                    case MiraiMessageType.Source:
-                        source = item.ToObject<MiraiMessageTypeDetail.Source>();
-                        chainMsg.Add(source);
-                        break;
-                    case MiraiMessageType.Quote:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Quote>());
-                        break;
-                    case MiraiMessageType.At:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.At>());
-                        break;
-                    case MiraiMessageType.AtAll:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.AtAll>());
-                        break;
-                    case MiraiMessageType.Face:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Face>());
-                        break;
-                    case MiraiMessageType.Plain:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Plain>());
-                        break;
-                    case MiraiMessageType.Image:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Image>());
-                        break;
-                    case MiraiMessageType.FlashImage:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.FlashImage>());
-                        break;
-                    case MiraiMessageType.Voice:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Voice>());
-                        break;
-                    case MiraiMessageType.Xml:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Xml>());
-                        break;
-                    case MiraiMessageType.Json:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Json>());
-                        break;
-                    case MiraiMessageType.App:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.App>());
-                        break;
-                    case MiraiMessageType.Poke:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Poke>());
-                        break;
-                    case MiraiMessageType.Dice:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Dice>());
-                        break;
-                    case MiraiMessageType.MarketFace:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.MarketFace>());
-                        break;
-                    case MiraiMessageType.MusicShare:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.MusicShare>());
-                        break;
-                    case MiraiMessageType.Forward:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Forward>());
-                        break;
-                    case MiraiMessageType.File:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.File>());
-                        break;
-                    case MiraiMessageType.MiraiCode:
-                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.MiraiCode>());
-                        break;
-                    default:
-                        break;
-                }
-            }
 
+            MiraiMessageTypeDetail.Source source = null;
+            var chainMsg = CQCodeBuilder.ParseJArray2MiraiMessageBaseList(msg["data"]["messageChain"] as JArray);
+            source = (MiraiMessageTypeDetail.Source)chainMsg.First(x => x.messageType == MiraiMessageType.Source);
             string parsedMsg = CQCodeBuilder.Parse(chainMsg);
             DispatchMessage(events, msg["data"], source, chainMsg, parsedMsg);
         }
@@ -390,7 +329,7 @@ namespace Another_Mirai_Native.Adapter
                     BinaryWriterExpand.Write_Ex(binaryWriter, 0);
                     PluginManagment.Instance.CallFunction(FunctionEnums.Upload, 1, Helper.TimeStamp, group.sender.group.id, group.sender.id, Convert.ToBase64String(stream.ToArray()));
                     sw.Stop();
-                    LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "OPQBot框架", "文件上传", $"来源群:{group.sender.group.id}({group.sender.group.name}) 来源QQ:{group.sender.id}({group.sender.memberName}) " +
+                    LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "文件上传", $"来源群:{group.sender.group.id}({group.sender.group.name}) 来源QQ:{group.sender.id}({group.sender.memberName}) " +
                         $"文件名:{file.name} 大小:{file.size / 1000}KB FileID:{file.id}", $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s");
                     return;
                 }
@@ -466,105 +405,22 @@ namespace Another_Mirai_Native.Adapter
             ApiQueue.Enqueue(queueObject);
             if(ApiQueue.Count == 1)
                 MessageSocket.Send(queueObject.request);
+            // 超时脱出
+            int timoutCountMax = 1000;
+            int timoutCount = 0;
             while (queueObject.result == "")
             {
+                if(timoutCount > timoutCountMax)
+                {
+                    break;
+                }
                 Thread.Sleep(10);
+                timoutCount++;
             }
+            ApiQueue.Dequeue();
             if (ApiQueue.Count != 0)
                 MessageSocket.Send(ApiQueue.Peek().request);
             return queueObject.result;
-        }
-        public int CallMiraiAPI(MiraiApiType type, params object[] args)
-        {
-            switch (type)
-            {
-                case MiraiApiType.about:
-                    break;
-                case MiraiApiType.botList:
-                    break;
-                case MiraiApiType.messageFromId:
-                    break;
-                case MiraiApiType.friendList:
-                    break;
-                case MiraiApiType.groupList:
-                    break;
-                case MiraiApiType.memberList:
-                    break;
-                case MiraiApiType.botProfile:
-                    break;
-                case MiraiApiType.friendProfile:
-                    break;
-                case MiraiApiType.memberProfile:
-                    break;
-                case MiraiApiType.userProfile:
-                    break;
-                case MiraiApiType.sendFriendMessage:
-                    
-                    break;
-                case MiraiApiType.sendGroupMessage:
-                    break;
-                case MiraiApiType.sendTempMessage:
-                    break;
-                case MiraiApiType.sendNudge:
-                    break;
-                case MiraiApiType.recall:
-                    break;
-                case MiraiApiType.roamingMessages:
-                    break;
-                case MiraiApiType.file_list:
-                    break;
-                case MiraiApiType.file_info:
-                    break;
-                case MiraiApiType.file_mkdir:
-                    break;
-                case MiraiApiType.file_delete:
-                    break;
-                case MiraiApiType.file_move:
-                    break;
-                case MiraiApiType.file_rename:
-                    break;
-                case MiraiApiType.deleteFriend:
-                    break;
-                case MiraiApiType.mute:
-                    break;
-                case MiraiApiType.unmute:
-                    break;
-                case MiraiApiType.kick:
-                    break;
-                case MiraiApiType.quit:
-                    break;
-                case MiraiApiType.muteAll:
-                    break;
-                case MiraiApiType.unmuteAll:
-                    break;
-                case MiraiApiType.setEssence:
-                    break;
-                case MiraiApiType.groupConfig_get:
-                    break;
-                case MiraiApiType.groupConfig_update:
-                    break;
-                case MiraiApiType.memberInfo_get:
-                    break;
-                case MiraiApiType.memberInfo_update:
-                    break;
-                case MiraiApiType.memberAdmin:
-                    break;
-                case MiraiApiType.anno_list:
-                    break;
-                case MiraiApiType.anno_publish:
-                    break;
-                case MiraiApiType.anno_delete:
-                    break;
-                case MiraiApiType.resp_newFriendRequestEvent:
-                    break;
-                case MiraiApiType.resp_memberJoinRequestEvent:
-                    break;
-                case MiraiApiType.resp_botInvitedJoinGroupRequestEvent:
-                    break;
-                default:
-                    break;
-            }
-            return 0;
         }
     }
 }
