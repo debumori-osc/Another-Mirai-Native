@@ -4,6 +4,7 @@ using Another_Mirai_Native.Adapter.CQCode.Model;
 using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
 using Another_Mirai_Native.Native;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +16,11 @@ namespace Another_Mirai_Native.Adapter
 {
     public static class CQCodeBuilder
     {
+        /// <summary>
+        /// 消息链转CQ码
+        /// </summary>
+        /// <param name="chainMsg"></param>
+        /// <returns></returns>
         public static string Parse(List<MiraiMessageBase> chainMsg)
         {
             StringBuilder Result = new();
@@ -99,6 +105,11 @@ namespace Another_Mirai_Native.Adapter
             }
             return Result.ToString();
         }
+        /// <summary>
+        /// CQ码转消息链
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public static List<MiraiMessageBase> BuildMessageChains(string message)
         {
             List<MiraiMessageBase> result = new();
@@ -147,7 +158,17 @@ namespace Another_Mirai_Native.Adapter
                     return new MiraiMessageTypeDetail.MarketFace { id = Convert.ToInt32(cqcode.Items["id"]) };
                 case CQCode.Enum.CQFunction.Image:
                     string picPath = cqcode.Items["file"];
-                    picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, picPath);
+                    picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath);
+                    if (!File.Exists(picPath))
+                    {
+                        string picTmp = File.ReadAllText(picPath + ".cqimg");
+                        picTmp = picTmp.Split('\n').Last().Replace("url=", "");
+                        if (cqcode.Items.ContainsKey("flash"))
+                        {
+                            return new MiraiMessageTypeDetail.FlashImage { url = picTmp };
+                        }
+                        return new MiraiMessageTypeDetail.Image { url = picTmp };
+                    }
                     if (cqcode.Items.ContainsKey("flash"))
                     {
                         return new MiraiMessageTypeDetail.FlashImage { path = picPath };
@@ -175,6 +196,76 @@ namespace Another_Mirai_Native.Adapter
                     return null;
             }
         }
-
+        public static List<MiraiMessageBase> ParseJArray2MiraiMessageBaseList(JArray json)
+        {
+            List<MiraiMessageBase> chainMsg = new();
+            foreach (var item in json)
+            {
+                MiraiMessageType msgType = Helper.String2Enum<MiraiMessageType>(item["type"].ToString());
+                switch (msgType)
+                {
+                    case MiraiMessageType.Source:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Source>());
+                        break;
+                    case MiraiMessageType.Quote:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Quote>());
+                        break;
+                    case MiraiMessageType.At:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.At>());
+                        break;
+                    case MiraiMessageType.AtAll:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.AtAll>());
+                        break;
+                    case MiraiMessageType.Face:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Face>());
+                        break;
+                    case MiraiMessageType.Plain:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Plain>());
+                        break;
+                    case MiraiMessageType.Image:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Image>());
+                        break;
+                    case MiraiMessageType.FlashImage:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.FlashImage>());
+                        break;
+                    case MiraiMessageType.Voice:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Voice>());
+                        break;
+                    case MiraiMessageType.Xml:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Xml>());
+                        break;
+                    case MiraiMessageType.Json:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Json>());
+                        break;
+                    case MiraiMessageType.App:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.App>());
+                        break;
+                    case MiraiMessageType.Poke:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Poke>());
+                        break;
+                    case MiraiMessageType.Dice:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Dice>());
+                        break;
+                    case MiraiMessageType.MarketFace:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.MarketFace>());
+                        break;
+                    case MiraiMessageType.MusicShare:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.MusicShare>());
+                        break;
+                    case MiraiMessageType.Forward:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.Forward>());
+                        break;
+                    case MiraiMessageType.File:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.File>());
+                        break;
+                    case MiraiMessageType.MiraiCode:
+                        chainMsg.Add(item.ToObject<MiraiMessageTypeDetail.MiraiCode>());
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return chainMsg;
+        }
     }
 }
