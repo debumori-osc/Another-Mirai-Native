@@ -10,7 +10,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     {
         public string type { get; set; }
         public long authorId { get; set; }
-        public long messageId { get; set; }
+        public int messageId { get; set; }
         public long time { get; set; }
         public long _operator { get; set; }
     }
