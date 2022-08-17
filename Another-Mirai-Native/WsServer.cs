@@ -1,6 +1,7 @@
 ﻿using Another_Mirai_Native.Adapter;
 using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
+using Another_Mirai_Native.Forms;
 using Another_Mirai_Native.Native;
 using Newtonsoft.Json.Linq;
 using System;
@@ -196,14 +197,30 @@ namespace Another_Mirai_Native
                     case MiraiApiType.sendFriendMessage:
                         long friend_QQid = json["data"]["args"]["qqId"].ToObject<long>();
                         string friend_text = json["data"]["args"]["text"].ToObject<string>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送私聊消息", $"QQ:{friend_QQid} 消息:{friend_text}", "处理中...");
-                        callResult = MiraiAPI.SendFriendMessage(friend_QQid, friend_text);
+                        if (plugin.Testing)
+                        {
+                            PluginTester.Instance.AddChatBlock(friend_text, true);
+                            callResult = 1;
+                        }
+                        else
+                        {
+                            logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送私聊消息", $"QQ:{friend_QQid} 消息:{friend_text}", "处理中...");
+                            callResult = MiraiAPI.SendFriendMessage(friend_QQid, friend_text);
+                        }
                         break;
                     case MiraiApiType.sendGroupMessage:
                         long group_groupid = json["data"]["args"]["groupid"].ToObject<long>();
                         string group_text = json["data"]["args"]["text"].ToObject<string>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送群聊消息", $"群:{group_groupid} 消息:{group_text}", "处理中...");
-                        callResult = MiraiAPI.SendGroupMessage(group_groupid, group_text);
+                        if (plugin.Testing)
+                        {
+                            PluginTester.Instance.AddChatBlock(group_text, true);
+                            callResult = 1;
+                        }
+                        else
+                        {
+                            logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送群聊消息", $"群:{group_groupid} 消息:{group_text}", "处理中...");
+                            callResult = MiraiAPI.SendGroupMessage(group_groupid, group_text);
+                        }
                         break;
                     case MiraiApiType.sendTempMessage:
                     case MiraiApiType.sendNudge:
