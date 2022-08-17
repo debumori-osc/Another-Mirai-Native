@@ -162,20 +162,26 @@ namespace Another_Mirai_Native.Forms
 
         private void button_Dev_Click(object sender, EventArgs e)
         {
+            var plugin = listView_PluginList.SelectedItems[0].Tag as CQPlugin;
+            if (plugin.Enable == false)
+            {
+                MessageBox.Show("请先启用插件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             if (MessageBox.Show("确认进入插件测试模式吗？测试状态下，此插件将无法处理消息"
                 , "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                var plugin = listView_PluginList.SelectedItems[0].Tag as CQPlugin;
                 if (plugin.Testing)
                 {
                     MessageBox.Show("此插件已经处在测试模式下，不可重复添加");
                     return;
                 }
-                //TODO: 插件测试
-                // PluginTester pluginTester = new PluginTester(new string[] { pluginName });
+                plugin.Testing = true;
+                PluginTester pluginTester = new();
+                pluginTester.TestingPlugin = plugin;
                 LogHelper.WriteLog(LogLevel.Warning, "插件测试"
                                 , $"{plugin.appinfo.Name} 插件已处于测试模式，将忽略所有框架消息");
-                // pluginTester.Show();
+                pluginTester.Show();
             }
         }
 
