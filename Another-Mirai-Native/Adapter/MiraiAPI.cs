@@ -1,19 +1,41 @@
 ﻿using Another_Mirai_Native.Adapter.CQCode.Expand;
-using Another_Mirai_Native.Adapter.CQCode.Model;
 using Another_Mirai_Native.Enums;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Another_Mirai_Native.Adapter
 {
     public static class MiraiAPI
     {
+        public static string GetBotNickName()
+        {
+            object request = new
+            {
+                sessionKey = MiraiAdapter.Instance.SessionKey_Message,
+            };
+            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.botProfile, request));
+            return json["nickname"].ToString();
+        }
+        public static string GetMessageByMsgId(int messageId)
+        {
+            object request = new
+            {
+                sessionKey = MiraiAdapter.Instance.SessionKey_Message,
+                id = messageId
+            };
+            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.messageFromId, request));
+            if (((int)json["code"]) == 0)
+            {
+                return CQCodeBuilder.Parse(CQCodeBuilder.ParseJArray2MiraiMessageBaseList(json["data"]["messageChain"] as JArray));
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
         public static int SendGroupMessage(long group, string message)
         {
             MiraiMessageBase[] msgChains = CQCodeBuilder.BuildMessageChains(message).ToArray();
@@ -167,7 +189,7 @@ namespace Another_Mirai_Native.Adapter
             JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.quit, request));
             return (int)json["code"];
         }
-        public static int HandleFriendRequest(string eventId, int operate, string message)
+        public static int HandleFriendRequest(long eventId, int operate, string message)
         {
             object request = new
             {
@@ -179,7 +201,7 @@ namespace Another_Mirai_Native.Adapter
             JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_newFriendRequestEvent, request));
             return (int)json["code"];
         }
-        public static int HandleGroupRequest(string eventId, int operate, string message)
+        public static int HandleGroupRequest(long eventId, int operate, string message)
         {
             object request = new
             {
@@ -191,7 +213,7 @@ namespace Another_Mirai_Native.Adapter
             JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_memberJoinRequestEvent, request));
             return (int)json["code"];
         }
-        public static int HandleInviteRequest(string eventId, int operate, string message)
+        public static int HandleInviteRequest(long eventId, int operate, string message)
         {
             object request = new
             {
