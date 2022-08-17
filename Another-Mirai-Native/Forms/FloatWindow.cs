@@ -1,4 +1,5 @@
-﻿using Another_Mirai_Native.DB;
+﻿using Another_Mirai_Native.Adapter;
+using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Native;
 using System;
 using System.Collections.Generic;
@@ -57,6 +58,7 @@ namespace Another_Mirai_Native.Forms
             {
                 LogHelper.CreateDB();
             }
+            Helper.NickName = MiraiAPI.GetBotNickName();
             //设置窗口透明色, 实现窗口背景透明
             this.TransparencyKey = Color.Gray;
             this.BackColor = Color.Gray;
