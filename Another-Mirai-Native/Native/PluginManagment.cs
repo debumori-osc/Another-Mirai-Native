@@ -254,6 +254,7 @@ namespace Another_Mirai_Native.Native
             LogHelper.WriteLog("遍历启动事件……");
             CallFunction(FunctionEnums.StartUp);
             CallFunction(FunctionEnums.Enable);
+            LogHelper.WriteLog("插件启动完成，开始处理消息逻辑……");
             Loading = false;
         }
         [DllImport("CQP.dll", EntryPoint = "cq_start")]
@@ -333,6 +334,7 @@ namespace Another_Mirai_Native.Native
             LogHelper.WriteLog("遍历启动事件……");
             CallFunction(FunctionEnums.StartUp);
             CallFunction(FunctionEnums.Enable);
+            LogHelper.WriteLog("插件启动完成，开始处理消息逻辑……");
             this.Loading = false;
         }
         public static CQPlugin GetPluginByID(string id) => Instance.Plugins.FirstOrDefault(x => x.appinfo.Id == id);

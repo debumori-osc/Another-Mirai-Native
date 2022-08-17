@@ -102,15 +102,15 @@ namespace Another_Mirai_Native.DB
         }
         public static int WriteLog(LogLevel level, string type, string message, string status = "")
         {
-            return WriteLog(level, "OPQBot框架", type, message, status);
+            return WriteLog(level, "AMN框架", type, message, status);
         }
         /// <summary>
-        /// 以info为等级，"OPQBot框架"为来源，"提示"为类型写出一条日志
+        /// 以info为等级，"AMN框架"为来源，"提示"为类型写出一条日志
         /// </summary>
         /// <param name="messages">日志内容</param>
         public static int WriteLog(string messages, string status = "")
         {
-            return WriteLog(LogLevel.Info, "OPQBot框架", "提示", messages, status);
+            return WriteLog(LogLevel.Info, "AMN框架", "提示", messages, status);
         }
 
         public static LogModel GetLogByID(int id)
