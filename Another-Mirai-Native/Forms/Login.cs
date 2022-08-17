@@ -32,6 +32,7 @@ namespace Another_Mirai_Native
             {
                 LoginBtn.Text = "连接中...";
                 LoginBtn.Enabled = false;
+                Helper.QQ = QQText.Text;
                 ConfigHelper.SetConfig("AutoLogin", AutoLoginCheck.Checked);
                 ConfigHelper.SetConfig("QQ", QQText.Text);
                 ConfigHelper.SetConfig("Ws_Url", WSUrl.Text);
