@@ -70,7 +70,7 @@ namespace Another_Mirai_Native
                         Enums.LogLevel log_priority = json["data"]["args"]["priority"].ToObject<Enums.LogLevel>();
                         string log_msg = json["data"]["args"]["msg"].ToObject<string>();
                         string log_type = "致命错误";
-                        string log_origin = "AMN 框架";
+                        string log_origin = "AMN框架";
                         if (json["data"]["args"].ContainsKey("type"))
                         {
                             log_type = json["data"]["args"]["type"].ToObject<string>();
@@ -85,13 +85,15 @@ namespace Another_Mirai_Native
                             }
                         }
                         LogHelper.WriteLog(log_priority, log_origin, log_type, log_msg, "");
+                        Send(new ApiResult { data = new { callResult = 1  }.ToJson() }.ToJson());
                         break;
                     case WsServerFunction.GetLog:
                         break;
                     case WsServerFunction.CallMiraiAPI:
-                        HandleMiraiFunction(json, logid);
+                        logid = HandleMiraiFunction(json, logid);
                         break;
                     case WsServerFunction.CallCQFunction:
+                        HandleCQFunction(json);
                         break;
                     case WsServerFunction.Exit:
                         break;
@@ -117,11 +119,12 @@ namespace Another_Mirai_Native
                         break;
                 }
                 sw.Stop();
+                if (logid == 0) return;
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
 
             }
-            public void HandleCQFunction(JObject json, int logid)
+            public void HandleCQFunction(JObject json)
             {
                 var apiType = json["data"]["type"].ToObject<string>();
                 int authcode = json["data"]["args"]["authCode"].ToObject<int>();
@@ -150,7 +153,7 @@ namespace Another_Mirai_Native
                         break;
                 }
             }
-            public void HandleMiraiFunction(JObject json, int logid)
+            public int HandleMiraiFunction(JObject json, int logid)
             {
                 var apiType = json["data"]["type"].ToObject<MiraiApiType>();
                 int authcode = json["data"]["args"]["authCode"].ToObject<int>();
@@ -160,7 +163,7 @@ namespace Another_Mirai_Native
                 {
                     Send(new ApiResult { success = false }.ToJson());
                     LogHelper.WriteLog("Authcode无效", "");
-                    return;
+                    return logid;
                 }
                 switch (apiType)
                 {
@@ -191,15 +194,15 @@ namespace Another_Mirai_Native
                     case MiraiApiType.userProfile:
                         break;
                     case MiraiApiType.sendFriendMessage:
-                        long friend_groupid = json["data"]["args"]["qqId"].ToObject<long>();
+                        long friend_QQid = json["data"]["args"]["qqId"].ToObject<long>();
                         string friend_text = json["data"]["args"]["text"].ToObject<string>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送私聊消息", friend_text, "处理中...");
-                        callResult = MiraiAPI.SendFriendMessage(friend_groupid, friend_text);
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送私聊消息", $"QQ:{friend_QQid} 消息:{friend_text}", "处理中...");
+                        callResult = MiraiAPI.SendFriendMessage(friend_QQid, friend_text);
                         break;
                     case MiraiApiType.sendGroupMessage:
                         long group_groupid = json["data"]["args"]["groupid"].ToObject<long>();
                         string group_text = json["data"]["args"]["text"].ToObject<string>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送群聊消息", group_text, "处理中...");
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送群聊消息", $"群:{group_groupid} 消息:{group_text}", "处理中...");
                         callResult = MiraiAPI.SendGroupMessage(group_groupid, group_text);
                         break;
                     case MiraiApiType.sendTempMessage:
@@ -207,8 +210,9 @@ namespace Another_Mirai_Native
                         break;
                     case MiraiApiType.recall:
                         int recall_msgId = json["data"]["args"]["msgId"].ToObject<int>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.Info, plugin.appinfo.Name, "撤回消息", $"msgid={recall_msgId}", "处理中...");
-                        // TODO: 填补
+                        string recallMsg = MiraiAPI.GetMessageByMsgId(recall_msgId);
+                        if (string.IsNullOrEmpty(recallMsg)) recallMsg = "消息拉取失败";
+                        logid = LogHelper.WriteLog(Enums.LogLevel.Info, plugin.appinfo.Name, "撤回消息", $"msgid={recall_msgId}, 内容={recallMsg}", "处理中...");                        
                         callResult = MiraiAPI.RecallMessage(recall_msgId, 0);
                         break;
                     case MiraiApiType.roamingMessages:
@@ -292,7 +296,7 @@ namespace Another_Mirai_Native
                     case MiraiApiType.anno_delete:
                         break;
                     case MiraiApiType.resp_newFriendRequestEvent:
-                        string respf_eventId = json["data"]["args"]["eventId"].ToObject<string>();
+                        long respf_eventId = json["data"]["args"]["eventId"].ToObject<long>();
                         int respf_operate = json["data"]["args"]["requestType"].ToObject<int>();
                         string respf_message = json["data"]["args"]["message"].ToObject<string>();
                         string respf_msg = "";
@@ -305,12 +309,19 @@ namespace Another_Mirai_Native
                                 respf_msg = "拒绝";
                                 break;
                         }
-                        //TODO:补全
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"好友添加申请", $"来源: {0} 操作: {respf_msg}", "处理中...");
+                        long respf_fromId = 0;
+                        string respf_nick = ""; 
+                        if (Cache.FriendRequset.ContainsKey(respf_eventId))
+                        {
+                            respf_fromId = Cache.FriendRequset[respf_eventId].Item1;
+                            respf_nick = Cache.FriendRequset[respf_eventId].Item2;
+                        }
+                        Cache.FriendRequset.Remove(respf_eventId);
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"好友添加申请", $"来源: {respf_fromId}({respf_nick}) 操作: {respf_msg}", "处理中...");
                         callResult = MiraiAPI.HandleFriendRequest(respf_eventId, respf_operate, respf_message);
                         break;
                     case MiraiApiType.resp_memberJoinRequestEvent:
-                        string respm_eventId = json["data"]["args"]["eventId"].ToObject<string>();
+                        long respm_eventId = json["data"]["args"]["eventId"].ToObject<long>();
                         int respm_operate = json["data"]["args"]["requestType"].ToObject<int>();
                         string respm_message = json["data"]["args"]["message"].ToObject<string>();
                         string respm_msg = "";
@@ -323,12 +334,21 @@ namespace Another_Mirai_Native
                                 respf_msg = "拒绝";
                                 break;
                         }
-                        //TODO:补全
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"群添加申请", $"来源: {0} 目标群: {0} 操作: {respm_msg}", "处理中...");
+                        long respm_fromId = 0, respm_groupId = 0;
+                        string respm_nick = "", respm_groupname ="";
+                        if (Cache.GroupRequset.ContainsKey(respm_eventId))
+                        {
+                            respm_fromId = Cache.GroupRequset[respm_eventId].Item1;
+                            respm_nick = Cache.GroupRequset[respm_eventId].Item2;
+                            respm_groupId = Cache.GroupRequset[respm_eventId].Item3;
+                            respm_groupname = Cache.GroupRequset[respm_eventId].Item4;
+                        }
+                        Cache.GroupRequset.Remove(respm_eventId);
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"群添加申请", $"来源: {respm_fromId}({respm_nick}) 目标群: {respm_groupId}({respm_groupname}) 操作: {respm_msg}", "处理中...");
                         callResult = MiraiAPI.HandleGroupRequest(respm_eventId, respm_operate, respm_message);
                         break;
                     case MiraiApiType.resp_botInvitedJoinGroupRequestEvent:
-                        string respb_eventId = json["data"]["args"]["eventId"].ToObject<string>();
+                        long respb_eventId = json["data"]["args"]["eventId"].ToObject<long>();
                         int respb_operate = json["data"]["args"]["requestType"].ToObject<int>();
                         string respb_message = json["data"]["args"]["message"].ToObject<string>();
                         string respb_msg = "";
@@ -341,14 +361,24 @@ namespace Another_Mirai_Native
                                 respf_msg = "拒绝";
                                 break;
                         }
-                        //TODO:补全
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"群邀请添加申请", $"来源群: {0} 来源人: {0} 操作: {respb_msg}", "处理中...");
+                        long respb_fromId = 0, respb_groupId = 0;
+                        string respb_nick = "", respb_groupname = "";
+                        if (Cache.GroupRequset.ContainsKey(respb_eventId))
+                        {
+                            respb_fromId = Cache.GroupRequset[respb_eventId].Item1;
+                            respb_nick = Cache.GroupRequset[respb_eventId].Item2;
+                            respb_groupId = Cache.GroupRequset[respb_eventId].Item3;
+                            respb_groupname = Cache.GroupRequset[respb_eventId].Item4;
+                        }
+                        Cache.GroupRequset.Remove(respb_eventId);
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"群邀请添加申请", $"来源群: {respb_groupId}({respb_groupname}) 来源人: {respb_fromId}({respb_nick}) 操作: {respb_msg}", "处理中...");
                         callResult = MiraiAPI.HandleInviteRequest(respb_eventId, respb_operate, respb_message);
                         break;
                     default:
                         break;
                 }
                 Send(new ApiResult { data = new { callResult }.ToJson() }.ToJson());
+                return logid;
             }
             public void Send(WsServerFunction type, object data)
             {
