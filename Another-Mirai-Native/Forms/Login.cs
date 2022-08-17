@@ -62,6 +62,8 @@ namespace Another_Mirai_Native
                     //所以在调用Show之后需要用配置恢复对Visable的变化值
                     if (ConfigHelper.ConfigHasKey("FloatWindow_Visible"))
                         FloatWindow.Instance.Visible = ConfigHelper.GetConfig<bool>("FloatWindow_Visible");
+                    else
+                        ConfigHelper.SetConfig("FloatWindow_Visible", true);
                 }
                 else
                 {
