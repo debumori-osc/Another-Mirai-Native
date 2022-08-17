@@ -26,7 +26,7 @@ namespace CQP
             Instance = this;
             Directory.CreateDirectory("logs/cqp");
             File.AppendAllLines("logs/cqp/log.txt", new string[] { $"[{DateTime.Now:G}] CQP Client Started" });
-            ServerConnection = new($"ws://localhost:{ConfigHelper.GetConfig<int>("Ws_ServerPort")}/amn");
+            ServerConnection = new($"ws://127.0.0.1:{ConfigHelper.GetConfig<int>("Ws_ServerPort")}/amn");
             ServerConnection.OnOpen += ServerConnection_OnOpen;
             ServerConnection.OnMessage += ServerConnection_OnMessage;
             ServerConnection.OnClose += ServerConnection_OnClose;
@@ -83,7 +83,7 @@ namespace CQP
                 {
                     if (timoutCount > timoutCountMax)
                     {
-                        queueObject.result = "{\"data\": \"\"callResult\": null\"}";
+                        queueObject.result = "{\"data\": \"\\\"callResult\\\": null\"}";
                     }
                     Thread.Sleep(10);
                     timoutCount++;

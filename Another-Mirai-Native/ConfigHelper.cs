@@ -36,6 +36,8 @@ namespace Another_Mirai_Native
                 return (T)(object)"";
             if (typeof(T) == typeof(int))
                 return (T)(object)0;
+            if (typeof(T) == typeof(long))
+                return default;
             if (typeof(T) == typeof(bool))
                 return (T)(object)false;
             if (typeof(T) == typeof(object))
