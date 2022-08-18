@@ -40,6 +40,10 @@
             this.checkBox_AboveAll = new System.Windows.Forms.CheckBox();
             this.button_Close = new System.Windows.Forms.Button();
             this.label_Desc = new System.Windows.Forms.Label();
+            this.rightPanel = new System.Windows.Forms.Panel();
+            this.leftPanel = new System.Windows.Forms.Panel();
+            this.rightPanel.SuspendLayout();
+            this.leftPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // listView_LogMain
@@ -99,7 +103,7 @@
             "警告 Warn",
             "错误 Error",
             "致命 Fatal"});
-            this.comboBox_LogLevel.Location = new System.Drawing.Point(12, 409);
+            this.comboBox_LogLevel.Location = new System.Drawing.Point(3, 6);
             this.comboBox_LogLevel.Name = "comboBox_LogLevel";
             this.comboBox_LogLevel.Size = new System.Drawing.Size(99, 20);
             this.comboBox_LogLevel.TabIndex = 1;
@@ -110,7 +114,7 @@
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.Cursor = System.Windows.Forms.Cursors.Default;
             this.linkLabel1.LinkBehavior = System.Windows.Forms.LinkBehavior.NeverUnderline;
-            this.linkLabel1.Location = new System.Drawing.Point(486, 412);
+            this.linkLabel1.Location = new System.Drawing.Point(3, 6);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(53, 12);
             this.linkLabel1.TabIndex = 2;
@@ -123,7 +127,7 @@
             this.checkBox_Update.AutoSize = true;
             this.checkBox_Update.Checked = true;
             this.checkBox_Update.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox_Update.Location = new System.Drawing.Point(551, 411);
+            this.checkBox_Update.Location = new System.Drawing.Point(68, 5);
             this.checkBox_Update.Name = "checkBox_Update";
             this.checkBox_Update.Size = new System.Drawing.Size(72, 16);
             this.checkBox_Update.TabIndex = 3;
@@ -134,7 +138,7 @@
             // checkBox_AboveAll
             // 
             this.checkBox_AboveAll.AutoSize = true;
-            this.checkBox_AboveAll.Location = new System.Drawing.Point(629, 411);
+            this.checkBox_AboveAll.Location = new System.Drawing.Point(146, 5);
             this.checkBox_AboveAll.Name = "checkBox_AboveAll";
             this.checkBox_AboveAll.Size = new System.Drawing.Size(72, 16);
             this.checkBox_AboveAll.TabIndex = 4;
@@ -144,7 +148,7 @@
             // 
             // button_Close
             // 
-            this.button_Close.Location = new System.Drawing.Point(713, 407);
+            this.button_Close.Location = new System.Drawing.Point(230, 1);
             this.button_Close.Name = "button_Close";
             this.button_Close.Size = new System.Drawing.Size(75, 23);
             this.button_Close.TabIndex = 5;
@@ -155,34 +159,53 @@
             // label_Desc
             // 
             this.label_Desc.AutoSize = true;
-            this.label_Desc.Location = new System.Drawing.Point(117, 415);
+            this.label_Desc.Location = new System.Drawing.Point(108, 12);
             this.label_Desc.Name = "label_Desc";
             this.label_Desc.Size = new System.Drawing.Size(113, 12);
             this.label_Desc.TabIndex = 6;
             this.label_Desc.Text = "日志列表将实时滚动";
             this.label_Desc.Visible = false;
             // 
+            // rightPanel
+            // 
+            this.rightPanel.Controls.Add(this.linkLabel1);
+            this.rightPanel.Controls.Add(this.checkBox_Update);
+            this.rightPanel.Controls.Add(this.button_Close);
+            this.rightPanel.Controls.Add(this.checkBox_AboveAll);
+            this.rightPanel.Location = new System.Drawing.Point(483, 407);
+            this.rightPanel.Name = "rightPanel";
+            this.rightPanel.Size = new System.Drawing.Size(312, 41);
+            this.rightPanel.TabIndex = 7;
+            // 
+            // leftPanel
+            // 
+            this.leftPanel.Controls.Add(this.comboBox_LogLevel);
+            this.leftPanel.Controls.Add(this.label_Desc);
+            this.leftPanel.Location = new System.Drawing.Point(11, 403);
+            this.leftPanel.Name = "leftPanel";
+            this.leftPanel.Size = new System.Drawing.Size(243, 33);
+            this.leftPanel.TabIndex = 8;
+            // 
             // LogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 442);
-            this.Controls.Add(this.label_Desc);
-            this.Controls.Add(this.button_Close);
-            this.Controls.Add(this.checkBox_AboveAll);
-            this.Controls.Add(this.checkBox_Update);
-            this.Controls.Add(this.linkLabel1);
-            this.Controls.Add(this.comboBox_LogLevel);
+            this.ClientSize = new System.Drawing.Size(796, 442);
+            this.Controls.Add(this.leftPanel);
+            this.Controls.Add(this.rightPanel);
             this.Controls.Add(this.listView_LogMain);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(616, 217);
             this.Name = "LogForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "运行日志 - ";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.LogForm_FormClosing);
             this.Load += new System.EventHandler(this.LogForm_Load);
+            this.SizeChanged += new System.EventHandler(this.LogForm_SizeChanged);
+            this.rightPanel.ResumeLayout(false);
+            this.rightPanel.PerformLayout();
+            this.leftPanel.ResumeLayout(false);
+            this.leftPanel.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -199,6 +222,7 @@
         private System.Windows.Forms.CheckBox checkBox_AboveAll;
         private System.Windows.Forms.Button button_Close;
         private System.Windows.Forms.Label label_Desc;
-
+        private System.Windows.Forms.Panel rightPanel;
+        private System.Windows.Forms.Panel leftPanel;
     }
 }

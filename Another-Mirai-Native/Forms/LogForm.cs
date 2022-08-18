@@ -31,6 +31,7 @@ namespace Another_Mirai_Native.Forms
             LogHelper.LogStatusUpdated += LogHelper_LogStatusUpdated;
             comboBox_LogLevel.SelectedIndex = 1;
             LoadLogs();
+            previewSize = Size;
         }
         private void LoadLogs()
         {
@@ -238,6 +239,15 @@ namespace Another_Mirai_Native.Forms
             ToolTip toolTip = new();
             string itemInfor = e.Item.SubItems[3].Text;
             toolTip.SetToolTip((e.Item).ListView, itemInfor);
+        }
+        Size previewSize;
+        private void LogForm_SizeChanged(object sender, EventArgs e)
+        {
+            int widthOffset = Size.Width - previewSize.Width, heightOffset = Size.Height - previewSize.Height;
+            listView_LogMain.Size = new(listView_LogMain.Width + widthOffset, listView_LogMain.Height + heightOffset);
+            leftPanel.Location = new(leftPanel.Left, leftPanel.Top + heightOffset);
+            rightPanel.Location = new(rightPanel.Left + widthOffset, rightPanel.Top + heightOffset);
+            previewSize = Size;
         }
     }
 }
