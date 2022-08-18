@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     {
         public string type { get; set; }
         public Member member { get; set; }
+        [JsonProperty(PropertyName = "operator")]
         public Operator _operator { get; set; }
         public class Member
         {

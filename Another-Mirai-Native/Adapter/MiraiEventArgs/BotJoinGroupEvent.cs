@@ -10,12 +10,24 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
     {
         public string type { get; set; }
         public Group group { get; set; }
-        public object invitor { get; set; }
+        public Member invitor { get; set; }
         public class Group
         {
             public long id { get; set; }
             public string name { get; set; }
             public string permission { get; set; }
         }
+        public class Member
+        {
+            public long id { get; set; }
+            public string memberName { get; set; }
+            public string specialTitle { get; set; }
+            public string permission { get; set; }
+            public long jolongimestamp { get; set; }
+            public long lastSpeakTimestamp { get; set; }
+            public long muteTimeRemaining { get; set; }
+            public Group group { get; set; }
+        }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ namespace Another_Mirai_Native.Adapter.MiraiEventArgs
         public bool origin { get; set; }
         public bool current { get; set; }
         public Group group { get; set; }
+        [JsonProperty(PropertyName = "operator")]
         public Operator _operator { get; set; }
         public class Group
         {
