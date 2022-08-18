@@ -186,8 +186,8 @@ namespace CQP
         [DllExport(ExportName = "CQ_addLog", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_addLog(int authCode, int priority, IntPtr type, IntPtr msg)
         {
-            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { args = new { authCode, type = type.ToString(GB18030), priority, msg = msg.ToString(GB18030) } });
-            return (int)(r.json["callResult"]);
+            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { args = new { authCode, type = type.ToString(GB18030), priority, msg = msg.ToString(GB18030) } }, false);
+            return 1;
         }
 
         [DllExport(ExportName = "CQ_setFatal", CallingConvention = CallingConvention.StdCall)]
