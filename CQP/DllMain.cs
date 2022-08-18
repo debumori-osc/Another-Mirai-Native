@@ -239,7 +239,8 @@ namespace CQP
         [DllExport(ExportName = "CQ_getImage", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getImage(int authCode, IntPtr file)
         {
-            return IntPtr.Zero;
+            var r = Clinet.Instance.Send(WsServerFunction.CallCQFunction, new { type = "GetImage", args = new { authCode, path=file.ToString(GB18030) } });
+            return Marshal.StringToHGlobalAnsi(r.json["callResult"].ToString());
         }
 
         [DllExport(ExportName = "CQ_getGroupInfo", CallingConvention = CallingConvention.StdCall)]

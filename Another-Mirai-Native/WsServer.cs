@@ -150,6 +150,15 @@ namespace Another_Mirai_Native
                     case "GetLoginNick":
                         Send(new ApiResult { data = new { callResult = Helper.NickName }.ToJson() }.ToJson());
                         break;
+                    case "GetImage":
+                        string cqimg = json["data"]["args"]["path"].ToString();
+                        string url = Helper.GetPicUrlFromCQImg(cqimg);
+                        string imgFileName = cqimg + ".jpg";
+                        string imgDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image");
+                        var downloadTask = Helper.DownloadFile(url, imgFileName, imgDir);
+                        downloadTask.Wait();
+                        Send(new ApiResult { data = new { callResult = Path.Combine(imgDir, imgFileName) }.ToJson() }.ToJson());
+                        break;
                     default:
                         break;
                 }
