@@ -9,6 +9,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Another_Mirai_Native.Forms
@@ -106,7 +107,14 @@ namespace Another_Mirai_Native.Forms
         private void button_Reload_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("确认重启框架吗？", "框架提出了一个疑问", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                PluginManagment.Instance.ReLoad();
+            {
+                new Thread(() =>
+                {
+                    PluginManagment.Instance.ReLoad();
+                    RefreshPluginList();
+                    MessageBox.Show("重载完成");
+                }).Start();
+            }
         }
 
         private void button_Disable_Click(object sender, EventArgs e)
@@ -121,7 +129,11 @@ namespace Another_Mirai_Native.Forms
                 listBoxItem.ForeColor = Color.Gray;
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "启用";
-                PluginManagment.Instance.UnLoad(plugin);
+                new Thread(() =>
+                {
+                    plugin.dll.CallFunction(FunctionEnums.Exit);
+                    plugin.dll.CallFunction(FunctionEnums.Disable);
+                }).Start();
             }
             else
             {
@@ -129,7 +141,11 @@ namespace Another_Mirai_Native.Forms
                 listBoxItem.ForeColor = Color.Black;
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "停用";
-                PluginManagment.Instance.Load(plugin.path);
+                new Thread(() =>
+                {
+                    plugin.dll.CallFunction(FunctionEnums.StartUp);
+                    plugin.dll.CallFunction(FunctionEnums.Enable);
+                }).Start();
             }
         }
 
@@ -187,9 +203,16 @@ namespace Another_Mirai_Native.Forms
 
         private void button_ReloadPlugin_Click(object sender, EventArgs e)
         {
-            Cursor = Cursors.WaitCursor;
             var plugin = listView_PluginList.SelectedItems[0].Tag as CQPlugin;
-            PluginManagment.Instance.ReLoad(plugin);
+            new Thread(() =>
+            {
+                PluginManagment.Instance.ReLoad(plugin);
+                RefreshPluginList();
+                MessageBox.Show("重载成功");
+            }).Start();
+        }
+        private void RefreshPluginList()
+        {
             MenuItem menu = NotifyIconHelper.Instance.ContextMenu.MenuItems.Find("PluginMenu", false).First();
             menu.MenuItems.Clear();
             PluginManagment.Instance.Plugins.ForEach(x =>
@@ -197,11 +220,8 @@ namespace Another_Mirai_Native.Forms
                 NotifyIconHelper.LoadMenu(JObject.Parse(x.json));
             });
             NotifyIconHelper.AddManageMenu();
-            Cursor = Cursors.Default;
             RefreshList();
-            MessageBox.Show("重载成功");
         }
-
         private void button_AddPlugin_Click(object sender, EventArgs e)
         {
             openFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "data", "plugins");
@@ -228,18 +248,21 @@ namespace Another_Mirai_Native.Forms
         }
         public void RefreshList()
         {
-            listView_PluginList.Items.Clear();
-            plugins = PluginManagment.Instance.Plugins;
-            foreach (var item in plugins)
+            Instance.Invoke(() =>
             {
-                ListViewItem listViewItem = new();
-                listViewItem.Tag = item;
-                listViewItem.ForeColor = item.Enable ? Color.Black : Color.Gray;
-                listViewItem.SubItems[0].Text = (item.Enable ? "" : "[未启用] ") + item.appinfo.Name;
-                listViewItem.SubItems.Add(item.appinfo.Version.ToString());
-                listViewItem.SubItems.Add(item.appinfo.Author);
-                listView_PluginList.Items.Add(listViewItem);
-            }
+                listView_PluginList.Items.Clear();
+                plugins = PluginManagment.Instance.Plugins;
+                foreach (var item in plugins)
+                {
+                    ListViewItem listViewItem = new();
+                    listViewItem.Tag = item;
+                    listViewItem.ForeColor = item.Enable ? Color.Black : Color.Gray;
+                    listViewItem.SubItems[0].Text = (item.Enable ? "" : "[未启用] ") + item.appinfo.Name;
+                    listViewItem.SubItems.Add(item.appinfo.Version.ToString());
+                    listViewItem.SubItems.Add(item.appinfo.Author);
+                    listView_PluginList.Items.Add(listViewItem);
+                }
+            });
         }
     }
 }
