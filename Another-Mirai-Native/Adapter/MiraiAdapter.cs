@@ -246,7 +246,13 @@ namespace Another_Mirai_Native.Adapter
                     handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupMemberDecrease, 1, Helper.TimeStamp, memberLeaveEventQuit.member.group.id, 0, memberLeaveEventQuit.member.id);
                     break;
                 case MiraiEvents.MemberCardChangeEvent:
+                    var memberCardChangeEvent = raw.ToObject<MemberCardChangeEvent>();
+                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群成员名片改变", $"QQ:{memberCardChangeEvent.member.id}({memberCardChangeEvent.member.memberName}) 群:{memberCardChangeEvent.member.group.id}({memberCardChangeEvent.member.group.name}) 名片:{memberCardChangeEvent.current}", "处理中...");
+                    break;
                 case MiraiEvents.MemberSpecialTitleChangeEvent:
+                    var memberSpecialTitleChangeEvent = raw.ToObject<MemberSpecialTitleChangeEvent>();
+                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群成员头衔改变", $"QQ:{memberSpecialTitleChangeEvent.member.id}({memberSpecialTitleChangeEvent.member.memberName}) 群:{memberSpecialTitleChangeEvent.member.group.id}({memberSpecialTitleChangeEvent.member.group.name}) 称号:{memberSpecialTitleChangeEvent.current}", "处理中...");
+                    break;
                 case MiraiEvents.MemberPermissionChangeEvent:
                     var memberPermissionChangeEvent = raw.ToObject<MemberPermissionChangeEvent>();
                     int memberPermissionChangeStatus = 1;
