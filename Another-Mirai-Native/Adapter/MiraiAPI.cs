@@ -63,7 +63,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 target = QQ,
-                messageChain = msgChains.ToJson()
+                messageChain = msgChains
             };
             JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.sendFriendMessage, request));
             if (((int)json["code"]) == 0)
