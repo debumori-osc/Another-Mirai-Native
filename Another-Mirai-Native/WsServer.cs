@@ -198,7 +198,7 @@ namespace Another_Mirai_Native
                         break;
                     case MiraiApiType.memberProfile:
                         long memberProfile_groupid = json["data"]["args"]["groupId"].ToObject<long>();
-                        long memberProfile_QQId = json["data"]["args"]["QQId"].ToObject<long>();
+                        long memberProfile_QQId = json["data"]["args"]["qqId"].ToObject<long>();
                         callResult = MiraiAPI.GetGroupMemberInfo(memberProfile_groupid, memberProfile_QQId);
                         break;
                     case MiraiApiType.userProfile:
