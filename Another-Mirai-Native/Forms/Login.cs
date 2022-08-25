@@ -142,6 +142,11 @@ namespace Another_Mirai_Native
         }
         private void CQP_Init()
         {
+            if(File.Exists("CQP.dll") is false)
+            {
+                MessageBox.Show("CQP.dll文件缺失.");
+                return;
+            }
             Dll.LoadLibrary("CQP.dll");
             Dll.ConnectServer();
         }
