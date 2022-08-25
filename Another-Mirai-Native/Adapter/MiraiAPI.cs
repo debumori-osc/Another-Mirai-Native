@@ -5,11 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Another_Mirai_Native.Adapter
 {
     public static class MiraiAPI
     {
+        static Encoding GB18030 = Encoding.GetEncoding("GB18030");
+
         public static string GetBotNickName()
         {
             object request = new
@@ -311,13 +314,13 @@ namespace Another_Mirai_Native.Adapter
                     switch (admin)
                     {
                         case "MEMBER":
-                            admin_num = 0;
-                            break;
-                        case "ADMINISTRATOR":
                             admin_num = 1;
                             break;
-                        case "OWNER":
+                        case "ADMINISTRATOR":
                             admin_num = 2;
+                            break;
+                        case "OWNER":
+                            admin_num = 3;
                             break;
                         default:
                             break;
@@ -335,7 +338,7 @@ namespace Another_Mirai_Native.Adapter
                     BinaryWriterExpand.Write_Ex(binaryWriter, admin_num);
                     BinaryWriterExpand.Write_Ex(binaryWriter, 0);
                     BinaryWriterExpand.Write_Ex(binaryWriter, item["specialTitle"].ToString());
-                    BinaryWriterExpand.Write_Ex(binaryWriter, 2051193600);
+                    BinaryWriterExpand.Write_Ex(binaryWriter, -1);
                     BinaryWriterExpand.Write_Ex(binaryWriter, 1);
 
                     BinaryWriterExpand.Write_Ex(binaryWriterMain, (short)stream.Length);
@@ -357,26 +360,41 @@ namespace Another_Mirai_Native.Adapter
                 memberId = QQId
             };
             JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_get, request));
-            if (((int)json["code"]) == 0)
+            if (json != null)
             {
-                var targetuser = json["data"];
+                var targetuser = json;
+                int userPermission = 0;
+                switch (targetuser["permission"].ToString())
+                {
+                    case "MEMBER":
+                        userPermission = 1;
+                        break;
+                    case "ADMINISTRATOR":
+                        userPermission = 2;
+                        break;
+                    case "OWNER":
+                        userPermission = 3;
+                        break;
+                    default:
+                        break;
+                }
                 MemoryStream stream = new();
                 BinaryWriter binaryWriter = new(stream);
 
                 BinaryWriterExpand.Write_Ex(binaryWriter, groupId);
                 BinaryWriterExpand.Write_Ex(binaryWriter, QQId);
-                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["nickname"].ToString());
-                BinaryWriterExpand.Write_Ex(binaryWriter, "");
-                BinaryWriterExpand.Write_Ex(binaryWriter, Convert.ToInt32(targetuser["sex"].ToString()));
-                BinaryWriterExpand.Write_Ex(binaryWriter, Convert.ToInt32(targetuser["age"].ToString()));
+                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, 0);
+                BinaryWriterExpand.Write_Ex(binaryWriter, 0);
                 BinaryWriterExpand.Write_Ex(binaryWriter, "unkown");
-                BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-                BinaryWriterExpand.Write_Ex(binaryWriter, 0);
+                BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["joinTimestamp"]);
+                BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["lastSpeakTimestamp"]);
                 BinaryWriterExpand.Write_Ex(binaryWriter, $"头衔{0}级");
+                BinaryWriterExpand.Write_Ex(binaryWriter, userPermission);
                 BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-                BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-                BinaryWriterExpand.Write_Ex(binaryWriter, "");
-                BinaryWriterExpand.Write_Ex(binaryWriter, 2051193600);
+                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["specialTitle"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, -1);
                 BinaryWriterExpand.Write_Ex(binaryWriter, 1);
                 return Convert.ToBase64String(stream.ToArray());
             }
