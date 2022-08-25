@@ -124,7 +124,8 @@ namespace Another_Mirai_Native.Adapter
                 return;
             }
             if ((json.ContainsKey("data") && json["data"].ContainsKey("code")) 
-                || (json["data"].ContainsKey("nickname") && json["data"].ContainsKey("sex")))
+                || (json["data"].ContainsKey("nickname") && json["data"].ContainsKey("sex"))
+                || json["data"].ContainsKey("specialTitle"))
             {
                 ApiQueue.Peek().result = json["data"].ToString();
                 Debug.WriteLine(e.Data);

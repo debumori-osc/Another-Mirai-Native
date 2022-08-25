@@ -80,6 +80,15 @@ namespace CQP
             Marshal.Copy(strPtr, buffer, 0, len);
             return encoding.GetString(buffer);
         }
-
+        public static string ToString(this JToken json, Encoding encoding)
+        {
+            string c = json.ToString();
+            var b = Encoding.UTF8.GetBytes(c);
+            c = encoding.GetString(Encoding.Convert(Encoding.UTF8, encoding, b));
+            byte[] messageBytes = encoding.GetBytes(c + "\0");
+            var messageIntptr = Marshal.AllocHGlobal(messageBytes.Length);
+            Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
+            return ToString(messageIntptr);
+        }
     }
 }
