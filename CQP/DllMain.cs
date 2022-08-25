@@ -1,6 +1,7 @@
 ﻿using Another_Mirai_Native.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -193,8 +194,8 @@ namespace CQP
         [DllExport(ExportName = "CQ_setFatal", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setFatal(int authCode, IntPtr errorMsg)
         {
-            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { args = new { authCode, priority = 40, msg = errorMsg.ToString(GB18030) } });
-            return (int)(r.json["callResult"]);
+            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { args = new { authCode, priority = 40, msg = errorMsg.ToString(GB18030) } }, false);
+            return 1;
         }
 
         [DllExport(ExportName = "CQ_getGroupMemberInfoV2", CallingConvention = CallingConvention.StdCall)]
@@ -221,7 +222,13 @@ namespace CQP
         [DllExport(ExportName = "CQ_getStrangerInfo", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getStrangerInfo(int authCode, long qqId, bool notCache)
         {
-            return IntPtr.Zero;
+            MemoryStream streamMain = new();
+            BinaryWriter binaryWriterMain = new(streamMain);
+            BinaryWriterExpand.Write_Ex(binaryWriterMain, qqId);
+            BinaryWriterExpand.Write_Ex(binaryWriterMain, "");
+            BinaryWriterExpand.Write_Ex(binaryWriterMain, 0);
+
+            return Marshal.StringToHGlobalAnsi(Convert.ToBase64String(streamMain.ToArray()));
         }
 
         [DllExport(ExportName = "CQ_canSendImage", CallingConvention = CallingConvention.StdCall)]
