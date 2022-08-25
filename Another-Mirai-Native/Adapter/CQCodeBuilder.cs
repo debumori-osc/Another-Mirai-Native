@@ -179,7 +179,7 @@ namespace Another_Mirai_Native.Adapter
                     recordPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, recordPath);
                     return new MiraiMessageTypeDetail.Voice { path = recordPath };
                 case CQCode.Enum.CQFunction.At:
-                    return new MiraiMessageTypeDetail.At { target = Convert.ToInt64(cqcode.Items["qq"]) };
+                    return new MiraiMessageTypeDetail.At { target = Convert.ToInt64(cqcode.Items["qq"]), display = "" };
                 case CQCode.Enum.CQFunction.Dice:
                     return new MiraiMessageTypeDetail.Dice { value = Convert.ToInt32(cqcode.Items["point"]) };
                 case CQCode.Enum.CQFunction.Music:
