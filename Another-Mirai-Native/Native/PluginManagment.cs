@@ -140,10 +140,6 @@ namespace Another_Mirai_Native.Native
                             .FirstOrDefault();
             c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
             File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
-            if(CQPlugin.Enable is false)
-            {
-                UnLoad(CQPlugin);
-            }
         }
         /// <summary>
         /// 从配置获取插件启用状态

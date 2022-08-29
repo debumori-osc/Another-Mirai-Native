@@ -147,6 +147,7 @@ namespace Another_Mirai_Native.Forms
                     plugin.dll.CallFunction(FunctionEnums.Enable);
                 }).Start();
             }
+            PluginManagment.Instance.FlipPluginState(plugin);
         }
 
         private void button_AppDir_Click(object sender, EventArgs e)
