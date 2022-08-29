@@ -116,20 +116,27 @@ namespace Another_Mirai_Native.Adapter
             var list = CQCodeModel.Parse(message);
             foreach (var item in list)
             {
-                message = message.Replace(item.ToString(), "<!cqcode!>[$$]");
+                message = message.Replace(item.ToString(), "<!cqcode!>");
             }
             List<string> p = new();
             string tmp = "";
             for (int i = 0; i < message.Length; i++)
             {
                 tmp += message[i];
-                if (tmp.EndsWith("[$$]"))
+                if(tmp == "<!cqcode!>")
                 {
-                    p.Add(tmp[..^4]);
+                    p.Add("<!cqcode!>");
+                    tmp = "";
+                }
+                else if (tmp.EndsWith("<!cqcode!>"))
+                {
+                    p.Add(tmp[..^10]);
+                    p.Add("<!cqcode!>");
                     tmp = "";
                 }
             }
-            p.Add(tmp);
+            if(tmp != "")
+                p.Add(tmp);
             int cqcode_index = 0;
             for (int i = 0; i < p.Count; i++)
             {
@@ -138,6 +145,7 @@ namespace Another_Mirai_Native.Adapter
                 {
                     messageBase = ParseCQCode2MiraiMessageBase(list[cqcode_index]);
                     cqcode_index++;
+                    if (messageBase == null) continue;
                 }
                 else
                 {
@@ -158,10 +166,24 @@ namespace Another_Mirai_Native.Adapter
                     return new MiraiMessageTypeDetail.MarketFace { id = Convert.ToInt32(cqcode.Items["id"]) };
                 case CQCode.Enum.CQFunction.Image:
                     string picPath = cqcode.Items["file"];
-                    picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image") + picPath;
-                    if (!File.Exists(picPath))
+                    string picPathA = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image") + picPath;
+                    string picPathB = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath);
+                    if (File.Exists(picPathA))
                     {
-                        string picTmp = File.ReadAllText(picPath + ".cqimg");
+                        picPath = picPathA;
+                    }
+                    else if (File.Exists(picPathB))
+                    {
+                        picPath = picPathB;
+                    }
+                    else
+                    {
+                        if(!File.Exists(picPath + ".cqimg"))
+                        {
+                            LogHelper.WriteLog(LogLevel.Warning, "发送图片", "文件不存在", "");
+                            return null;
+                        }
+                        string picTmp = File.ReadAllText(picPath + ".cqimg");                        
                         picTmp = picTmp.Split('\n').Last().Replace("url=", "");
                         if (cqcode.Items.ContainsKey("flash"))
                         {
