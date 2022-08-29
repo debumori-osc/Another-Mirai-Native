@@ -158,7 +158,7 @@ namespace Another_Mirai_Native.Adapter
                     return new MiraiMessageTypeDetail.MarketFace { id = Convert.ToInt32(cqcode.Items["id"]) };
                 case CQCode.Enum.CQFunction.Image:
                     string picPath = cqcode.Items["file"];
-                    picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath);
+                    picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image") + picPath;
                     if (!File.Exists(picPath))
                     {
                         string picTmp = File.ReadAllText(picPath + ".cqimg");
