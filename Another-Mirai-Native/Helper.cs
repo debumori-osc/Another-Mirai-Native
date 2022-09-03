@@ -140,5 +140,14 @@ namespace Another_Mirai_Native
             return ToString(messageIntptr, encoding);
         }
 
+        public static string ParsePic2Base64(string picPath)
+        {
+            if(File.Exists(picPath) is false)
+            {
+                return "";
+            }
+            var buffer = File.ReadAllBytes(picPath);
+            return Convert.ToBase64String(buffer);
+        }
     }
 }

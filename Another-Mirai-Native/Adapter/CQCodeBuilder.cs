@@ -191,11 +191,16 @@ namespace Another_Mirai_Native.Adapter
                         }
                         return new MiraiMessageTypeDetail.Image { url = picTmp };
                     }
+                    string picBase64 = Helper.ParsePic2Base64(picPath);
+                    if(string.IsNullOrEmpty(picBase64))
+                    {
+                        return null;
+                    }
                     if (cqcode.Items.ContainsKey("flash"))
                     {
-                        return new MiraiMessageTypeDetail.FlashImage { path = picPath };
+                        return new MiraiMessageTypeDetail.FlashImage { base64 = picBase64 };
                     }
-                    return new MiraiMessageTypeDetail.Image { path = picPath };
+                    return new MiraiMessageTypeDetail.Image { base64 = picBase64 };
                 case CQCode.Enum.CQFunction.Record:
                     string recordPath = cqcode.Items["file"];
                     recordPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, recordPath);
