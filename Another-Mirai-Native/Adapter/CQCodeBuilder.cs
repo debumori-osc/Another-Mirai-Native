@@ -178,7 +178,7 @@ namespace Another_Mirai_Native.Adapter
                     }
                     else
                     {
-                        if(!File.Exists(picPath + ".cqimg"))
+                        if(!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath + ".cqimg")))
                         {
                             LogHelper.WriteLog(LogLevel.Warning, "发送图片", "文件不存在", "");
                             return null;
