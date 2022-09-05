@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using Another_Mirai_Native.Adapter;
 using Another_Mirai_Native.Enums;
 using Another_Mirai_Native.Forms;
 using Another_Mirai_Native.Native;
@@ -25,6 +26,7 @@ namespace Another_Mirai_Native
             Instance.ContextMenu = new ContextMenu();
             ContextMenu menu = Instance.ContextMenu;
             menu.MenuItems.Add(new MenuItem() { Text = Helper.NickName, Name = "UserName" });
+            menu.MenuItems.Add(new MenuItem() { Text = "重新连接", Tag = "ReLink" });
             menu.MenuItems.Add("-");
             menu.MenuItems.Add(new MenuItem() { Text = "应用", Name = "PluginMenu" });
             menu.MenuItems.Add(new MenuItem() { Text = "日志", Tag = "LogForm" });
@@ -35,11 +37,12 @@ namespace Another_Mirai_Native
             menu.MenuItems.Add(new MenuItem() { Text = "重载应用", Tag = "ReLoad" });
             menu.MenuItems.Add(new MenuItem() { Text = "退出", Tag = "Quit" });
 
-            menu.MenuItems[3].Click += MenuItem_Click;
+            menu.MenuItems[1].Click += MenuItem_Click;
+            menu.MenuItems[4].Click += MenuItem_Click;
             menu.MenuItems[5].Click += MenuItem_Click;
             menu.MenuItems[6].Click += MenuItem_Click;
-            menu.MenuItems[8].Click += MenuItem_Click;
             menu.MenuItems[9].Click += MenuItem_Click;
+            menu.MenuItems[10].Click += MenuItem_Click;
         }
         public static void LoadMenu(JObject json)//初始化,遍历json的menu节点
         {
@@ -74,6 +77,10 @@ namespace Another_Mirai_Native
             {
                 switch (targetItem.Tag)
                 {
+                    case "ReLink":
+                        MiraiAdapter.Instance.MessageSocket.Close();
+                        MiraiAdapter.Instance.EventSocket.Close();
+                        return;
                     case "Quit":
                         Quit();
                         return;
