@@ -220,6 +220,8 @@ namespace Another_Mirai_Native.Adapter
                         {
                             if (VoiceHelper.SilkEncode(recordPath, extension))
                                 recordPath = recordPath.Replace(extension, ".silk");
+                            else 
+                                return null;
                         }
                         recordPath = new FileInfo(recordPath).FullName;
                         return new MiraiMessageTypeDetail.Voice { base64 = Helper.ParsePic2Base64(recordPath) };
