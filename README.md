@@ -18,6 +18,9 @@ https://github.com/project-mirai/mirai-api-http#安装mirai-api-http
 - 开放`ws`，配置`verifyKey`
 - 如需公网访问，请将`ws-host`设置为`0.0.0.0`，服务器开放ws的监听端口
 
+## 音频支持
+https://github.com/Hellobaka/Another-Mirai-Native/releases/tag/1.5.5 下载其中的`tools.7z`并按说明解压即可
+
 ## 待实现功能
 - [ ] WebUI
 - [ ] 糊的所有功能真的可用吗？
