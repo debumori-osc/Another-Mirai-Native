@@ -129,11 +129,6 @@ namespace Another_Mirai_Native.Forms
                 listBoxItem.ForeColor = Color.Gray;
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "启用";
-                new Thread(() =>
-                {
-                    plugin.dll.CallFunction(FunctionEnums.Exit);
-                    plugin.dll.CallFunction(FunctionEnums.Disable);
-                }).Start();
             }
             else
             {
@@ -141,13 +136,8 @@ namespace Another_Mirai_Native.Forms
                 listBoxItem.ForeColor = Color.Black;
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "停用";
-                new Thread(() =>
-                {
-                    plugin.dll.CallFunction(FunctionEnums.StartUp);
-                    plugin.dll.CallFunction(FunctionEnums.Enable);
-                }).Start();
             }
-            PluginManagment.Instance.FlipPluginState(plugin);
+            new Thread(() => PluginManagment.Instance.FlipPluginState(plugin)).Start();
         }
 
         private void button_AppDir_Click(object sender, EventArgs e)

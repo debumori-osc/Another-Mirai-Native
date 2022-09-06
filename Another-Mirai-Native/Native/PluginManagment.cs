@@ -135,6 +135,16 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public void FlipPluginState(CQPlugin CQPlugin)
         {
+            if(CQPlugin.Enable)
+            {
+                CQPlugin.dll.CallFunction(FunctionEnums.Exit);
+                CQPlugin.dll.CallFunction(FunctionEnums.Disable);
+            }
+            else
+            {
+                CQPlugin.dll.CallFunction(FunctionEnums.Enable);
+                CQPlugin.dll.CallFunction(FunctionEnums.StartUp);
+            }
             var c = PluginStatus["Status"]
                             .Where(x => x["Name"].ToString() == CQPlugin.appinfo.Id)
                             .FirstOrDefault();
