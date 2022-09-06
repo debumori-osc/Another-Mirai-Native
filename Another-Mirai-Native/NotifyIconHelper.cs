@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -35,6 +36,9 @@ namespace Another_Mirai_Native
             menu.MenuItems.Add(new MenuItem() { Text = "显示悬浮窗", Tag = "Displaywindow", Checked = FloatWindow.Instance.ShowFlag });
             menu.MenuItems.Add(new MenuItem() { Text = "窗口置顶", Tag = "TopMost", Checked = FloatWindow.Instance.TopMostFlag });
             menu.MenuItems.Add("-");
+            menu.MenuItems.Add(new MenuItem() { Text = $"框架版本：{Application.ProductVersion}" });
+            menu.MenuItems.Add(new MenuItem() { Text = "检查更新", Tag = "Update" });
+            menu.MenuItems.Add("-");
             menu.MenuItems.Add(new MenuItem() { Text = "重载应用", Tag = "ReLoad" });
             menu.MenuItems.Add(new MenuItem() { Text = "退出", Tag = "Quit" });
 
@@ -42,8 +46,9 @@ namespace Another_Mirai_Native
             menu.MenuItems[4].Click += MenuItem_Click;
             menu.MenuItems[5].Click += MenuItem_Click;
             menu.MenuItems[6].Click += MenuItem_Click;
-            menu.MenuItems[9].Click += MenuItem_Click;
             menu.MenuItems[10].Click += MenuItem_Click;
+            menu.MenuItems[12].Click += MenuItem_Click;
+            menu.MenuItems[13].Click += MenuItem_Click;
         }
         public static void LoadMenu(JObject json)//初始化,遍历json的menu节点
         {
@@ -85,6 +90,9 @@ namespace Another_Mirai_Native
                             MiraiAdapter.Instance.EventSocket.Close();
                         }).Start();
                         return;
+                    case "Update":
+                        Update();
+                        return;
                     case "Quit":
                         Quit();
                         return;
@@ -124,6 +132,24 @@ namespace Another_Mirai_Native
                 MessageBox.Show($"拉起菜单发生错误，错误信息:{exc.Message}\n{exc.StackTrace}", "菜单错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private static async void Update()
+        {
+            string updateUrl = "https://gitee.com/Hellobaka/LoliconApiSetuBot/raw/master/New.json";
+            JObject json = JObject.Parse(await Helper.GetString(updateUrl));
+            if (Convert.ToInt32(json["version"].ToString().Replace(".","")) > Convert.ToInt32(Application.ProductVersion.Replace(".", "")))
+            {
+                if (MessageBox.Show($"新版本：{json["version"]}\n更新时间：{json["time"]}\n更新内容：{json["update"]}\n点击确定前往下载", "新版本出现了", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                {
+                    Process.Start(json["url"].ToString());
+                }
+            }
+            else
+            {
+                MessageBox.Show("暂无更新");
+            }
+        }
+
         public static void ShowNotifyIcon()
         {
             Instance.Visible = true;

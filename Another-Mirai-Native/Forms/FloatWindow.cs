@@ -88,7 +88,7 @@ namespace Another_Mirai_Native.Forms
             Image image = Helper.Base642Image(DefaultIcon);
             try
             {
-                var streamTask = Helper.Get($"http://q1.qlogo.cn/g?b=qq&nk={Helper.QQ}&s=640");
+                var streamTask = Helper.GetData($"http://q1.qlogo.cn/g?b=qq&nk={Helper.QQ}&s=640");
                 streamTask.Wait();
                 if (streamTask.Result.Length > 0)//下载成功
                     image = Image.FromStream(streamTask.Result);

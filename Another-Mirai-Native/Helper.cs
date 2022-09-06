@@ -64,13 +64,26 @@ namespace Another_Mirai_Native
                 return false;
             }
         }
-        public static async Task<Stream> Get(string url)
+        public static async Task<Stream> GetData(string url)
         {
             try
             {
                 using var http = new HttpClient();
                 var r = http.GetAsync(url);
                 return await r.Result.Content.ReadAsStreamAsync();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        public static async Task<string> GetString(string url)
+        {
+            try
+            {
+                using var http = new HttpClient();
+                var r = http.GetAsync(url);
+                return await r.Result.Content.ReadAsStringAsync();
             }
             catch
             {
