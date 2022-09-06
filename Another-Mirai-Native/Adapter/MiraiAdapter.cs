@@ -84,13 +84,16 @@ namespace Another_Mirai_Native.Adapter
         {
             LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
             reConnect = 0;
-            while (NoEventTimeout < NoEventTimeoutMax)
+            new Thread(() =>
             {
-                Thread.Sleep(1000);
-                NoEventTimeout++;
-            }
-            LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器疑似无响应", $"status={MessageSocket.ReadyState}");
-            EventSocket.Close();
+                while (NoEventTimeout < NoEventTimeoutMax)
+                {
+                    Thread.Sleep(1000);
+                    NoEventTimeout++;
+                }
+                LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器疑似无响应", $"status={EventSocket.ReadyState}");
+                EventSocket.Close();
+            }).Start();
         }
         private long NoMsgTimeout = 0;
         private long NoMsgTimeoutMax = 600;
@@ -98,17 +101,21 @@ namespace Another_Mirai_Native.Adapter
         {
             LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
             reConnect = 0;
-            while (NoMsgTimeout < NoMsgTimeoutMax)
+            new Thread(() =>
             {
-                Thread.Sleep(1000);
-                NoMsgTimeout++;
-            }
-            LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器疑似无响应", $"status={MessageSocket.ReadyState}");
-            MessageSocket.Close();
+                while (NoMsgTimeout < NoMsgTimeoutMax)
+                {
+                    Thread.Sleep(1000);
+                    NoMsgTimeout++;
+                }
+                LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器疑似无响应", $"status={MessageSocket.ReadyState}");
+                MessageSocket.Close();
+            }).Start();
         }
 
         private void EventSocket_OnClose(object sender, CloseEventArgs e)
         {
+            SessionKey_Event = "";
             reConnect++;
             LogHelper.WriteLog($"与事件服务器断开连接...第 {reConnect} 次重连");
             Thread.Sleep(3000);
@@ -122,6 +129,7 @@ namespace Another_Mirai_Native.Adapter
 
         private void MessageSocket_OnClose(object sender, CloseEventArgs e)
         {
+            SessionKey_Message = "";
             reConnect++;
             LogHelper.WriteLog($"与消息服务器断开连接...第 {reConnect} 次重连");
             Thread.Sleep(3000);
