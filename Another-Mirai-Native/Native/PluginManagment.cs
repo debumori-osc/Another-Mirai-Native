@@ -116,9 +116,10 @@ namespace Another_Mirai_Native.Native
                 , null
                 , new object[] { iLib, appInfo, json.ToString(), dll, enabled, filepath }
                 , null, null);
+
             Plugins.Add(CQPlugin);
             if (SavedPlugins.Any(x => x.appinfo.Name == appInfo.Name) is false)
-                SavedPlugins.Add(new CQPlugin { appinfo = appInfo, json = json, path = filepath, Enable = false });
+                SavedPlugins.Add(new CQPlugin { appinfo = appInfo, json = json.ToString(), Enable = false, path = filepath });
             cq_start(Marshal.StringToHGlobalAnsi(destpath), authcode);
             //将它的窗口写入托盘右键菜单
             NotifyIconHelper.LoadMenu(json);
@@ -132,21 +133,27 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public void FlipPluginState(CQPlugin CQPlugin)
         {
+            string pluginId = CQPlugin.appinfo.Id;
             if (CQPlugin.Enable)
             {
                 CQPlugin.dll.CallFunction(FunctionEnums.Exit);
                 CQPlugin.dll.CallFunction(FunctionEnums.Disable);
                 UnLoad(CQPlugin);
+                var appdomain = AppDomains.First(x => x.Key == CQPlugin.handle);
+                AppDomains.Remove(CQPlugin.handle);
+                AppDomain.Unload(appdomain.Value);
             }
             else
             {
-                Load(CQPlugin.path);
+                if (!Plugins.Any(x => x.appinfo.Name == CQPlugin.appinfo.Name))
+                    Load(CQPlugin.path);
                 CQPlugin loadedPlugin = Plugins.FirstOrDefault(x => x.appinfo.Name == CQPlugin.appinfo.Name);
                 loadedPlugin.dll.CallFunction(FunctionEnums.Enable);
                 loadedPlugin.dll.CallFunction(FunctionEnums.StartUp);
+                loadedPlugin.Enable = true;
             }
             var c = PluginStatus["Status"]
-                            .Where(x => x["Name"].ToString() == CQPlugin.appinfo.Id)
+                            .Where(x => x["Name"].ToString() == pluginId)
                             .FirstOrDefault();
             c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
             File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
