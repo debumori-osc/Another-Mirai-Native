@@ -11,6 +11,7 @@ using System.Linq;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 using System.Management;
+using System.Threading;
 
 namespace Another_Mirai_Native
 {
@@ -203,12 +204,7 @@ namespace Another_Mirai_Native
                     Send(new ApiResult
                     {
                         Type = "GetDirectory",
-                        Data = new
-                        {
-                            dirList = dirInfo.GetDirectories().Select(x => x.Name).ToList()
-                           ,
-                            fileList = dirInfo.GetFiles().Where(x => x.Name.EndsWith(filter)).Select(x => x.Name).ToList()
-                        }.ToJson()
+                        Data = new { dirList = dirInfo.GetDirectories().Select(x => x.Name).ToList(), fileList = dirInfo.GetFiles().Where(x => x.Name.EndsWith(filter)).Select(x => x.Name).ToList() }
                     });
                 }
             }
@@ -379,7 +375,7 @@ namespace Another_Mirai_Native
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { Success = false }.ToJson());
+                    Send(new ApiResult { Success = false });
                     LogHelper.WriteLog("Authcode无效", "");
                     return;
                 }
@@ -389,7 +385,7 @@ namespace Another_Mirai_Native
                         string path = @$"data\app\{plugin.appinfo.Id}";
                         if (Directory.Exists(path) is false)
                             Directory.CreateDirectory(path);
-                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = new DirectoryInfo(path).FullName + "\\" }.ToJson() }.ToJson());
+                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = new DirectoryInfo(path).FullName + "\\" } });
                         break;
                     case "GetLoginQQ":
                         Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = Helper.QQ } });
@@ -418,7 +414,7 @@ namespace Another_Mirai_Native
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { Type = "HandleMiraiFunction", Success = false }.ToJson());
+                    Send(new ApiResult { Type = "HandleMiraiFunction", Success = false });
                     LogHelper.WriteLog("Authcode无效", "");
                     return logid;
                 }
@@ -689,30 +685,33 @@ namespace Another_Mirai_Native
             Server = new(port);
             Server.AddWebSocketService<Handler>("/amn");
             Instance = this;
-            DeviceInformation.Instance = new()
+            new Thread(() =>
             {
-                CpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"),
-                MemoryCounter = new PerformanceCounter("Memory", "Available MBytes"),
-                CpuFrequencyCounter = new PerformanceCounter("Processor", "Processor Frequency"),
-                HandleCounter = new PerformanceCounter("Process", "Handle Count"),
-                ThreadCounter = new PerformanceCounter("Process", "Thread Count"),
-                DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_Processor").Get()
-            };
-            foreach(var item in DeviceInformation.Instance.DeviceInfo)
-            {
-                DeviceInformation.Instance.CPUName = item["Name"].ToString();
-                DeviceInformation.Instance.CPUCoreCount = Convert.ToInt32(item["NumberOfCores"].ToString());
-                DeviceInformation.Instance.CPUThreadCount = Convert.ToInt32(item["ThreadCount"].ToString());
-            }
-            DeviceInformation.Instance.DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_OperatingSystem").Get();
-            foreach(var item in DeviceInformation.Instance.DeviceInfo)
-            {
-                DeviceInformation.Instance.OSVersion = item["Version"].ToString();
-                DeviceInformation.Instance.OSName = item["Caption"].ToString();
-                DeviceInformation.Instance.TotalMemory = Convert.ToInt32(item["TotalVisibleMemorySize"].ToString());
-                DeviceInformation.Instance.TotalVirtualMemory = Convert.ToInt32(item["TotalVirtualMemorySize"].ToString());
-            }
-            DeviceInformation.Instance.OSArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+                DeviceInformation.Instance = new()
+                {
+                    CpuCounter = new PerformanceCounter("Processor Information", "% Processor Time", "_Total"),
+                    MemoryCounter = new PerformanceCounter("Memory", "Available MBytes"),
+                    CpuFrequencyCounter = new PerformanceCounter("Processor Information", "Processor Frequency"),
+                    HandleCounter = new PerformanceCounter("Process", "Handle Count"),
+                    ThreadCounter = new PerformanceCounter("Process", "Thread Count"),
+                    DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_Processor").Get()
+                };
+                foreach (var item in DeviceInformation.Instance.DeviceInfo)
+                {
+                    DeviceInformation.Instance.CPUName = item["Name"].ToString();
+                    DeviceInformation.Instance.CPUCoreCount = Convert.ToInt32(item["NumberOfCores"].ToString());
+                    DeviceInformation.Instance.CPUThreadCount = Convert.ToInt32(item["ThreadCount"].ToString());
+                }
+                DeviceInformation.Instance.DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_OperatingSystem").Get();
+                foreach (var item in DeviceInformation.Instance.DeviceInfo)
+                {
+                    DeviceInformation.Instance.OSVersion = item["Version"].ToString();
+                    DeviceInformation.Instance.OSName = item["Caption"].ToString();
+                    DeviceInformation.Instance.TotalMemory = Convert.ToInt32(item["TotalVisibleMemorySize"].ToString());
+                    DeviceInformation.Instance.TotalVirtualMemory = Convert.ToInt32(item["TotalVirtualMemorySize"].ToString());
+                }
+                DeviceInformation.Instance.OSArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+            }).Start();
         }
         public static void Init(int port)
         {

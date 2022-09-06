@@ -15,8 +15,22 @@ namespace CQP
     {
         public class ApiResult
         {
-            public bool success { get; set; }
-            public string data { get; set; }
+            /// <summary>
+            /// 调用是否成功
+            /// </summary>
+            public bool Success { get; set; } = true;
+            /// <summary>
+            /// 调用返回的结果
+            /// </summary>
+            public object Data { get; set; }
+            /// <summary>
+            /// 错误消息
+            /// </summary>
+            public string Msg { get; set; } = "ok";
+            /// <summary>
+            /// 调用逻辑的类别
+            /// </summary>
+            public string Type { get; set; }
             public JObject json { get; set; }
         }
         public WebSocket ServerConnection;
@@ -92,7 +106,7 @@ namespace CQP
                 if (ApiQueue.Count != 0)
                     ServerConnection.Send(ApiQueue.Peek().request);
                 var r = JsonConvert.DeserializeObject<ApiResult>(queueObject.result);
-                r.json = JObject.Parse(r.data);
+                r.json = JObject.FromObject(r.Data);
                 return r;
             }
             return null;
