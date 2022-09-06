@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using WebSocketSharp;
 using WebSocketSharp.Server;
+using System.Management;
 
 namespace Another_Mirai_Native
 {
@@ -82,7 +83,7 @@ namespace Another_Mirai_Native
                 // 连接未授权, 拒绝处理逻辑
                 if (ClientType == WsClientType.UnAuth)
                 {
-                    Send(new ApiResult { Type = "UserRole", Msg = "UnAuth", Success = false });
+                    Send(new ApiResult { Type = "Info", Msg = "UnAuth", Success = false });
                     return;
                 }
                 int logid = 0;
@@ -129,6 +130,15 @@ namespace Another_Mirai_Native
                     case WsServerFunction.GetDirectroy:
                         Ws_GetDirectory(json);
                         break;
+                    case WsServerFunction.HeartBeat:
+                        Send("ok");
+                        break;
+                    case WsServerFunction.Status:
+                        Ws_GetStatus();
+                        break;
+                    case WsServerFunction.DeviceInfo:
+                        Ws_GetDeviceInfo();
+                        break;
                     default:
                         break;
                 }
@@ -137,6 +147,43 @@ namespace Another_Mirai_Native
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
             }
+
+            private void Ws_GetStatus()
+            {
+                DeviceInformation instance = DeviceInformation.Instance;
+                Send(new ApiResult
+                {
+                    Type = "GetStatus",
+                    Data = new
+                    {
+                        CPUUsage = instance.CpuCounter.NextValue(),
+                        MemoryLeftAvaliable = instance.MemoryCounter.NextValue(),
+                        CPUFrequency = instance.CpuFrequencyCounter.NextValue(),
+                        HandleCount = instance.HandleCounter.NextValue(),
+                        ThreadCount = instance.ThreadCounter.NextValue()
+                    }
+                });
+            }
+
+            private void Ws_GetDeviceInfo()
+            {
+                DeviceInformation instance = DeviceInformation.Instance;
+                Send(new ApiResult
+                {
+                    Type = "GetDeviceInfo",
+                    Data = new
+                    {
+                        TotalMemory = instance.TotalMemory / 1024,
+                        TotalVirtualMemory = instance.TotalVirtualMemory / 1024,
+                        instance.CPUName,
+                        instance.CPUCoreCount,
+                        instance.OSName,
+                        instance.OSVersion,
+                        instance.OSArch
+                    }
+                });
+            }
+
             /// <summary>
             /// 根据传入的路径, 获取子目录以及文件列表
             /// </summary>
@@ -256,9 +303,9 @@ namespace Another_Mirai_Native
                 {
                     int authCode = (int)json["authCode"];
                     var plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == authCode);
-                    if(plugin == null)
+                    if (plugin == null)
                     {
-                        Send(new ApiResult { Type = "ReloadPlugin", Msg="插件不存在", Success = false});
+                        Send(new ApiResult { Type = "ReloadPlugin", Msg = "插件不存在", Success = false });
                         return;
                     }
                     PluginManagment.Instance.ReLoad(plugin);
@@ -317,11 +364,11 @@ namespace Another_Mirai_Native
                 if (key == ConfigHelper.GetConfig<string>("WsServer_Key"))
                 {
                     ClientType = data["role"].ToObject<WsClientType>();
-                    Send(new ApiResult());
+                    Send(new ApiResult { Type = "Info" });
                 }
                 else
                 {
-                    Send(new ApiResult { Type = "VerifyPassword", Msg = "密码错误", Success = false });
+                    Send(new ApiResult { Type = "Info", Msg = "密码错误", Success = false });
                 }
             }
 
@@ -371,7 +418,7 @@ namespace Another_Mirai_Native
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { Type= "HandleMiraiFunction", Success = false }.ToJson());
+                    Send(new ApiResult { Type = "HandleMiraiFunction", Success = false }.ToJson());
                     LogHelper.WriteLog("Authcode无效", "");
                     return logid;
                 }
@@ -613,6 +660,28 @@ namespace Another_Mirai_Native
         }
         public static WsServer Instance { get; set; }
         public WebSocketServer Server { get; set; }
+        public class DeviceInformation
+        {
+            public static DeviceInformation Instance { get; set; }
+            public PerformanceCounter CpuCounter { get; set; }
+            public PerformanceCounter CpuFrequencyCounter { get; set; }
+            public PerformanceCounter HandleCounter { get; set; }
+            public PerformanceCounter ThreadCounter { get; set; }
+            public PerformanceCounter MemoryCounter { get; set; }
+            public ManagementObjectCollection DeviceInfo { get; set; }
+
+            public string CPUName { get; set; }
+            public int CPUCoreCount { get; set; }
+            public int CPUThreadCount { get; set; }
+
+            public int TotalMemory { get; set; }
+            public int TotalVirtualMemory { get; set; }
+
+            public string OSVersion { get; set; }
+            public string OSName { get; set; }
+            public string OSArch { get; set; }
+        }
+
         public delegate void CQPConnected_Handler();
         public event CQPConnected_Handler CQPConnected;
         public WsServer(int port)
@@ -620,6 +689,30 @@ namespace Another_Mirai_Native
             Server = new(port);
             Server.AddWebSocketService<Handler>("/amn");
             Instance = this;
+            DeviceInformation.Instance = new()
+            {
+                CpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"),
+                MemoryCounter = new PerformanceCounter("Memory", "Available MBytes"),
+                CpuFrequencyCounter = new PerformanceCounter("Processor", "Processor Frequency"),
+                HandleCounter = new PerformanceCounter("Process", "Handle Count"),
+                ThreadCounter = new PerformanceCounter("Process", "Thread Count"),
+                DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_Processor").Get()
+            };
+            foreach(var item in DeviceInformation.Instance.DeviceInfo)
+            {
+                DeviceInformation.Instance.CPUName = item["Name"].ToString();
+                DeviceInformation.Instance.CPUCoreCount = Convert.ToInt32(item["NumberOfCores"].ToString());
+                DeviceInformation.Instance.CPUThreadCount = Convert.ToInt32(item["ThreadCount"].ToString());
+            }
+            DeviceInformation.Instance.DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_OperatingSystem").Get();
+            foreach(var item in DeviceInformation.Instance.DeviceInfo)
+            {
+                DeviceInformation.Instance.OSVersion = item["Version"].ToString();
+                DeviceInformation.Instance.OSName = item["Caption"].ToString();
+                DeviceInformation.Instance.TotalMemory = Convert.ToInt32(item["TotalVisibleMemorySize"].ToString());
+                DeviceInformation.Instance.TotalVirtualMemory = Convert.ToInt32(item["TotalVirtualMemorySize"].ToString());
+            }
+            DeviceInformation.Instance.OSArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
         }
         public static void Init(int port)
         {
