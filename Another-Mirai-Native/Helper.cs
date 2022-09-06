@@ -149,5 +149,12 @@ namespace Another_Mirai_Native
             var buffer = File.ReadAllBytes(picPath);
             return Convert.ToBase64String(buffer);
         }
+        public static void RestartApplication()
+        {
+            string path = typeof(Login).Assembly.Location;
+            Process.Start(path, $"-r");
+            //NotifyIconHelper.HideNotifyIcon();
+            Environment.Exit(0);
+        }
     }
 }

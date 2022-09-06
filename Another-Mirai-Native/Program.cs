@@ -55,20 +55,13 @@ namespace Another_Mirai_Native
             if (e.ExceptionObject is Exception ex)
             {
                 var b = Error_TaskDialog.ShowErrorDialog(ex.Message, ex.StackTrace, false);
-                if (b == Error_TaskDialog.TaskDialogResult.ReloadApp)
-                {
-                    //Login.pluginManagment.ReLoad();
-                }
-                else if (b == Error_TaskDialog.TaskDialogResult.Exit)
+                if (b == Error_TaskDialog.TaskDialogResult.Exit)
                 {
                     Environment.Exit(0);
                 }
                 else if (b == Error_TaskDialog.TaskDialogResult.Restart)
                 {
-                    string path = typeof(Login).Assembly.Location;
-                    Process.Start(path, $"-r");
-                    //NotifyIconHelper.HideNotifyIcon();
-                    Environment.Exit(0);
+                    Helper.RestartApplication();
                 }
             }
         }
@@ -80,7 +73,7 @@ namespace Another_Mirai_Native
                 var b = Error_TaskDialog.ShowErrorDialog(e.Exception.Message, e.Exception.StackTrace);
                 if (b == Error_TaskDialog.TaskDialogResult.ReloadApp)
                 {
-                    // Login.pluginManagment.ReLoad();
+                    PluginManagment.Instance.ReLoad();
                 }
                 else if (b == Error_TaskDialog.TaskDialogResult.Exit)
                 {
