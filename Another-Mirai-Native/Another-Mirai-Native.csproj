@@ -281,6 +281,7 @@
     <Compile Include="Adapter\MiraiMessageEventArgs\OtherClientMessage.cs" />
     <Compile Include="Adapter\MiraiMessageEventArgs\StrangerMessage.cs" />
     <Compile Include="Adapter\MiraiMessageEventArgs\TempMessage.cs" />
+    <Compile Include="Adapter\VoiceHelper.cs" />
     <Compile Include="CQCode\Core\CQP.cs" />
     <Compile Include="CQCode\Core\Kernel32.cs" />
     <Compile Include="CQCode\CQApi.cs" />

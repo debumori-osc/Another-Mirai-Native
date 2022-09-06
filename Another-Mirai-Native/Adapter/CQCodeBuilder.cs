@@ -50,22 +50,22 @@ namespace Another_Mirai_Native.Adapter
                     case MiraiMessageType.Image:
                         var image = (MiraiMessageTypeDetail.Image)item;
                         string imgId = image.imageId.Replace("-", "").Replace("{", "").Replace("}", "").Split('.').First();
-                        Directory.CreateDirectory("data/image");
-                        File.WriteAllText($"data/image/{imgId}.cqimg", $"[image]\nmd5=0\nsize=0\nurl={image.url}");
+                        Directory.CreateDirectory("data\\image");
+                        File.WriteAllText($"data\\image\\{imgId}.cqimg", $"[image]\nmd5=0\nsize=0\nurl={image.url}");
                         Result.Append($"[CQ:image,file={imgId}]");
                         break;
                     case MiraiMessageType.FlashImage:
                         var flashImage = (MiraiMessageTypeDetail.FlashImage)item;
                         string flashImgId = flashImage.imageId.Replace("-", "").Replace("{", "").Replace("}", "").Split('.').First();
-                        Directory.CreateDirectory("data/image");
-                        File.WriteAllText($"data/image/{flashImgId}.cqimg", $"[image]\nmd5=0\nsize=0\nurl={flashImage.url}");
+                        Directory.CreateDirectory("data\\image");
+                        File.WriteAllText($"data\\image\\{flashImgId}.cqimg", $"[image]\nmd5=0\nsize=0\nurl={flashImage.url}");
                         Result.Append($"[CQ:image,file={flashImgId},flash=true]");
                         break;
                     case MiraiMessageType.Voice:
                         var voice = (MiraiMessageTypeDetail.Voice)item;
                         string voiceId = voice.voiceId.Replace(".amr", "");
-                        Directory.CreateDirectory("data/record");
-                        File.WriteAllText($"data/image/{voiceId}.cqrecord", $"[record]\nurl={voice.url}");
+                        Directory.CreateDirectory("data\\record");
+                        File.WriteAllText($"data\\record\\{voiceId}.cqrecord", $"[record]\nurl={voice.url}");
                         Result.Append($"[CQ:record,file={voice.voiceId}]");
                         break;
                     case MiraiMessageType.Xml:
@@ -211,10 +211,28 @@ namespace Another_Mirai_Native.Adapter
                     }
                     return new MiraiMessageTypeDetail.Image { base64 = picBase64 };
                 case CQCode.Enum.CQFunction.Record:
-                    // TODO: 音频支持
                     string recordPath = cqcode.Items["file"];
-                    recordPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, recordPath);
-                    return new MiraiMessageTypeDetail.Voice { path = recordPath };
+                    recordPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\record", recordPath);
+                    if (File.Exists(recordPath))
+                    {
+                        string extension = new FileInfo(recordPath).Extension;
+                        if (extension != ".silk")
+                        {
+                            if (VoiceHelper.SilkEncode(recordPath, extension))
+                                recordPath = recordPath.Replace(extension, ".silk");
+                        }
+                        recordPath = new FileInfo(recordPath).FullName;
+                        return new MiraiMessageTypeDetail.Voice { base64 = Helper.ParsePic2Base64(recordPath) };
+                    }
+                    else if(File.Exists(recordPath + ".cqrecord"))
+                    {
+                        string recordUrl = File.ReadAllText(recordPath + ".cqrecord").Replace("[record]\nurl=", "");
+                        return new MiraiMessageTypeDetail.Voice { url = recordUrl };
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 case CQCode.Enum.CQFunction.At:
                     return new MiraiMessageTypeDetail.At { target = Convert.ToInt64(cqcode.Items["qq"]), display = "" };
                 case CQCode.Enum.CQFunction.Dice:
