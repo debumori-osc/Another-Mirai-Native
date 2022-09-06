@@ -68,7 +68,19 @@
         /// <summary>
         /// 未授权连接
         /// </summary>
-        UnAuth
+        UnAuth,
+        /// <summary>
+        /// 获取Bot宿主机状态
+        /// </summary>
+        Status,        
+        /// <summary>
+        /// 获取Bot宿主机信息
+        /// </summary>
+        DeviceInfo,
+        /// <summary>
+        /// 心跳
+        /// </summary>
+        HeartBeat
     }
     public enum WsClientType
     {
