@@ -54,17 +54,34 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.OnClose += EventSocket_OnClose;
             EventSocket.OnOpen += EventSocket_OnOpen;
         }
+        private long NoEventTimeout = 0;
+        private long NoEventTimeoutMax = 600;
 
         private void EventSocket_OnOpen(object sender, EventArgs e)
         {
-            LogHelper.WriteLog($"连接到事件服务器");
-            reConnect = 0;
+            LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
+            reConnect = 0; 
+            while (NoEventTimeout < NoEventTimeoutMax)
+            {
+                Thread.Sleep(1000);
+                NoEventTimeout++;
+            }
+            LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器疑似无响应", $"status={MessageSocket.ReadyState}");
+            EventSocket.Close();
         }
-
+        private long NoMsgTimeout = 0;
+        private long NoMsgTimeoutMax = 600;
         private void MessageSocket_OnOpen(object sender, EventArgs e)
         {
-            LogHelper.WriteLog($"连接到消息服务器");
+            LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
             reConnect = 0;
+            while(NoMsgTimeout < NoMsgTimeoutMax)
+            {
+                Thread.Sleep(1000);
+                NoMsgTimeout++;
+            }
+            LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器疑似无响应", $"status={MessageSocket.ReadyState}");
+            MessageSocket.Close();
         }
 
         private void EventSocket_OnClose(object sender, CloseEventArgs e)
@@ -95,6 +112,7 @@ namespace Another_Mirai_Native.Adapter
 
         private void MessageSocket_OnMessage(object sender, MessageEventArgs e)
         {
+            NoMsgTimeout = 0;
             JObject json = JObject.Parse(e.Data);
             if (string.IsNullOrWhiteSpace(SessionKey_Message))
             {
@@ -136,6 +154,7 @@ namespace Another_Mirai_Native.Adapter
 
         private void EventSocket_OnMessage(object sender, MessageEventArgs e)
         {
+            NoEventTimeout = 0;
             JObject json = JObject.Parse(e.Data);
             if (string.IsNullOrWhiteSpace(SessionKey_Event))
             {
