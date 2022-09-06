@@ -21,7 +21,9 @@ namespace Another_Mirai_Native
         public class ApiResult
         {
             public bool success { get; set; } = true;
-            public string data { get; set; }
+            public object data { get; set; }
+            public string msg { get; set; } = "ok";
+            public string type { get; set; }
         }
         public class Handler : WebSocketBehavior
         {
@@ -38,20 +40,29 @@ namespace Another_Mirai_Native
                         switch (data["role"].ToObject<WsClientType>())
                         {
                             case WsClientType.CQP:
+                                InitRole(data);
+                                Instance.CQPConnected?.Invoke();
+                                break;
                             case WsClientType.WebUI:
-                                string key = data["key"].ToString();
-                                if (key == ConfigHelper.GetConfig<string>("WsServer_Key"))
+                                string webUI_Password = ConfigHelper.GetConfig<string>("WebUI_Password");
+                                if (string.IsNullOrWhiteSpace(webUI_Password))
                                 {
-                                    ClientType = data["role"].ToObject<WsClientType>();
-                                    Send(new ApiResult { data = "ok" }.ToJson());
-                                    if (ClientType == WsClientType.CQP)
-                                    {
-                                        Instance.CQPConnected?.Invoke();
-                                    }
+                                    webUI_Password = new Random().Next().ToString();
+                                    ConfigHelper.SetConfig("WebUI_Password", webUI_Password);
                                 }
+                                string password = json["data"]["args"]["password"].ToString();
+                                if (password != webUI_Password)
+                                {
+                                    Send(new ApiResult { type = "VerifyPassword", msg = "密码错误", success = false });
+                                    return;
+                                }
+                                InitRole(data);
+                                LogHelper.LogAdded -= WebUI_LogAdded;
+                                LogHelper.LogAdded += WebUI_LogAdded;
+                                LogHelper.LogStatusUpdated -= WebUI_LogStatusUpdated;
+                                LogHelper.LogStatusUpdated += WebUI_LogStatusUpdated;
                                 break;
                             case WsClientType.UnAuth:
-                                break;
                             default:
                                 break;
                         }
@@ -59,36 +70,19 @@ namespace Another_Mirai_Native
                     default:
                         break;
                 }
-                if(ClientType == WsClientType.UnAuth)
+                if (ClientType == WsClientType.UnAuth)
                 {
-                    Send(WsServerFunction.UnAuth, "");
+                    Send(new ApiResult { type = "UserRole", msg = "UnAuth", success = false });
                     return;
                 }
                 int logid = 0;
                 switch (json["type"].ToObject<WsServerFunction>())
                 {
                     case WsServerFunction.AddLog:
-                        Enums.LogLevel log_priority = json["data"]["args"]["priority"].ToObject<Enums.LogLevel>();
-                        string log_msg = json["data"]["args"]["msg"].ToObject<string>();
-                        string log_type = "致命错误";
-                        string log_origin = "AMN框架";
-                        if (json["data"]["args"].ContainsKey("type"))
-                        {
-                            log_type = json["data"]["args"]["type"].ToObject<string>();
-                        }                        
-                        if (json["data"]["args"].ContainsKey("authCode"))
-                        {
-                            int authcode = json["data"]["args"]["authCode"].ToObject<int>();
-                            var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
-                            if (plugin != null)
-                            {
-                                log_origin = plugin.appinfo.Name;
-                            }
-                        }
-                        LogHelper.WriteLog(log_priority, log_origin, log_type, log_msg, "");
-                        Send(new ApiResult { data = new { callResult = 1  }.ToJson() }.ToJson());
+                        Ws_AddLog(json);
                         break;
                     case WsServerFunction.GetLog:
+                        Ws_GetLog(json);
                         break;
                     case WsServerFunction.CallMiraiAPI:
                         logid = HandleMiraiFunction(json, logid);
@@ -97,24 +91,35 @@ namespace Another_Mirai_Native
                         HandleCQFunction(json);
                         break;
                     case WsServerFunction.Exit:
+                        Ws_ExitApplication();
                         break;
                     case WsServerFunction.Restart:
+                        Ws_RestartApplication();
                         break;
                     case WsServerFunction.AddPlugin:
+                        Ws_AddPlugin(json);
                         break;
                     case WsServerFunction.ReloadPlugin:
+                        Ws_ReloadPlugin();
                         break;
                     case WsServerFunction.GetPluginList:
+                        Ws_GetPluginList();
                         break;
                     case WsServerFunction.SwitchPluginStatus:
+                        Ws_SwitchPluginStatus(json);
                         break;
                     case WsServerFunction.GetBotInfo:
+                        Ws_GetBotInfo();
                         break;
                     case WsServerFunction.GetGroupList:
+
                         break;
                     case WsServerFunction.GetFriendList:
                         break;
                     case WsServerFunction.GetStatus:
+                        break;
+                    case WsServerFunction.GetDirectroy:
+                        Ws_GetDirectory(json);
                         break;
                     default:
                         break;
@@ -123,8 +128,150 @@ namespace Another_Mirai_Native
                 if (logid == 0) return;
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
-
             }
+
+            private void Ws_GetDirectory(JObject json)
+            {
+                string dir = json["data"]["args"]["dir"].ToString(); // 全路径
+                if (dir.IsNullOrEmpty())
+                {
+                    var drivels = DriveInfo.GetDrives();
+                    Send(new ApiResult { type = "GetDirectory", data = new { driveList = drivels.Select(x => x.Name).ToList() } });
+                }
+                else
+                {
+                    string filter = json["data"]["args"]["filter"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(filter)) filter = ".dll";
+                    var dirInfo = new DirectoryInfo(dir);
+                    Send(new ApiResult
+                    {
+                        type = "GetDirectory",
+                        data = new
+                        {
+                            dirList = dirInfo.GetDirectories().Select(x => x.Name).ToList()
+                           ,
+                            fileList = dirInfo.GetFiles().Where(x => x.Name.EndsWith(filter)).Select(x => x.Name).ToList()
+                        }.ToJson()
+                    });
+                }
+            }
+
+            private void Ws_GetBotInfo()
+            {
+                Send(new ApiResult { type = "GetBotInfo", data = new { Helper.QQ, Helper.NickName } });
+            }
+
+            private void Ws_AddPlugin(JObject json)
+            {
+                string path = json["data"]["args"]["path"].ToString();
+                if (File.Exists(path) is false)
+                {
+                    Send(new ApiResult { type = "AddPlugin", msg = "文件不存在", success = false });
+                    return;
+                }
+                if (path.EndsWith(".dll") is false)
+                {
+                    Send(new ApiResult { type = "AddPlugin", msg = "所选文件非插件文件，请选择dll文件", success = false });
+                    return;
+                }
+                if (File.Exists(path[..^4] + ".json") is false)
+                {
+                    Send(new ApiResult { type = "AddPlugin", msg = "所选插件缺失json文件", success = false });
+                    return;
+                }
+                PluginManagment.Instance.Load(path);
+                Send(new ApiResult());
+            }
+
+            private void Ws_AddLog(JObject json)
+            {
+                Enums.LogLevel log_priority = json["data"]["args"]["priority"].ToObject<Enums.LogLevel>();
+                string log_msg = json["data"]["args"]["msg"].ToObject<string>();
+                string log_type = "致命错误";
+                string log_origin = "AMN框架";
+                if (json["data"]["args"].ContainsKey("type"))
+                {
+                    log_type = json["data"]["args"]["type"].ToObject<string>();
+                }
+                if (json["data"]["args"].ContainsKey("authCode"))
+                {
+                    int authcode = json["data"]["args"]["authCode"].ToObject<int>();
+                    var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
+                    if (plugin != null)
+                    {
+                        log_origin = plugin.appinfo.Name;
+                    }
+                }
+                LogHelper.WriteLog(log_priority, log_origin, log_type, log_msg, "");
+                Send(new ApiResult { type = "AddLog", data = new { callResult = 1 } });
+            }
+
+            private void Ws_GetLog(JObject json)
+            {
+                int priority = json["data"]["args"]["priority"].ToObject<int>();
+                var logList = LogHelper.GetDisplayLogs(priority);
+                Send(new ApiResult { type = "GetLog", data = new { logList } });
+            }
+
+            private void Ws_ExitApplication()
+            {
+                Send(new ApiResult { type = "ExitApplication", });
+                Environment.Exit(0);
+            }
+
+            private void Ws_RestartApplication()
+            {
+                Send(new ApiResult { type = "RestartApplication", });
+                Helper.RestartApplication();
+            }
+
+            private void Ws_ReloadPlugin()
+            {
+                PluginManagment.Instance.ReLoad();
+                Send(new ApiResult { type = "ReloadPlugin", });
+            }
+
+            private void Ws_GetPluginList()
+            {
+                var pluginList = PluginManagment.Instance.Plugins.Select(x => { return new { x.Enable, x.Testing, x.appinfo }; }).ToList();
+                Send(new ApiResult { type = "GetPluginList", data = new { pluginList } });
+            }
+
+            private void Ws_SwitchPluginStatus(JObject json)
+            {
+                var pluginId = (int)json["data"]["args"]["authCode"];
+                CQPlugin plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == pluginId);
+                if (plugin != null)
+                {
+                    PluginManagment.Instance.FlipPluginState(plugin);
+                    Send(new ApiResult { type = "SwitchPluginStatus" });
+                }
+                else
+                {
+                    Send(new ApiResult { type = "SwitchPluginStatus", msg = "插件不存在", success = false });
+                }
+            }
+
+            private void WebUI_LogStatusUpdated(int logid, string status)
+            {
+                Send(new ApiResult { type = "LogStatusUpdated", data = new { logid, status } });
+            }
+
+            private void WebUI_LogAdded(int logid, LogModel log)
+            {
+                Send(new ApiResult { type = "LogAdded", data = new { logid, log } });
+            }
+
+            private void InitRole(JToken data)
+            {
+                string key = data["key"].ToString();
+                if (key == ConfigHelper.GetConfig<string>("WsServer_Key"))
+                {
+                    ClientType = data["role"].ToObject<WsClientType>();
+                    Send(new ApiResult());
+                }
+            }
+
             public void HandleCQFunction(JObject json)
             {
                 var apiType = json["data"]["type"].ToObject<string>();
@@ -142,13 +289,13 @@ namespace Another_Mirai_Native
                         string path = @$"data\app\{plugin.appinfo.Id}";
                         if (Directory.Exists(path) is false)
                             Directory.CreateDirectory(path);
-                        Send(new ApiResult { data = new { callResult = new DirectoryInfo(path).FullName + "\\" }.ToJson() }.ToJson());
+                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = new DirectoryInfo(path).FullName + "\\" }.ToJson() }.ToJson());
                         break;
                     case "GetLoginQQ":
-                        Send(new ApiResult { data = new { callResult = Helper.QQ }.ToJson() }.ToJson());
+                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = Helper.QQ } });
                         break;
                     case "GetLoginNick":
-                        Send(new ApiResult { data = new { callResult = Helper.NickName }.ToJson() }.ToJson());
+                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = Helper.NickName } });
                         break;
                     case "GetImage":
                         string cqimg = json["data"]["args"]["path"].ToString();
@@ -157,7 +304,7 @@ namespace Another_Mirai_Native
                         string imgDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image");
                         var downloadTask = Helper.DownloadFile(url, imgFileName, imgDir);
                         downloadTask.Wait();
-                        Send(new ApiResult { data = new { callResult = Path.Combine(imgDir, imgFileName) }.ToJson() }.ToJson());
+                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = Path.Combine(imgDir, imgFileName) } });
                         break;
                     default:
                         break;
@@ -171,7 +318,7 @@ namespace Another_Mirai_Native
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { success = false }.ToJson());
+                    Send(new ApiResult { type= "HandleMiraiFunction", success = false }.ToJson());
                     LogHelper.WriteLog("Authcode无效", "");
                     return logid;
                 }
@@ -238,7 +385,7 @@ namespace Another_Mirai_Native
                         int recall_msgId = json["data"]["args"]["msgId"].ToObject<int>();
                         string recallMsg = MiraiAPI.GetMessageByMsgId(recall_msgId);
                         if (string.IsNullOrEmpty(recallMsg)) recallMsg = "消息拉取失败";
-                        logid = LogHelper.WriteLog(Enums.LogLevel.Info, plugin.appinfo.Name, "撤回消息", $"msgid={recall_msgId}, 内容={recallMsg}", "处理中...");                        
+                        logid = LogHelper.WriteLog(Enums.LogLevel.Info, plugin.appinfo.Name, "撤回消息", $"msgid={recall_msgId}, 内容={recallMsg}", "处理中...");
                         callResult = MiraiAPI.RecallMessage(recall_msgId, 0);
                         break;
                     case MiraiApiType.roamingMessages:
@@ -312,7 +459,7 @@ namespace Another_Mirai_Native
                         long admin_group = json["data"]["args"]["groupId"].ToObject<long>();
                         long admin_qq = json["data"]["args"]["qqId"].ToObject<long>();
                         bool admin_set = json["data"]["args"]["isSet"].ToObject<bool>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"{(admin_set?"设置":"取消")}群成员管理", $"{(admin_set?"设置":"取消")}群{admin_group} 成员{admin_qq}", "处理中...");
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoSend, plugin.appinfo.Name, $"{(admin_set ? "设置" : "取消")}群成员管理", $"{(admin_set ? "设置" : "取消")}群{admin_group} 成员{admin_qq}", "处理中...");
                         callResult = MiraiAPI.SetAdmin(admin_group, admin_qq, admin_set);
                         break;
                     case MiraiApiType.anno_list:
@@ -336,7 +483,7 @@ namespace Another_Mirai_Native
                                 break;
                         }
                         long respf_fromId = 0;
-                        string respf_nick = ""; 
+                        string respf_nick = "";
                         if (Cache.FriendRequset.ContainsKey(respf_eventId))
                         {
                             respf_fromId = Cache.FriendRequset[respf_eventId].Item1;
@@ -361,7 +508,7 @@ namespace Another_Mirai_Native
                                 break;
                         }
                         long respm_fromId = 0, respm_groupId = 0;
-                        string respm_nick = "", respm_groupname ="";
+                        string respm_nick = "", respm_groupname = "";
                         if (Cache.GroupRequset.ContainsKey(respm_eventId))
                         {
                             respm_fromId = Cache.GroupRequset[respm_eventId].Item1;
@@ -403,12 +550,12 @@ namespace Another_Mirai_Native
                     default:
                         break;
                 }
-                Send(new ApiResult { data = new { callResult }.ToJson() }.ToJson());
+                Send(new ApiResult { type = "HandleMiraiFunction", data = new { callResult } });
                 return logid;
             }
-            public void Send(WsServerFunction type, object data)
+            public void Send(object data)
             {
-                 Send(new { type, data }.ToJson());
+                Send(data.ToJson());
             }
         }
         public static WsServer Instance { get; set; }

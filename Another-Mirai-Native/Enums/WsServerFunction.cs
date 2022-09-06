@@ -17,6 +17,7 @@
         GetGroupList,
         GetFriendList,
         GetStatus,
+        GetDirectroy,
         UnAuth
     }
     public enum WsClientType
