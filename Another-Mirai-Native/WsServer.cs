@@ -606,9 +606,9 @@ namespace Another_Mirai_Native
                 Send(new ApiResult { Type = "HandleMiraiFunction", Data = new { callResult } });
                 return logid;
             }
-            public void Send(object data)
+            public void Send(object objData)
             {
-                Send(data.ToJson());
+                Send(data: objData.ToJson());
             }
         }
         public static WsServer Instance { get; set; }
