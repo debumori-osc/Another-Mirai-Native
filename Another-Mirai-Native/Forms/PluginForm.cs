@@ -134,7 +134,8 @@ namespace Another_Mirai_Native.Forms
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "停用";
             }
-            new Thread(() => {
+            new Thread(() =>
+            {
                 PluginManagment.Instance.FlipPluginState(plugin);
                 Invoke(() => { RefreshList(); });
             }).Start();
@@ -206,7 +207,7 @@ namespace Another_Mirai_Native.Forms
         {
             MenuItem menu = NotifyIconHelper.Instance.ContextMenu.MenuItems.Find("PluginMenu", false).First();
             menu.MenuItems.Clear();
-            PluginManagment.Instance.Plugins.ForEach(x =>
+            DistinctPluginList().ForEach(x =>
             {
                 NotifyIconHelper.LoadMenu(x.json);
             });
@@ -243,14 +244,7 @@ namespace Another_Mirai_Native.Forms
             {
                 listView_PluginList.Items.Clear();
 
-                var pluginList = PluginManagment.Instance.Plugins;
-                foreach(var item in PluginManagment.Instance.SavedPlugins)
-                {
-                    if(pluginList.Any(x=>x.appinfo.Name == item.appinfo.Name) is false)
-                    {
-                        pluginList.Add(item);
-                    }
-                }
+                List<CQPlugin> pluginList = DistinctPluginList();
                 foreach (var item in pluginList.OrderBy(x => x.appinfo.Name))
                 {
                     ListViewItem listViewItem = new();
@@ -262,6 +256,20 @@ namespace Another_Mirai_Native.Forms
                     listView_PluginList.Items.Add(listViewItem);
                 }
             });
+        }
+
+        private static List<CQPlugin> DistinctPluginList()
+        {
+            var pluginList = PluginManagment.Instance.Plugins;
+            foreach (var item in PluginManagment.Instance.SavedPlugins)
+            {
+                if (pluginList.Any(x => x.appinfo.Name == item.appinfo.Name) is false)
+                {
+                    pluginList.Add(item);
+                }
+            }
+
+            return pluginList;
         }
     }
 }
