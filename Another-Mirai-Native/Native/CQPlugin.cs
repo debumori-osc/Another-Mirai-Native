@@ -27,9 +27,9 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public AppInfo appinfo;
         /// <summary>
-        /// 插件的json部分,包含名称、描述、函数入口以及窗口名称部分
+        /// 插件的json部分,包含名称、描述、函数入口以及窗口名称部分 不使用JObject是因为JObject无法序列化
         /// </summary>
-        public JObject json;
+        public string json;
         public string path;
         public Dll dll;
         /// <summary>
@@ -37,7 +37,7 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public bool Enable;
         public bool Testing;
-        public CQPlugin(IntPtr handle, AppInfo appinfo, JObject json, Dll dll, bool enable, string path)
+        public CQPlugin(IntPtr handle, AppInfo appinfo, string json, Dll dll, bool enable, string path)
         {
             this.handle = handle;
             this.appinfo = appinfo;

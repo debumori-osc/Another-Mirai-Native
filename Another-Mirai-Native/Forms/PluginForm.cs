@@ -97,7 +97,7 @@ namespace Another_Mirai_Native.Forms
             label_Author.Text = appinfo.Author;
             label_Version.Text = appinfo.Version.ToString();
             label_Description.Text = appinfo.Description;
-            JObject json = plugin.json;
+            JObject json = JObject.Parse(plugin.json);
             label_Auth.Text = $"需要以下权限（{JArray.Parse(json["auth"].ToString()).Count}个）";
             foreach (var item in (JArray)json["auth"])
                 listBox_Auth.Items.Add(ChineseName[Convert.ToInt32(item.ToString())]);
@@ -131,7 +131,7 @@ namespace Another_Mirai_Native.Forms
             else
             {
                 listBoxItem.ForeColor = Color.Black;
-                listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
+                listBoxItem.SubItems[0].Text = (plugin.Enable ? "[未启用]" : " ") + plugin.appinfo.Name;
                 button_Disable.Text = "停用";
             }
             new Thread(() =>
@@ -209,7 +209,7 @@ namespace Another_Mirai_Native.Forms
             menu.MenuItems.Clear();
             DistinctPluginList().ForEach(x =>
             {
-                NotifyIconHelper.LoadMenu(x.json);
+                NotifyIconHelper.LoadMenu(JObject.Parse(x.json));
             });
             NotifyIconHelper.AddManageMenu();
             RefreshList();
@@ -240,11 +240,13 @@ namespace Another_Mirai_Native.Forms
         }
         public void RefreshList()
         {
+            int selectedIndex = 0;
             Instance.Invoke(() =>
             {
                 listView_PluginList.Items.Clear();
 
                 List<CQPlugin> pluginList = DistinctPluginList();
+                int index = 0;
                 foreach (var item in pluginList.OrderBy(x => x.appinfo.Name))
                 {
                     ListViewItem listViewItem = new();
@@ -253,14 +255,20 @@ namespace Another_Mirai_Native.Forms
                     listViewItem.SubItems[0].Text = (item.Enable ? "" : "[未启用] ") + item.appinfo.Name;
                     listViewItem.SubItems.Add(item.appinfo.Version.ToString());
                     listViewItem.SubItems.Add(item.appinfo.Author);
+                    if(index == selectedIndex)
+                    {
+                        listViewItem.Selected = true;
+                    }
                     listView_PluginList.Items.Add(listViewItem);
-                }
+                    index++;
+                }                
             });
         }
 
         private static List<CQPlugin> DistinctPluginList()
         {
-            var pluginList = PluginManagment.Instance.Plugins;
+            var pluginList = new List<CQPlugin>();
+            PluginManagment.Instance.Plugins.ForEach(x => pluginList.Add(x));
             foreach (var item in PluginManagment.Instance.SavedPlugins)
             {
                 if (pluginList.Any(x => x.appinfo.Name == item.appinfo.Name) is false)
