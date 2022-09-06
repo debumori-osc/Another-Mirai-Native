@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using Another_Mirai_Native.Adapter;
 using Another_Mirai_Native.Enums;
@@ -78,8 +79,11 @@ namespace Another_Mirai_Native
                 switch (targetItem.Tag)
                 {
                     case "ReLink":
-                        MiraiAdapter.Instance.MessageSocket.Close();
-                        MiraiAdapter.Instance.EventSocket.Close();
+                        new Thread(() =>
+                        {
+                            MiraiAdapter.Instance.MessageSocket.Close();
+                            MiraiAdapter.Instance.EventSocket.Close();
+                        }).Start();
                         return;
                     case "Quit":
                         Quit();
@@ -107,7 +111,7 @@ namespace Another_Mirai_Native
                     return;
                 }
                 string menuname = string.Empty;
-                foreach (var item in JArray.Parse(c.json["menu"].ToString()))//遍历此插件的json的menu节点,寻找窗口函数
+                foreach (var item in JArray.Parse(JObject.Parse(c.json)["menu"].ToString()))//遍历此插件的json的menu节点,寻找窗口函数
                 {
                     if (item["name"].ToString() == pair.Value)
                     { menuname = item["function"].ToString(); break; }
