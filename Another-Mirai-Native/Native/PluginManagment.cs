@@ -221,8 +221,11 @@ namespace Another_Mirai_Native.Native
             Load(path);
             Loading = false;
             var pluginReload = Plugins.Find(x => x.appinfo.Name == name);
-            pluginReload.dll.CallFunction(FunctionEnums.StartUp);
-            pluginReload.dll.CallFunction(FunctionEnums.Enable);
+            if (pluginReload.Enable)
+            {
+                pluginReload.dll.CallFunction(FunctionEnums.StartUp);
+                pluginReload.dll.CallFunction(FunctionEnums.Enable);
+            }
         }
 
         /// <summary>
