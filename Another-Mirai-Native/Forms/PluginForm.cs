@@ -22,7 +22,6 @@ namespace Another_Mirai_Native.Forms
             InitializeComponent();
             Instance = this;
         }
-        private List<CQPlugin> plugins = new();
         /// <summary>
         /// 权限转中文名称字典
         /// </summary>
@@ -98,7 +97,7 @@ namespace Another_Mirai_Native.Forms
             label_Author.Text = appinfo.Author;
             label_Version.Text = appinfo.Version.ToString();
             label_Description.Text = appinfo.Description;
-            JObject json = JObject.Parse(plugin.json);
+            JObject json = plugin.json;
             label_Auth.Text = $"需要以下权限（{JArray.Parse(json["auth"].ToString()).Count}个）";
             foreach (var item in (JArray)json["auth"])
                 listBox_Auth.Items.Add(ChineseName[Convert.ToInt32(item.ToString())]);
@@ -125,19 +124,20 @@ namespace Another_Mirai_Native.Forms
             var listBoxItem = listView_PluginList.SelectedItems[0];
             if (plugin.Enable)
             {
-                plugin.Enable = false;
                 listBoxItem.ForeColor = Color.Gray;
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "启用";
             }
             else
             {
-                plugin.Enable = true;
                 listBoxItem.ForeColor = Color.Black;
                 listBoxItem.SubItems[0].Text = (plugin.Enable ? "" : "[未启用] ") + plugin.appinfo.Name;
                 button_Disable.Text = "停用";
             }
-            new Thread(() => PluginManagment.Instance.FlipPluginState(plugin)).Start();
+            new Thread(() => {
+                PluginManagment.Instance.FlipPluginState(plugin);
+                Invoke(() => { RefreshList(); });
+            }).Start();
         }
 
         private void button_AppDir_Click(object sender, EventArgs e)
@@ -208,7 +208,7 @@ namespace Another_Mirai_Native.Forms
             menu.MenuItems.Clear();
             PluginManagment.Instance.Plugins.ForEach(x =>
             {
-                NotifyIconHelper.LoadMenu(JObject.Parse(x.json));
+                NotifyIconHelper.LoadMenu(x.json);
             });
             NotifyIconHelper.AddManageMenu();
             RefreshList();
@@ -242,8 +242,16 @@ namespace Another_Mirai_Native.Forms
             Instance.Invoke(() =>
             {
                 listView_PluginList.Items.Clear();
-                plugins = PluginManagment.Instance.Plugins;
-                foreach (var item in plugins)
+
+                var pluginList = PluginManagment.Instance.Plugins;
+                foreach(var item in PluginManagment.Instance.SavedPlugins)
+                {
+                    if(pluginList.Any(x=>x.appinfo.Name == item.appinfo.Name) is false)
+                    {
+                        pluginList.Add(item);
+                    }
+                }
+                foreach (var item in pluginList.OrderBy(x => x.appinfo.Name))
                 {
                     ListViewItem listViewItem = new();
                     listViewItem.Tag = item;

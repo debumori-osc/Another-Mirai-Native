@@ -24,6 +24,7 @@ namespace Another_Mirai_Native.Native
     {
         public static PluginManagment Instance { get; set; }
         public List<CQPlugin> Plugins { get; set; } = new();
+        public List<CQPlugin> SavedPlugins { get; set; } = new();
         public Dictionary<IntPtr, AppDomain> AppDomains { get; set; } = new();
         public bool Loading { get; set; } = false;
         private JObject PluginStatus;
@@ -82,7 +83,7 @@ namespace Another_Mirai_Native.Native
             //复制它的json
             File.Copy(plugininfo.FullName.Replace(".dll", ".json"), destpath.Replace(".dll", ".json"), true);
 
-            IntPtr iLib = dll.Load(destpath, json);//将dll插件LoadLibrary,并进行函数委托的实例化;
+            IntPtr iLib = dll.Load(destpath);//将dll插件LoadLibrary,并进行函数委托的实例化;
 
             AppDomainSetup ads = new()
             {
@@ -116,7 +117,8 @@ namespace Another_Mirai_Native.Native
                 , new object[] { iLib, appInfo, json.ToString(), dll, enabled, filepath }
                 , null, null);
             Plugins.Add(CQPlugin);
-
+            if (SavedPlugins.Any(x => x.appinfo.Name == appInfo.Name) is false)
+                SavedPlugins.Add(new CQPlugin { appinfo = appInfo, json = json, path = filepath, Enable = false });
             cq_start(Marshal.StringToHGlobalAnsi(destpath), authcode);
             //将它的窗口写入托盘右键菜单
             NotifyIconHelper.LoadMenu(json);
@@ -125,25 +127,23 @@ namespace Another_Mirai_Native.Native
             return true;
         }
 
-        private void NewappDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e)
-        {
-            Console.WriteLine();
-        }
-
         /// <summary>
         /// 翻转插件启用状态
         /// </summary>
         public void FlipPluginState(CQPlugin CQPlugin)
         {
-            if(CQPlugin.Enable)
+            if (CQPlugin.Enable)
             {
                 CQPlugin.dll.CallFunction(FunctionEnums.Exit);
                 CQPlugin.dll.CallFunction(FunctionEnums.Disable);
+                UnLoad(CQPlugin);
             }
             else
             {
-                CQPlugin.dll.CallFunction(FunctionEnums.Enable);
-                CQPlugin.dll.CallFunction(FunctionEnums.StartUp);
+                Load(CQPlugin.path);
+                CQPlugin loadedPlugin = Plugins.FirstOrDefault(x => x.appinfo.Name == CQPlugin.appinfo.Name);
+                loadedPlugin.dll.CallFunction(FunctionEnums.Enable);
+                loadedPlugin.dll.CallFunction(FunctionEnums.StartUp);
             }
             var c = PluginStatus["Status"]
                             .Where(x => x["Name"].ToString() == CQPlugin.appinfo.Id)
@@ -151,6 +151,8 @@ namespace Another_Mirai_Native.Native
             c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
             File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
         }
+
+
         /// <summary>
         /// 从配置获取插件启用状态
         /// </summary>
@@ -170,8 +172,8 @@ namespace Another_Mirai_Native.Native
             {
                 JObject CQPlugin = new()
                 {
-                    new JProperty("Name",appInfo.Id),
-                    new JProperty("Enabled",1)
+                    new JProperty("Name", appInfo.Id),
+                    new JProperty("Enabled", 1)
                 };
                 statesArray.Add(CQPlugin);
                 File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
@@ -196,7 +198,8 @@ namespace Another_Mirai_Native.Native
                 CQPlugin.dll.UnLoad();
                 Plugins.Remove(CQPlugin);
                 LogHelper.WriteLog(LogLevel.InfoSuccess, "插件卸载", $"插件 {CQPlugin.appinfo.Name} 卸载成功");
-                CQPlugin = null; GC.Collect();
+                CQPlugin = null;
+                GC.Collect();
             }
             catch (Exception e)
             {
@@ -335,6 +338,7 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public void ReLoad()
         {
+            SavedPlugins.Clear();
             UnLoad();
             Load();
             LogHelper.WriteLog("遍历启动事件……");

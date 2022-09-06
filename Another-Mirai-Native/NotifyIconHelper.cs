@@ -107,7 +107,7 @@ namespace Another_Mirai_Native
                     return;
                 }
                 string menuname = string.Empty;
-                foreach (var item in JArray.Parse(JObject.Parse(c.json)["menu"].ToString()))//遍历此插件的json的menu节点,寻找窗口函数
+                foreach (var item in JArray.Parse(c.json["menu"].ToString()))//遍历此插件的json的menu节点,寻找窗口函数
                 {
                     if (item["name"].ToString() == pair.Value)
                     { menuname = item["function"].ToString(); break; }

@@ -29,7 +29,7 @@ namespace Another_Mirai_Native.Native
         /// <summary>
         /// 插件的json部分,包含名称、描述、函数入口以及窗口名称部分
         /// </summary>
-        public string json;
+        public JObject json;
         public string path;
         public Dll dll;
         /// <summary>
@@ -37,7 +37,7 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public bool Enable;
         public bool Testing;
-        public CQPlugin(IntPtr handle, AppInfo appinfo, string json, Dll dll, bool enable, string path)
+        public CQPlugin(IntPtr handle, AppInfo appinfo, JObject json, Dll dll, bool enable, string path)
         {
             this.handle = handle;
             this.appinfo = appinfo;
@@ -46,6 +46,7 @@ namespace Another_Mirai_Native.Native
             this.Enable = enable;
             this.path = path;
         }
+        public CQPlugin() { }
     }
     [Serializable]
     public class Dll : IDisposable
@@ -68,7 +69,7 @@ namespace Another_Mirai_Native.Native
         private IntPtr hLib;
         #endregion
 
-        public IntPtr Load(string filepath, JObject json)
+        public IntPtr Load(string filepath)
         {
             if (hLib == null || hLib == (IntPtr)0)
             {
