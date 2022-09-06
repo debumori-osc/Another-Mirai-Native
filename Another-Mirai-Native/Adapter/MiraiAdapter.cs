@@ -4,7 +4,6 @@ using Another_Mirai_Native.Adapter.MiraiMessageEventArgs;
 using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
 using Another_Mirai_Native.Native;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -19,19 +18,43 @@ using WebSocketSharp;
 
 namespace Another_Mirai_Native.Adapter
 {
+    /// <summary>
+    /// 描述与Mirai-Http-Api(MHA) 交互的类
+    /// </summary>
     public class MiraiAdapter
     {
         public static MiraiAdapter Instance { get; set; }
+        /// <summary>
+        /// 与MHA通信的连接, 通常以ws开头
+        /// </summary>
         public string WsURL { get; set; }
+        /// <summary>
+        /// MHA配置中所定义的SecretKey
+        /// </summary>
         public string AuthKey { get; set; }
+        /// <summary>
+        /// Mirai框架中登录中 且 希望控制逻辑的QQ号
+        /// </summary>
         public string QQ { get; set; }
+        /// <summary>
+        /// 保存消息服务器的SessionKey
+        /// </summary>
         public string SessionKey_Message { get; set; }
+        /// <summary>
+        /// 保存事件服务器的SessionKey
+        /// </summary>
         public string SessionKey_Event { get; set; }
+        /// <summary>
+        /// 重连次数
+        /// </summary>
         public int reConnect { get; set; }
 
         public WebSocket MessageSocket;
         public WebSocket EventSocket;
         public delegate void ConnectedStateChange(bool status, string msg);
+        /// <summary>
+        /// 连接状态变更事件
+        /// </summary>
         public event ConnectedStateChange ConnectedStateChanged;
 
         static Encoding GB18030 = Encoding.GetEncoding("GB18030");
@@ -60,7 +83,7 @@ namespace Another_Mirai_Native.Adapter
         private void EventSocket_OnOpen(object sender, EventArgs e)
         {
             LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
-            reConnect = 0; 
+            reConnect = 0;
             while (NoEventTimeout < NoEventTimeoutMax)
             {
                 Thread.Sleep(1000);
@@ -75,7 +98,7 @@ namespace Another_Mirai_Native.Adapter
         {
             LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
             reConnect = 0;
-            while(NoMsgTimeout < NoMsgTimeoutMax)
+            while (NoMsgTimeout < NoMsgTimeoutMax)
             {
                 Thread.Sleep(1000);
                 NoMsgTimeout++;
@@ -109,7 +132,9 @@ namespace Another_Mirai_Native.Adapter
             MessageSocket.OnOpen += MessageSocket_OnOpen;
             MessageSocket.Connect();
         }
-
+        /// <summary>
+        /// 处理消息, 使用了消息队列
+        /// </summary>
         private void MessageSocket_OnMessage(object sender, MessageEventArgs e)
         {
             NoMsgTimeout = 0;
@@ -135,15 +160,15 @@ namespace Another_Mirai_Native.Adapter
                 }
                 return;
             }
-            if (json.ContainsKey("code"))
+            if (json.ContainsKey("code"))// 为API调用结果
             {
                 ApiQueue.Peek().result = json.ToString();
                 Debug.WriteLine(e.Data);
                 return;
             }
-            if ((json.ContainsKey("data") && json["data"].ContainsKey("code")) 
+            if ((json.ContainsKey("data") && json["data"].ContainsKey("code"))
                 || (json["data"].ContainsKey("nickname") && json["data"].ContainsKey("sex"))
-                || json["data"].ContainsKey("specialTitle"))
+                || json["data"].ContainsKey("specialTitle"))// 同样为API调用结果, 但是结果封装与上面那个不一样
             {
                 ApiQueue.Peek().result = json["data"].ToString();
                 Debug.WriteLine(e.Data);
@@ -177,14 +202,16 @@ namespace Another_Mirai_Native.Adapter
                 }
                 return;
             }
-            if (json["data"].ContainsKey("code"))
+            if (json["data"].ContainsKey("code"))// 将结果写入队列第一个元素 并排出队列
             {
-                ApiQueue.Dequeue().result = json["data"].ToString();
+                ApiQueue.Peek().result = json["data"].ToString();// TODO: 验证
                 return;
             }
             ParseEvent(json);
         }
-
+        /// <summary>
+        /// 处理分发事件
+        /// </summary>
         private void ParseEvent(JObject msg)
         {
             Stopwatch sw = new();
@@ -239,7 +266,7 @@ namespace Another_Mirai_Native.Adapter
                 case MiraiEvents.BotJoinGroupEvent:
                     var botJoinGroup = raw.ToObject<BotJoinGroupEvent>();
                     string botJoinGroupInvitorMsg = "";
-                    if(botJoinGroup.invitor != null)
+                    if (botJoinGroup.invitor != null)
                     {
                         botJoinGroupInvitorMsg = $" 邀请人:{botJoinGroup.invitor.id}({botJoinGroup.invitor.memberName})";
                     }
@@ -269,7 +296,7 @@ namespace Another_Mirai_Native.Adapter
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群撤回", $"群:{groupRecall.group.id}({groupRecall.group.name}) QQ:{groupRecall.authorId} 内容:{groupRecallMsg}", "处理中...");
                     break;
                 case MiraiEvents.FriendRecallEvent:
-                    var friendRecall = raw.ToObject<FriendRecallEvent>();                    
+                    var friendRecall = raw.ToObject<FriendRecallEvent>();
                     string friendRecallMsg = MiraiAPI.GetMessageByMsgId(friendRecall.messageId);
                     if (string.IsNullOrEmpty(friendRecallMsg)) friendRecallMsg = "消息拉取失败";
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "私聊撤回", $"QQ:{friendRecall.authorId} 内容:{friendRecallMsg}", "处理中...");
@@ -277,7 +304,7 @@ namespace Another_Mirai_Native.Adapter
                 case MiraiEvents.NudgeEvent:
                     var nudge = raw.ToObject<NudgeEvent>();
                     string nudgeMsg = "";
-                    if(nudge.subject.kind == "Group")
+                    if (nudge.subject.kind == "Group")
                     {
                         nudgeMsg = $"群:{nudge.subject.id} QQ:{nudge.fromId}";
                     }
@@ -394,7 +421,10 @@ namespace Another_Mirai_Native.Adapter
             }
             LogHelper.UpdateLogStatus(logid, updatemsg);
         }
-
+        /// <summary>
+        /// 处理分发消息
+        /// </summary>
+        /// <param name="msg"></param>
         private void ParseMessage(JObject msg)
         {
             MiraiMessageEvents events = Helper.String2Enum<MiraiMessageEvents>(msg["data"]["type"].ToString());
@@ -405,6 +435,14 @@ namespace Another_Mirai_Native.Adapter
             string parsedMsg = CQCodeBuilder.Parse(chainMsg);
             DispatchMessage(events, msg["data"], source, chainMsg, parsedMsg);
         }
+        /// <summary>
+        /// 将消息分发给插件处理
+        /// </summary>
+        /// <param name="msgEvent">消息来源</param>
+        /// <param name="raw">原始json对象</param>
+        /// <param name="source"></param>
+        /// <param name="chainMsg">消息链</param>
+        /// <param name="msg">CQ码转码后文本</param>
         private void DispatchMessage(MiraiMessageEvents msgEvent, JToken raw, MiraiMessageTypeDetail.Source source, List<MiraiMessageBase> chainMsg, string msg)
         {
             if (source == null)
@@ -416,6 +454,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 Stopwatch sw = new();
                 sw.Start();
+                // 文件上传优先处理
                 if (chainMsg.Any(x => x.messageType == MiraiMessageType.File))
                 {
                     var group = raw.ToObject<GroupMessage>();
@@ -432,11 +471,13 @@ namespace Another_Mirai_Native.Adapter
                         $"文件名:{file.name} 大小:{file.size / 1000}KB FileID:{file.id}", $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s");
                     return;
                 }
+                // utf8转GB18030
                 var b = Encoding.UTF8.GetBytes(msg);
                 msg = GB18030.GetString(Encoding.Convert(Encoding.UTF8, GB18030, b));
                 byte[] messageBytes = GB18030.GetBytes(msg + "\0");
                 var messageIntptr = Marshal.AllocHGlobal(messageBytes.Length);
                 Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
+
                 int logid = 0;
                 CQPlugin handledPlugin = null;
                 switch (msgEvent)
@@ -477,49 +518,72 @@ namespace Another_Mirai_Native.Adapter
                 LogHelper.UpdateLogStatus(logid, updatemsg);
             }).Start();
         }
-
+        /// <summary>
+        /// 连接消息服务器与事件服务器
+        /// </summary>
+        /// <returns></returns>
         public bool Connect()
         {
             MessageSocket.Connect();
             EventSocket.Connect();
-            return false;
+            return false;// ?
         }
+        /// <summary>
+        /// 描述消息队列的对象
+        /// </summary>
         class QueueObject
         {
+            /// <summary>
+            /// 向MHA发送的请求
+            /// </summary>
             public string request { get; set; }
+            /// <summary>
+            /// 处理后的结果
+            /// </summary>
             public string result { get; set; } = "";
         }
+        /// <summary>
+        /// API等待队列
+        /// </summary>
         Queue<QueueObject> ApiQueue = new();
+        /// <summary>
+        /// 调用MiraiAPI
+        /// </summary>
+        /// <param name="type">API类别</param>
+        /// <param name="data">调用内容</param>
         public string CallMiraiAPI(MiraiApiType type, object data)
         {
             string apiType = Enum.GetName(typeof(MiraiApiType), type);
-            string command=apiType, subCommand="";
-            if (apiType.Contains("_"))
+            string command = apiType, subCommand = "";
+            if (apiType.Contains("_"))// 子命令
             {
                 var c = apiType.Split('_');
                 command = c[0];
                 subCommand = c[1];
             }
-            QueueObject queueObject = new() { request= new { syncId=-1, command, subCommand, content = data  }.ToJson() };
+            QueueObject queueObject = new() { request = new { syncId = -1, command, subCommand, content = data }.ToJson() };
             ApiQueue.Enqueue(queueObject);
-            if(ApiQueue.Count == 1)
+            if (ApiQueue.Count == 1)// 无需队列等待 直接发送请求
                 MessageSocket.Send(queueObject.request);
             // 超时脱出
             int timoutCountMax = 1000;
             int timoutCount = 0;
+            // 等待消息处理后将结果放置在对象中
             while (queueObject.result == "")
             {
-                if(timoutCount > timoutCountMax)
+                if (timoutCount > timoutCountMax)// 超时
                 {
+                    // TODO: 请求是否需要设置默认值
                     break;
                 }
                 Thread.Sleep(10);
                 timoutCount++;
             }
+            // 从队列排出
             ApiQueue.Dequeue();
-            if (ApiQueue.Count != 0)
+            if (ApiQueue.Count != 0)// 将队列下一元素的请求发送
                 MessageSocket.Send(ApiQueue.Peek().request);
-            return queueObject.result;
+            return queueObject.result;// 返回请求结果
         }
     }
 }

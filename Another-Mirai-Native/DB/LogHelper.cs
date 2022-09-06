@@ -7,12 +7,25 @@ using System.Text;
 
 namespace Another_Mirai_Native.DB
 {
+    /// <summary>
+    /// 描述日志的静态类
+    /// </summary>
     public static class LogHelper
     {
         public delegate void AddLogHandler(int logid, LogModel log);
+        /// <summary>
+        /// 日志添加事件
+        /// </summary>
         public static event AddLogHandler LogAdded;
         public delegate void UpdateLogStatusHandler(int logid, string status);
+        /// <summary>
+        /// 日志状态更新事件
+        /// </summary>
         public static event UpdateLogStatusHandler LogStatusUpdated;
+        /// <summary>
+        /// 获取当天日志文件名
+        /// </summary>
+        /// <returns></returns>
         public static string GetLogFileName()
         {
             var fileinfo = new DirectoryInfo($@"logs\{Helper.QQ}").GetFiles("*.db");
@@ -27,6 +40,9 @@ namespace Another_Mirai_Native.DB
             }
             return string.IsNullOrWhiteSpace(filename) ? $"logv2_{DateTime.Now:yyMMdd}.db" : filename;
         }
+        /// <summary>
+        /// 获取日志文件路径
+        /// </summary>
         public static string GetLogFilePath()
         {
             if (Directory.Exists($@"logs\{Helper.QQ}") is false)
@@ -44,6 +60,9 @@ namespace Another_Mirai_Native.DB
             });
             return db;
         }
+        /// <summary>
+        /// 初始化日志数据库
+        /// </summary>
         public static void CreateDB()
         {
             using (var db = GetInstance())
@@ -54,9 +73,14 @@ namespace Another_Mirai_Native.DB
             }
             WriteLog(LogLevel.InfoSuccess, "运行日志", $"日志数据库初始化完毕{DateTime.Now:yyMMdd}。");
         }
-        public static string GetTimeStampString(long Timestamp)
+        /// <summary>
+        /// 获取显示日志的时间文本
+        /// </summary>
+        /// <param name="timestamp">待转换文本</param>
+        /// <returns></returns>
+        public static string GetTimeStampString(long timestamp)
         {
-            DateTime time = Helper.TimeStamp2DateTime(Timestamp);
+            DateTime time = Helper.TimeStamp2DateTime(timestamp);
             StringBuilder sb = new();
             //sb.Append($"{(time.AddDays(1).Day == DateTime.Now.Day ? "昨天" : "今天")} ");
             sb.Append($"{time:MM/dd HH:mm:ss}");

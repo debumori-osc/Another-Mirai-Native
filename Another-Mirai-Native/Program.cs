@@ -18,8 +18,9 @@ namespace Another_Mirai_Native
         [STAThread]
         static void Main(string[] args)
         {
+            // 防止启动多个程序
             Process[] process = Process.GetProcessesByName("AnotherMiraiNative");
-            if (args.Length != 0 && args[0] == "-r")
+            if (args.Length != 0 && args[0] == "-r")// 如果含有 -r 参数 则等待前者进程退出之后再启动
             {
                 int initialNum = process.Length;
                 if (initialNum != 1)
@@ -30,10 +31,9 @@ namespace Another_Mirai_Native
                     }
                 }
             }
-            else if(args.Length != 0 && args[0] == "-i")
+            else if(args.Length != 0 && args[0] == "-i")// 含有 -i 参数 忽略进程检测
             {
-                // Save.IgnoreProcessChecking = true;
-                // Do nothing. Ignore Process Checking
+                // 忽略进程检测
             }
             else
             {
@@ -50,6 +50,9 @@ namespace Another_Mirai_Native
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Login());
         }
+        /// <summary>
+        /// 不可逆错误
+        /// </summary>
         public static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             if (e.ExceptionObject is Exception ex)
@@ -65,7 +68,9 @@ namespace Another_Mirai_Native
                 }
             }
         }
-
+        /// <summary>
+        /// 可忽略错误
+        /// </summary>
         public static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             if (e.Exception != null)

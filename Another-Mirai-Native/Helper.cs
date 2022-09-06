@@ -14,15 +14,45 @@ using System.Threading.Tasks;
 
 namespace Another_Mirai_Native
 {
+    /// <summary>
+    /// 公用静态函数集
+    /// </summary>
     public static class Helper
     {
+        /// <summary>
+        /// 框架登录中的QQ号
+        /// </summary>
         public static string QQ { get; set; }
+        /// <summary>
+        /// 框架登录中的昵称
+        /// </summary>
         public static string NickName { get; set; }
+        /// <summary>
+        /// 连接MHA的URL
+        /// </summary>
         public static string WsURL { get; set; }
+        /// <summary>
+        /// 连接MHA的SecretKey
+        /// </summary>
         public static string WsAuthKey { get; set; }
+        /// <summary>
+        /// 最大获取或显示日志数量
+        /// </summary>
+        // TODO: 设置为配置
         public static int MaxLogCount { get; set; } = 500;
+        /// <summary>
+        /// 当前时间戳
+        /// </summary>
         public static long TimeStamp => (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+        /// <summary>
+        /// 时间戳转换为DateTime
+        /// </summary>
         public static DateTime TimeStamp2DateTime(long timestamp) => new DateTime(1970, 1, 1, 8, 0, 0, DateTimeKind.Local).AddSeconds(timestamp);
+        /// <summary>
+        /// JToken中是否含有某个键
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="key">需要判断的键名</param>
         public static bool ContainsKey(this JToken json, string key)
         {
             try
@@ -73,6 +103,9 @@ namespace Another_Mirai_Native
                 return false;
             }
         }
+        /// <summary>
+        /// Base64转图片
+        /// </summary>
         public static Image Base642Image(string base64)
         {
             try
@@ -87,15 +120,25 @@ namespace Another_Mirai_Native
                 return null;
             }
         }
+        /// <summary>
+        /// 从文本转换为枚举对象
+        /// </summary>
+        /// <typeparam name="T">待转换枚举</typeparam>
+        /// <param name="value">待转换文本</param>
+        /// <returns>枚举对象</returns>
         public static T String2Enum<T>(string value)
         {
             return (T)Enum.Parse(typeof(T), value);
         }
-        public static T Int2Enum<T>(int value)
-        {
-            return (T)Enum.Parse(typeof(T), Enum.GetName(typeof(T), value));
-        }
+        /// <summary>
+        /// 对象转Json文本
+        /// </summary>
         public static string ToJson(this object obj) => JsonConvert.SerializeObject(obj);
+        /// <summary>
+        /// 从cqimg中获取图片URL
+        /// </summary>
+        /// <param name="cqimg"></param>
+        /// <returns></returns>
         public static string GetPicUrlFromCQImg(string cqimg)
         {
             string picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", cqimg);
@@ -139,7 +182,10 @@ namespace Another_Mirai_Native
             Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
             return ToString(messageIntptr, encoding);
         }
-
+        /// <summary>
+        /// 图片转Base64
+        /// </summary>
+        /// <param name="picPath">图片路径</param>
         public static string ParsePic2Base64(string picPath)
         {
             if(File.Exists(picPath) is false)
@@ -149,11 +195,14 @@ namespace Another_Mirai_Native
             var buffer = File.ReadAllBytes(picPath);
             return Convert.ToBase64String(buffer);
         }
+        /// <summary>
+        /// 重启应用
+        /// </summary>
         public static void RestartApplication()
         {
             string path = typeof(Login).Assembly.Location;
             Process.Start(path, $"-r");
-            //NotifyIconHelper.HideNotifyIcon();
+            NotifyIconHelper.HideNotifyIcon();
             Environment.Exit(0);
         }
     }

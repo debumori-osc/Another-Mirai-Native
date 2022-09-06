@@ -1,26 +1,26 @@
 ﻿using Another_Mirai_Native.Adapter.CQCode;
-using Another_Mirai_Native.Adapter.CQCode.Expand;
 using Another_Mirai_Native.Adapter.CQCode.Model;
 using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
-using Another_Mirai_Native.Native;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Another_Mirai_Native.Adapter
 {
+    /// <summary>
+    /// 辅助CQ码构建与解析的类
+    /// </summary>
     public static class CQCodeBuilder
     {
         /// <summary>
         /// 消息链转CQ码
         /// </summary>
-        /// <param name="chainMsg"></param>
-        /// <returns></returns>
+        /// <param name="chainMsg">从Mirai发送来的消息链</param>
+        /// <returns>转换CQ码后的结果</returns>
         public static string Parse(List<MiraiMessageBase> chainMsg)
         {
             StringBuilder Result = new();
@@ -108,34 +108,34 @@ namespace Another_Mirai_Native.Adapter
         /// <summary>
         /// CQ码转消息链
         /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="message">CQ码文本</param>
+        /// <returns>转换后的消息链数组</returns>
         public static List<MiraiMessageBase> BuildMessageChains(string message)
         {
             List<MiraiMessageBase> result = new();
-            var list = CQCodeModel.Parse(message);
+            var list = CQCodeModel.Parse(message);// 通过工具函数提取所有的CQ码
             foreach (var item in list)
             {
-                message = message.Replace(item.ToString(), "<!cqcode!>");
+                message = message.Replace(item.ToString(), "<!cqcode!>");// 将CQ码的位置使用占空文本替换
             }
-            List<string> p = new();
+            List<string> p = new();// 记录下文本与CQ码的位置关系
             string tmp = "";
-            for (int i = 0; i < message.Length; i++)
+            for (int i = 0; i < message.Length; i++)// 将消息中的CQ码与文本分离开
             {
-                tmp += message[i];
-                if(tmp == "<!cqcode!>")
+                tmp += message[i];// 文本
+                if(tmp == "<!cqcode!>")// 此消息中没有其他文本, 只有CQ码
                 {
                     p.Add("<!cqcode!>");
                     tmp = "";
                 }
-                else if (tmp.EndsWith("<!cqcode!>"))
+                else if (tmp.EndsWith("<!cqcode!>"))// 消息以CQ码结尾
                 {
-                    p.Add(tmp[..^10]);
-                    p.Add("<!cqcode!>");
+                    p.Add(tmp[..^10]);// 记录文本位置
+                    p.Add("<!cqcode!>");// 记录CQ码位置
                     tmp = "";
                 }
             }
-            if(tmp != "")
+            if(tmp != "")// 文本中没有CQ码, 或不以CQ码结尾
                 p.Add(tmp);
             int cqcode_index = 0;
             for (int i = 0; i < p.Count; i++)
@@ -143,19 +143,22 @@ namespace Another_Mirai_Native.Adapter
                 MiraiMessageBase messageBase;
                 if (p[i] == "<!cqcode!>")
                 {
-                    messageBase = ParseCQCode2MiraiMessageBase(list[cqcode_index]);
+                    messageBase = ParseCQCode2MiraiMessageBase(list[cqcode_index]);// 将CQ码转换为消息链对象
                     cqcode_index++;
                     if (messageBase == null) continue;
                 }
                 else
                 {
-                    messageBase = new MiraiMessageTypeDetail.Plain { text = p[i] };
+                    messageBase = new MiraiMessageTypeDetail.Plain { text = p[i] };// 将文本转换为消息链对象
                 }
                 result.Add(messageBase);
             }
             return result;
         }
-
+        /// <summary>
+        /// 将CQ码转换为消息链对象
+        /// </summary>
+        /// <param name="cqcode">需要转换的CQ码对象</param>
         private static MiraiMessageBase ParseCQCode2MiraiMessageBase(CQCodeModel cqcode)
         {
             switch (cqcode.Function)
@@ -166,6 +169,9 @@ namespace Another_Mirai_Native.Adapter
                     return new MiraiMessageTypeDetail.MarketFace { id = Convert.ToInt32(cqcode.Items["id"]) };
                 case CQCode.Enum.CQFunction.Image:
                     string picPath = cqcode.Items["file"];
+                    // 以下为两个纠错路径, 防止拼接路径时出现以下两种情况
+                    // basePath + "\foo.jpg"
+                    // basePath + "foo.jpg"
                     string picPathA = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image") + picPath;
                     string picPathB = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath);
                     if (File.Exists(picPathA))
@@ -178,12 +184,14 @@ namespace Another_Mirai_Native.Adapter
                     }
                     else
                     {
+                        // 若以上两个路径均不存在, 判断对应的cqimg文件是否存在
                         if(!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath + ".cqimg")))
                         {
                             LogHelper.WriteLog(LogLevel.Warning, "发送图片", "文件不存在", "");
                             return null;
                         }
-                        string picTmp = File.ReadAllText(picPath + ".cqimg");                        
+                        string picTmp = File.ReadAllText(picPath + ".cqimg");      
+                        // 分离cqimg文件中的url
                         picTmp = picTmp.Split('\n').Last().Replace("url=", "");
                         if (cqcode.Items.ContainsKey("flash"))
                         {
@@ -191,6 +199,7 @@ namespace Another_Mirai_Native.Adapter
                         }
                         return new MiraiMessageTypeDetail.Image { url = picTmp };
                     }
+                    // 将图片转换为base64
                     string picBase64 = Helper.ParsePic2Base64(picPath);
                     if(string.IsNullOrEmpty(picBase64))
                     {
@@ -202,6 +211,7 @@ namespace Another_Mirai_Native.Adapter
                     }
                     return new MiraiMessageTypeDetail.Image { base64 = picBase64 };
                 case CQCode.Enum.CQFunction.Record:
+                    // TODO: 音频支持
                     string recordPath = cqcode.Items["file"];
                     recordPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, recordPath);
                     return new MiraiMessageTypeDetail.Voice { path = recordPath };
@@ -223,6 +233,10 @@ namespace Another_Mirai_Native.Adapter
                     return null;
             }
         }
+        /// <summary>
+        /// 将Mirai发送的json数组, 转换为消息链对象
+        /// </summary>
+        /// <param name="json">json数组</param>
         public static List<MiraiMessageBase> ParseJArray2MiraiMessageBaseList(JArray json)
         {
             List<MiraiMessageBase> chainMsg = new();

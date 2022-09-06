@@ -5,28 +5,46 @@ using Another_Mirai_Native.Forms;
 using Another_Mirai_Native.Native;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
 namespace Another_Mirai_Native
 {
+    /// <summary>
+    /// WebSocket逻辑
+    /// </summary>
     public class WsServer
     {
+        /// <summary>
+        /// 描述WebSocket逻辑返回结果的类
+        /// </summary>
         public class ApiResult
         {
-            public bool success { get; set; } = true;
-            public object data { get; set; }
-            public string msg { get; set; } = "ok";
-            public string type { get; set; }
+            /// <summary>
+            /// 调用是否成功
+            /// </summary>
+            public bool Success { get; set; } = true;
+            /// <summary>
+            /// 调用返回的结果
+            /// </summary>
+            public object Data { get; set; }
+            /// <summary>
+            /// 错误消息
+            /// </summary>
+            public string Msg { get; set; } = "ok";
+            /// <summary>
+            /// 调用逻辑的类别
+            /// </summary>
+            public string Type { get; set; }
         }
         public class Handler : WebSocketBehavior
         {
+            /// <summary>
+            /// 连接类别
+            /// </summary>
             private WsClientType ClientType = WsClientType.UnAuth;
             protected override void OnMessage(MessageEventArgs e)
             {
@@ -34,6 +52,9 @@ namespace Another_Mirai_Native
                 sw.Start();
                 JObject json = JObject.Parse(e.Data);
                 var data = json["data"];
+                // 当type为Info时, 对连接进行鉴权, 若未授权的连接将无法调用逻辑
+                // 认为所有连接都必须进行授权, 将鉴权密码写入配置文件中
+                // CQP.dll在鉴权时也需要进行鉴权, 防止连接伪造为CQP连接而跳过鉴权流程
                 switch (json["type"].ToObject<WsServerFunction>())
                 {
                     case WsServerFunction.Info:
@@ -44,18 +65,6 @@ namespace Another_Mirai_Native
                                 Instance.CQPConnected?.Invoke();
                                 break;
                             case WsClientType.WebUI:
-                                string webUI_Password = ConfigHelper.GetConfig<string>("WebUI_Password");
-                                if (string.IsNullOrWhiteSpace(webUI_Password))
-                                {
-                                    webUI_Password = new Random().Next().ToString();
-                                    ConfigHelper.SetConfig("WebUI_Password", webUI_Password);
-                                }
-                                string password = json["data"]["args"]["password"].ToString();
-                                if (password != webUI_Password)
-                                {
-                                    Send(new ApiResult { type = "VerifyPassword", msg = "密码错误", success = false });
-                                    return;
-                                }
                                 InitRole(data);
                                 LogHelper.LogAdded -= WebUI_LogAdded;
                                 LogHelper.LogAdded += WebUI_LogAdded;
@@ -70,9 +79,10 @@ namespace Another_Mirai_Native
                     default:
                         break;
                 }
+                // 连接未授权, 拒绝处理逻辑
                 if (ClientType == WsClientType.UnAuth)
                 {
-                    Send(new ApiResult { type = "UserRole", msg = "UnAuth", success = false });
+                    Send(new ApiResult { Type = "UserRole", Msg = "UnAuth", Success = false });
                     return;
                 }
                 int logid = 0;
@@ -100,7 +110,7 @@ namespace Another_Mirai_Native
                         Ws_AddPlugin(json);
                         break;
                     case WsServerFunction.ReloadPlugin:
-                        Ws_ReloadPlugin();
+                        Ws_ReloadPlugin(json);
                         break;
                     case WsServerFunction.GetPluginList:
                         Ws_GetPluginList();
@@ -112,11 +122,9 @@ namespace Another_Mirai_Native
                         Ws_GetBotInfo();
                         break;
                     case WsServerFunction.GetGroupList:
-
+                        // TODO: 完成
                         break;
                     case WsServerFunction.GetFriendList:
-                        break;
-                    case WsServerFunction.GetStatus:
                         break;
                     case WsServerFunction.GetDirectroy:
                         Ws_GetDirectory(json);
@@ -129,24 +137,26 @@ namespace Another_Mirai_Native
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
             }
-
+            /// <summary>
+            /// 根据传入的路径, 获取子目录以及文件列表
+            /// </summary>
             private void Ws_GetDirectory(JObject json)
             {
-                string dir = json["data"]["args"]["dir"].ToString(); // 全路径
-                if (dir.IsNullOrEmpty())
+                string dir = json["dir"].ToString(); // 全路径
+                if (dir.IsNullOrEmpty())// 为空时传递驱动器列表
                 {
                     var drivels = DriveInfo.GetDrives();
-                    Send(new ApiResult { type = "GetDirectory", data = new { driveList = drivels.Select(x => x.Name).ToList() } });
+                    Send(new ApiResult { Type = "GetDirectory", Data = new { driveList = drivels.Select(x => x.Name).ToList() } });
                 }
                 else
                 {
-                    string filter = json["data"]["args"]["filter"]?.ToString();
-                    if (string.IsNullOrWhiteSpace(filter)) filter = ".dll";
+                    string filter = json["filter"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(filter)) filter = ".dll";// 默认筛选dll文件
                     var dirInfo = new DirectoryInfo(dir);
                     Send(new ApiResult
                     {
-                        type = "GetDirectory",
-                        data = new
+                        Type = "GetDirectory",
+                        Data = new
                         {
                             dirList = dirInfo.GetDirectories().Select(x => x.Name).ToList()
                            ,
@@ -155,34 +165,40 @@ namespace Another_Mirai_Native
                     });
                 }
             }
-
+            /// <summary>
+            /// 获取Bot QQ号与昵称
+            /// </summary>
             private void Ws_GetBotInfo()
             {
-                Send(new ApiResult { type = "GetBotInfo", data = new { Helper.QQ, Helper.NickName } });
+                Send(new ApiResult { Type = "GetBotInfo", Data = new { Helper.QQ, Helper.NickName } });
             }
-
+            /// <summary>
+            /// 根据完全路径加载插件
+            /// </summary>
             private void Ws_AddPlugin(JObject json)
             {
-                string path = json["data"]["args"]["path"].ToString();
+                string path = json["path"].ToString();
                 if (File.Exists(path) is false)
                 {
-                    Send(new ApiResult { type = "AddPlugin", msg = "文件不存在", success = false });
+                    Send(new ApiResult { Type = "AddPlugin", Msg = "文件不存在", Success = false });
                     return;
                 }
                 if (path.EndsWith(".dll") is false)
                 {
-                    Send(new ApiResult { type = "AddPlugin", msg = "所选文件非插件文件，请选择dll文件", success = false });
+                    Send(new ApiResult { Type = "AddPlugin", Msg = "所选文件非插件文件，请选择dll文件", Success = false });
                     return;
                 }
                 if (File.Exists(path[..^4] + ".json") is false)
                 {
-                    Send(new ApiResult { type = "AddPlugin", msg = "所选插件缺失json文件", success = false });
+                    Send(new ApiResult { Type = "AddPlugin", Msg = "所选插件缺失json文件", Success = false });
                     return;
                 }
                 PluginManagment.Instance.Load(path);
                 Send(new ApiResult());
             }
-
+            /// <summary>
+            /// 添加日志
+            /// </summary>
             private void Ws_AddLog(JObject json)
             {
                 Enums.LogLevel log_priority = json["data"]["args"]["priority"].ToObject<Enums.LogLevel>();
@@ -203,65 +219,98 @@ namespace Another_Mirai_Native
                     }
                 }
                 LogHelper.WriteLog(log_priority, log_origin, log_type, log_msg, "");
-                Send(new ApiResult { type = "AddLog", data = new { callResult = 1 } });
+                Send(new ApiResult { Type = "AddLog", Data = new { callResult = 1 } });
             }
-
+            /// <summary>
+            /// 根据优先级获取日志, 获取到的条数由配置决定
+            /// </summary>
             private void Ws_GetLog(JObject json)
             {
-                int priority = json["data"]["args"]["priority"].ToObject<int>();
+                int priority = json["priority"].ToObject<int>();
                 var logList = LogHelper.GetDisplayLogs(priority);
-                Send(new ApiResult { type = "GetLog", data = new { logList } });
+                Send(new ApiResult { Type = "GetLog", Data = new { logList } });
             }
-
+            /// <summary>
+            /// 退出应用
+            /// </summary>
             private void Ws_ExitApplication()
             {
-                Send(new ApiResult { type = "ExitApplication", });
+                Send(new ApiResult { Type = "ExitApplication", });
                 Environment.Exit(0);
             }
-
+            /// <summary>
+            /// 重启应用
+            /// </summary>
             private void Ws_RestartApplication()
             {
-                Send(new ApiResult { type = "RestartApplication", });
+                Send(new ApiResult { Type = "RestartApplication", });
                 Helper.RestartApplication();
             }
-
-            private void Ws_ReloadPlugin()
+            /// <summary>
+            /// 重载单个或所有应用
+            /// </summary>
+            /// <param name="json"></param>
+            private void Ws_ReloadPlugin(JObject json)
             {
-                PluginManagment.Instance.ReLoad();
-                Send(new ApiResult { type = "ReloadPlugin", });
+                if (json.ContainsKey("authCode"))// 需要重载单个插件时传递插件的AuthCode
+                {
+                    int authCode = (int)json["authCode"];
+                    var plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == authCode);
+                    if(plugin == null)
+                    {
+                        Send(new ApiResult { Type = "ReloadPlugin", Msg="插件不存在", Success = false});
+                        return;
+                    }
+                    PluginManagment.Instance.ReLoad(plugin);
+                }
+                else
+                {
+                    PluginManagment.Instance.ReLoad();
+                }
+                Send(new ApiResult { Type = "ReloadPlugin", });
             }
-
+            /// <summary>
+            /// 获取插件列表
+            /// </summary>
             private void Ws_GetPluginList()
             {
                 var pluginList = PluginManagment.Instance.Plugins.Select(x => { return new { x.Enable, x.Testing, x.appinfo }; }).ToList();
-                Send(new ApiResult { type = "GetPluginList", data = new { pluginList } });
+                Send(new ApiResult { Type = "GetPluginList", Data = new { pluginList } });
             }
-
+            /// <summary>
+            /// 切换插件的禁用或启用状态
+            /// </summary>
             private void Ws_SwitchPluginStatus(JObject json)
             {
-                var pluginId = (int)json["data"]["args"]["authCode"];
+                var pluginId = (int)json["authCode"];
                 CQPlugin plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == pluginId);
                 if (plugin != null)
                 {
                     PluginManagment.Instance.FlipPluginState(plugin);
-                    Send(new ApiResult { type = "SwitchPluginStatus" });
+                    Send(new ApiResult { Type = "SwitchPluginStatus" });
                 }
                 else
                 {
-                    Send(new ApiResult { type = "SwitchPluginStatus", msg = "插件不存在", success = false });
+                    Send(new ApiResult { Type = "SwitchPluginStatus", Msg = "插件不存在", Success = false });
                 }
             }
-
+            /// <summary>
+            /// 日志状态更新事件
+            /// </summary>
             private void WebUI_LogStatusUpdated(int logid, string status)
             {
-                Send(new ApiResult { type = "LogStatusUpdated", data = new { logid, status } });
+                Send(new ApiResult { Type = "LogStatusUpdated", Data = new { logid, status } });
             }
-
+            /// <summary>
+            /// 添加日志事件
+            /// </summary>
             private void WebUI_LogAdded(int logid, LogModel log)
             {
-                Send(new ApiResult { type = "LogAdded", data = new { logid, log } });
+                Send(new ApiResult { Type = "LogAdded", Data = new { logid, log } });
             }
-
+            /// <summary>
+            /// 连接角色鉴权
+            /// </summary>
             private void InitRole(JToken data)
             {
                 string key = data["key"].ToString();
@@ -269,6 +318,10 @@ namespace Another_Mirai_Native
                 {
                     ClientType = data["role"].ToObject<WsClientType>();
                     Send(new ApiResult());
+                }
+                else
+                {
+                    Send(new ApiResult { Type = "VerifyPassword", Msg = "密码错误", Success = false });
                 }
             }
 
@@ -279,7 +332,7 @@ namespace Another_Mirai_Native
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { success = false }.ToJson());
+                    Send(new ApiResult { Success = false }.ToJson());
                     LogHelper.WriteLog("Authcode无效", "");
                     return;
                 }
@@ -289,13 +342,13 @@ namespace Another_Mirai_Native
                         string path = @$"data\app\{plugin.appinfo.Id}";
                         if (Directory.Exists(path) is false)
                             Directory.CreateDirectory(path);
-                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = new DirectoryInfo(path).FullName + "\\" }.ToJson() }.ToJson());
+                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = new DirectoryInfo(path).FullName + "\\" }.ToJson() }.ToJson());
                         break;
                     case "GetLoginQQ":
-                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = Helper.QQ } });
+                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = Helper.QQ } });
                         break;
                     case "GetLoginNick":
-                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = Helper.NickName } });
+                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = Helper.NickName } });
                         break;
                     case "GetImage":
                         string cqimg = json["data"]["args"]["path"].ToString();
@@ -304,7 +357,7 @@ namespace Another_Mirai_Native
                         string imgDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image");
                         var downloadTask = Helper.DownloadFile(url, imgFileName, imgDir);
                         downloadTask.Wait();
-                        Send(new ApiResult { type = "HandleCQFunction", data = new { callResult = Path.Combine(imgDir, imgFileName) } });
+                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = Path.Combine(imgDir, imgFileName) } });
                         break;
                     default:
                         break;
@@ -318,7 +371,7 @@ namespace Another_Mirai_Native
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { type= "HandleMiraiFunction", success = false }.ToJson());
+                    Send(new ApiResult { Type= "HandleMiraiFunction", Success = false }.ToJson());
                     LogHelper.WriteLog("Authcode无效", "");
                     return logid;
                 }
@@ -550,7 +603,7 @@ namespace Another_Mirai_Native
                     default:
                         break;
                 }
-                Send(new ApiResult { type = "HandleMiraiFunction", data = new { callResult } });
+                Send(new ApiResult { Type = "HandleMiraiFunction", Data = new { callResult } });
                 return logid;
             }
             public void Send(object data)
