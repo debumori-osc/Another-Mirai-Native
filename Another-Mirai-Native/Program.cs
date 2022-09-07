@@ -43,7 +43,11 @@ namespace Another_Mirai_Native
                     return;
                 }
             }
+            UsageMonitor.CreateDB();
+            UsageMonitor.StartRecord();
+
             Application.ThreadException += Application_ThreadException;
+            Application.ApplicationExit += (a, b) => { UsageMonitor.ExitFlag = true; };
             //未处理的异常捕获
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Application.EnableVisualStyles();

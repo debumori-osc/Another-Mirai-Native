@@ -40,6 +40,8 @@ namespace Another_Mirai_Native
         /// </summary>
         // TODO: 设置为配置
         public static int MaxLogCount { get; set; } = 500;
+        public static List<DateTime> MsgSpeed { get; set; } = new();
+        public static DateTime StartUpTime { get; set; } = DateTime.Now;
         /// <summary>
         /// 当前时间戳
         /// </summary>

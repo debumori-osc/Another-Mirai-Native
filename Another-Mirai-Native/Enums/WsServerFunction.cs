@@ -52,7 +52,7 @@
         /// <summary>
         /// 获取Bot QQ与昵称
         /// </summary>
-        GetBotInfo,
+        BotInfo,
         /// <summary>
         /// 获取群列表
         /// </summary>
@@ -73,6 +73,10 @@
         /// 获取Bot宿主机状态
         /// </summary>
         Status,        
+        /// <summary>
+        /// 获取Bot状态图表数据
+        /// </summary>
+        Table,        
         /// <summary>
         /// 获取Bot宿主机信息
         /// </summary>

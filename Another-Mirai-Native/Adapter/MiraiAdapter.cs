@@ -44,6 +44,7 @@ namespace Another_Mirai_Native.Adapter
         /// 保存事件服务器的SessionKey
         /// </summary>
         public string SessionKey_Event { get; set; }
+        public bool ExitFlag { get; set; }
         /// <summary>
         /// 重连次数
         /// </summary>
@@ -76,6 +77,22 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.OnMessage += EventSocket_OnMessage;
             EventSocket.OnClose += EventSocket_OnClose;
             EventSocket.OnOpen += EventSocket_OnOpen;
+
+            new Thread(() =>
+            {
+                while (!ExitFlag)
+                {
+                    for (int i = 0; i < Helper.MsgSpeed.Count; i++)
+                    {
+                        if (Helper.MsgSpeed[i].AddMinutes(1) < DateTime.Now)
+                        {
+                            Helper.MsgSpeed.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                    Thread.Sleep(500);
+                }
+            }).Start();
         }
         private long NoEventTimeout = 0;
         private long NoEventTimeoutMax = 600;
@@ -140,6 +157,7 @@ namespace Another_Mirai_Native.Adapter
             MessageSocket.OnOpen += MessageSocket_OnOpen;
             MessageSocket.Connect();
         }
+
         /// <summary>
         /// 处理消息, 使用了消息队列
         /// </summary>
@@ -435,6 +453,7 @@ namespace Another_Mirai_Native.Adapter
         /// <param name="msg"></param>
         private void ParseMessage(JObject msg)
         {
+            Helper.MsgSpeed.Add(DateTime.Now);
             MiraiMessageEvents events = Helper.String2Enum<MiraiMessageEvents>(msg["data"]["type"].ToString());
 
             MiraiMessageTypeDetail.Source source = null;

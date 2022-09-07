@@ -12,6 +12,7 @@ using WebSocketSharp;
 using WebSocketSharp.Server;
 using System.Management;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace Another_Mirai_Native
 {
@@ -120,7 +121,7 @@ namespace Another_Mirai_Native
                     case WsServerFunction.SwitchPluginStatus:
                         Ws_SwitchPluginStatus(json);
                         break;
-                    case WsServerFunction.GetBotInfo:
+                    case WsServerFunction.BotInfo:
                         Ws_GetBotInfo();
                         break;
                     case WsServerFunction.GetGroupList:
@@ -140,6 +141,9 @@ namespace Another_Mirai_Native
                     case WsServerFunction.DeviceInfo:
                         Ws_GetDeviceInfo();
                         break;
+                    case WsServerFunction.Table:
+                        Ws_GetTable();
+                        break;
                     default:
                         break;
                 }
@@ -149,19 +153,27 @@ namespace Another_Mirai_Native
                 LogHelper.UpdateLogStatus(logid, updatemsg);
             }
 
+            private void Ws_GetTable()
+            {
+                Send(new ApiResult { Type = "Table", Data = UsageMonitor.GetMinuteMonitor() });
+            }
+
             private void Ws_GetStatus()
             {
                 DeviceInformation instance = DeviceInformation.Instance;
                 Send(new ApiResult
                 {
-                    Type = "GetStatus",
+                    Type = "Status",
                     Data = new
                     {
                         CPUUsage = instance.CpuCounter.NextValue(),
-                        MemoryLeftAvaliable = instance.MemoryCounter.NextValue(),
-                        CPUFrequency = instance.CpuFrequencyCounter.NextValue(),
+                        MemoryLeftAvailable = instance.MemoryCounter.NextValue(),
+                        CPUFrequency = instance.CpuBaseFrequencyCounter.NextValue() * (instance.CpuAccCounter.NextValue()/100),
                         HandleCount = instance.HandleCounter.NextValue(),
-                        ThreadCount = instance.ThreadCounter.NextValue()
+                        ThreadCount = instance.ThreadCounter.NextValue(),
+                        MessageSpeed = Helper.MsgSpeed.Count,
+                        SystemUpTime = Environment.TickCount / 1000,
+                        AMNUpTime = (DateTime.Now - Helper.StartUpTime).TotalSeconds
                     }
                 });
             }
@@ -171,7 +183,7 @@ namespace Another_Mirai_Native
                 DeviceInformation instance = DeviceInformation.Instance;
                 Send(new ApiResult
                 {
-                    Type = "GetDeviceInfo",
+                    Type = "DeviceInfo",
                     Data = new
                     {
                         TotalMemory = instance.TotalMemory / 1024,
@@ -213,7 +225,7 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_GetBotInfo()
             {
-                Send(new ApiResult { Type = "GetBotInfo", Data = new { Helper.QQ, Helper.NickName } });
+                Send(new ApiResult { Type = "BotInfo", Data = new { Helper.QQ, nickname = Helper.NickName, version = Application.ProductVersion } });;
             }
             /// <summary>
             /// 根据完全路径加载插件
@@ -660,7 +672,8 @@ namespace Another_Mirai_Native
         {
             public static DeviceInformation Instance { get; set; }
             public PerformanceCounter CpuCounter { get; set; }
-            public PerformanceCounter CpuFrequencyCounter { get; set; }
+            public PerformanceCounter CpuBaseFrequencyCounter { get; set; }
+            public PerformanceCounter CpuAccCounter { get; set; }
             public PerformanceCounter HandleCounter { get; set; }
             public PerformanceCounter ThreadCounter { get; set; }
             public PerformanceCounter MemoryCounter { get; set; }
@@ -689,11 +702,12 @@ namespace Another_Mirai_Native
             {
                 DeviceInformation.Instance = new()
                 {
-                    CpuCounter = new PerformanceCounter("Processor Information", "% Processor Time", "_Total"),
+                    CpuCounter = new PerformanceCounter("Processor Information", "% Processor Utility", "_Total"),
                     MemoryCounter = new PerformanceCounter("Memory", "Available MBytes"),
-                    CpuFrequencyCounter = new PerformanceCounter("Processor Information", "Processor Frequency"),
-                    HandleCounter = new PerformanceCounter("Process", "Handle Count"),
-                    ThreadCounter = new PerformanceCounter("Process", "Thread Count"),
+                    CpuBaseFrequencyCounter = new PerformanceCounter("Processor Information", "Processor Frequency", "_Total"),
+                    CpuAccCounter = new PerformanceCounter("Processor Information", "% Processor Performance", "_Total"),
+                    HandleCounter = new PerformanceCounter("Process", "Handle Count", "_Total"),
+                    ThreadCounter = new PerformanceCounter("Process", "Thread Count", "_Total"),
                     DeviceInfo = new ManagementObjectSearcher("SELECT * FROM Win32_Processor").Get()
                 };
                 foreach (var item in DeviceInformation.Instance.DeviceInfo)
