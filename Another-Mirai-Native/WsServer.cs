@@ -160,7 +160,13 @@ namespace Another_Mirai_Native
 
             private void Ws_GetStatus()
             {
-                DeviceInformation instance = DeviceInformation.Instance;
+                DeviceInformation instance = DeviceInformation.Instance; 
+                int PluginNum = 0;
+                if (PluginManagment.Instance != null)
+                {
+                    PluginNum = PluginManagment.Instance.Plugins.Count;
+                }
+
                 Send(new ApiResult
                 {
                     Type = "Status",
@@ -173,7 +179,8 @@ namespace Another_Mirai_Native
                         ThreadCount = instance.ThreadCounter.NextValue(),
                         MessageSpeed = Helper.MsgSpeed.Count,
                         SystemUpTime = Environment.TickCount / 1000,
-                        AMNUpTime = (DateTime.Now - Helper.StartUpTime).TotalSeconds
+                        AMNUpTime = (DateTime.Now - Helper.StartUpTime).TotalSeconds,
+                        PluginNum
                     }
                 });
             }
