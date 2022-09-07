@@ -129,12 +129,16 @@ namespace Another_Mirai_Native.Adapter
                 MessageSocket.Close();
             }).Start();
         }
-
+        bool eventNoWarning = false;
         private void EventSocket_OnClose(object sender, CloseEventArgs e)
         {
             SessionKey_Event = "";
             reConnect++;
-            LogHelper.WriteLog($"与事件服务器断开连接...第 {reConnect} 次重连");
+            if (eventNoWarning)
+            {
+                LogHelper.WriteLog($"与事件服务器断开连接...第 {reConnect} 次重连");
+                eventNoWarning = false;
+            }
             Thread.Sleep(3000);
             string event_connecturl = $"{WsURL}/event?verifyKey={AuthKey}&qq={QQ}";
             EventSocket = new WebSocket(event_connecturl);
@@ -143,12 +147,16 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.OnOpen += EventSocket_OnOpen;
             EventSocket.Connect();
         }
-
+        bool msgNoWarning = false;
         private void MessageSocket_OnClose(object sender, CloseEventArgs e)
         {
             SessionKey_Message = "";
             reConnect++;
-            LogHelper.WriteLog($"与消息服务器断开连接...第 {reConnect} 次重连");
+            if (msgNoWarning)
+            {
+                LogHelper.WriteLog($"与消息服务器断开连接...第 {reConnect} 次重连");
+                msgNoWarning = false;
+            }
             Thread.Sleep(3000);
             string message_connecturl = $"{WsURL}/message?verifyKey={AuthKey}&qq={QQ}";
             MessageSocket = new WebSocket(message_connecturl);
@@ -157,7 +165,13 @@ namespace Another_Mirai_Native.Adapter
             MessageSocket.OnOpen += MessageSocket_OnOpen;
             MessageSocket.Connect();
         }
-
+        public void ActiveDropConnection()
+        {
+            eventNoWarning = true;
+            msgNoWarning = true;
+            EventSocket.Close();
+            MessageSocket.Close();
+        }
         /// <summary>
         /// 处理消息, 使用了消息队列
         /// </summary>

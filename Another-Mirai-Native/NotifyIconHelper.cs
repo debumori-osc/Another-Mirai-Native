@@ -86,8 +86,7 @@ namespace Another_Mirai_Native
                     case "ReLink":
                         new Thread(() =>
                         {
-                            MiraiAdapter.Instance.MessageSocket.Close();
-                            MiraiAdapter.Instance.EventSocket.Close();
+                            MiraiAdapter.Instance.ActiveDropConnection();
                         }).Start();
                         return;
                     case "Update":
