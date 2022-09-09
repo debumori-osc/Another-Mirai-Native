@@ -13,6 +13,8 @@ using WebSocketSharp.Server;
 using System.Management;
 using System.Threading;
 using System.Windows.Forms;
+using Another_Mirai_Native.Adapter.MiraiEventArgs;
+using System.Collections.Generic;
 
 namespace Another_Mirai_Native
 {
@@ -144,6 +146,24 @@ namespace Another_Mirai_Native
                     case WsServerFunction.Table:
                         Ws_GetTable();
                         break;
+                    case WsServerFunction.CheckTest:
+                        Ws_CheckTest();
+                        break;
+                    case WsServerFunction.EnableTest:
+                        Ws_EnableTest(json);
+                        break;
+                    case WsServerFunction.DisableTest:
+                        Ws_DisableTest();
+                        break;
+                    case WsServerFunction.SendTestMsg:
+                        Ws_SendTestMsg(json);
+                        break;
+                    case WsServerFunction.ActiveForwarder:
+                        MiraiAdapter.Instance.OnMessageArrived += MiraiAdapter_OnMessageArrived;
+                        break;
+                    case WsServerFunction.InactiveForwarder:
+                        MiraiAdapter.Instance.OnMessageArrived -= MiraiAdapter_OnMessageArrived;
+                        break;
                     default:
                         break;
                 }
@@ -153,6 +173,73 @@ namespace Another_Mirai_Native
                 LogHelper.UpdateLogStatus(logid, updatemsg);
             }
 
+            private void MiraiAdapter_OnMessageArrived(string json)
+            {
+                Send(new ApiResult { Type = "Msg", Data = json });
+            }
+
+            private void Ws_CheckTest()
+            {
+                if (PluginTestHelper.Instance.CheckPlugin())
+                {
+                    CQPlugin plugin = PluginTestHelper.Instance.TestingPlugin;
+                    Send(new ApiResult { Type = "CheckTest", Data = new { Enabled = plugin.Enable, Testing = true, AppInfo = plugin.appinfo } });
+                }
+                else
+                {
+                    Send(new ApiResult { Type = "CheckTest" });
+                }
+            }
+
+            private void Ws_DisableTest()
+            {
+                PluginTestHelper.Instance.DisableTest();
+                Send(new ApiResult { Type = "DisableTest" });
+            }
+
+            private void Ws_SendTestMsg(JObject json)
+            {
+                if (PluginTestHelper.Instance.CheckPlugin() is false)
+                {
+                    if (Ws_EnableTest(json) is false) return;
+                }
+                string msg = json["msg"].ToString();
+                bool isGroup = ((bool)json["isGroup"]);
+                long qqId = ((long)json["qqId"]);
+                if (isGroup)
+                {
+                    long groupId = ((long)json["groupId"]);
+                    PluginTestHelper.Instance.SendGroupMsg(msg, groupId, qqId);
+                }
+                else
+                {
+                    PluginTestHelper.Instance.SendPrivateMsg(msg, qqId);
+                }
+                Send(new ApiResult { Type = "SendTestMsg" });
+            }
+
+            private bool Ws_EnableTest(JObject json)
+            {
+                int authCode = ((int)json["authCode"]);
+                CQPlugin plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == authCode);
+                if (plugin == null)
+                {
+                    Send(new ApiResult { Type = "EnableTest", Msg = "插件不存在", Success = false });
+                    return false;
+                }
+                plugin.Testing = true;
+                PluginTestHelper.Instance.EnableTest(plugin);
+                PluginTestHelper.Instance.OnPluginSendMsg -= PluginTestHelper_OnPluginSendMsg;
+                PluginTestHelper.Instance.OnPluginSendMsg += PluginTestHelper_OnPluginSendMsg;
+                Send(new ApiResult { Type = "EnableTest", Data = new { Enabled = plugin.Enable, Testing = true, AppInfo = plugin.appinfo } });
+                return true;
+            }
+
+            private void PluginTestHelper_OnPluginSendMsg(string msg)
+            {
+                Send(new ApiResult { Type = "TestMsgReceive", Data = msg });
+            }
+
             private void Ws_GetTable()
             {
                 Send(new ApiResult { Type = "Table", Data = UsageMonitor.GetMinuteMonitor() });
@@ -160,7 +247,7 @@ namespace Another_Mirai_Native
 
             private void Ws_GetStatus()
             {
-                DeviceInformation instance = DeviceInformation.Instance; 
+                DeviceInformation instance = DeviceInformation.Instance;
                 int PluginNum = 0;
                 if (PluginManagment.Instance != null)
                 {
@@ -174,7 +261,7 @@ namespace Another_Mirai_Native
                     {
                         CPUUsage = instance.CpuCounter.NextValue(),
                         MemoryLeftAvailable = instance.MemoryCounter.NextValue(),
-                        CPUFrequency = instance.CpuBaseFrequencyCounter.NextValue() * (instance.CpuAccCounter.NextValue()/100),
+                        CPUFrequency = instance.CpuBaseFrequencyCounter.NextValue() * (instance.CpuAccCounter.NextValue() / 100),
                         HandleCount = instance.HandleCounter.NextValue(),
                         ThreadCount = instance.ThreadCounter.NextValue(),
                         MessageSpeed = Helper.MsgSpeed.Count,
@@ -232,7 +319,7 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_GetBotInfo()
             {
-                Send(new ApiResult { Type = "BotInfo", Data = new { Helper.QQ, nickname = Helper.NickName, version = Application.ProductVersion } });;
+                Send(new ApiResult { Type = "BotInfo", Data = new { Helper.QQ, nickname = Helper.NickName, version = Application.ProductVersion } }); ;
             }
             /// <summary>
             /// 根据完全路径加载插件
@@ -289,7 +376,33 @@ namespace Another_Mirai_Native
             private void Ws_GetLog(JObject json)
             {
                 int priority = json["priority"].ToObject<int>();
-                var logList = LogHelper.GetDisplayLogs(priority);
+                int pageSize = ((int)json["itemsPerPage"]);
+                int pageIndex = ((int)json["page"]);
+                string search = json["search"].ToString();
+
+                JArray sortBy = (json["sortBy"] as JArray);
+                string orderBy = string.Empty;
+                bool orderByDesc = false;
+                if (sortBy != null && sortBy.Count != 0)
+                {
+                    orderBy = sortBy[0].ToString();
+                    orderByDesc = (bool)(sortBy["sortDesc"] as JArray)![0];// 是否降序, 第一项为bool表示是否降序
+                }
+                List<DateTime> date = new();
+                if (json["date"] is JArray array)
+                {
+                    foreach (var item in array)// 日志时间筛选
+                    {
+                        date.Add(DateTime.Parse(item.ToString()));
+                    }
+                }
+                long dt1 = 0, dt2 = 0;
+                if (date.Count != 0)
+                {
+                    dt1 = Helper.DateTime2TimeStamp(date[0]);
+                    dt2 = Helper.DateTime2TimeStamp(date[1]);
+                }
+                var logList = LogHelper.DetailQueryLogs(priority, pageSize, pageIndex, search, orderBy, orderByDesc, dt1, dt2);
                 Send(new ApiResult { Type = "GetLog", Data = new { logList } });
             }
             /// <summary>
@@ -336,7 +449,7 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_GetPluginList()
             {
-                var pluginList = PluginManagment.Instance.Plugins.Select(x => { return new { x.Enable, x.Testing, x.appinfo }; }).ToList();
+                var pluginList = PluginManagment.Instance.Plugins.Select(x => { return new { x.Enable, x.Testing, AppInfo = x.appinfo }; }).ToList();
                 Send(new ApiResult { Type = "GetPluginList", Data = new { pluginList } });
             }
             /// <summary>
@@ -470,7 +583,7 @@ namespace Another_Mirai_Native
                         string friend_text = json["data"]["args"]["text"].ToObject<string>();
                         if (plugin.Testing)
                         {
-                            PluginTester.Instance.AddChatBlock(friend_text, true);
+                            PluginTestHelper.Instance.ReceiveMsg(friend_text);
                             callResult = 1;
                         }
                         else
@@ -484,7 +597,7 @@ namespace Another_Mirai_Native
                         string group_text = json["data"]["args"]["text"].ToObject<string>();
                         if (plugin.Testing)
                         {
-                            PluginTester.Instance.AddChatBlock(group_text, true);
+                            PluginTestHelper.Instance.ReceiveMsg(group_text);
                             callResult = 1;
                         }
                         else

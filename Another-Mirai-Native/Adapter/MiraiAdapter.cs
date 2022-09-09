@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
+using static Another_Mirai_Native.Adapter.MiraiAdapter;
 
 namespace Another_Mirai_Native.Adapter
 {
@@ -52,6 +53,9 @@ namespace Another_Mirai_Native.Adapter
 
         public WebSocket MessageSocket;
         public WebSocket EventSocket;
+        public delegate void MessageArrived(string json);
+        public event MessageArrived OnMessageArrived;
+
         public delegate void ConnectedStateChange(bool status, string msg);
         /// <summary>
         /// 连接状态变更事件
@@ -470,6 +474,7 @@ namespace Another_Mirai_Native.Adapter
             Helper.MsgSpeed.Add(DateTime.Now);
             MiraiMessageEvents events = Helper.String2Enum<MiraiMessageEvents>(msg["data"]["type"].ToString());
 
+            OnMessageArrived?.Invoke(msg.ToString(Newtonsoft.Json.Formatting.None));
             MiraiMessageTypeDetail.Source source = null;
             var chainMsg = CQCodeBuilder.ParseJArray2MiraiMessageBaseList(msg["data"]["messageChain"] as JArray);
             source = (MiraiMessageTypeDetail.Source)chainMsg.First(x => x.messageType == MiraiMessageType.Source);

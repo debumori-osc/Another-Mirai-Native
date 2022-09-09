@@ -347,6 +347,7 @@
     <Compile Include="Native\CQPlugin.cs" />
     <Compile Include="Native\Error_TaskDialog.cs" />
     <Compile Include="Native\PluginManagment.cs" />
+    <Compile Include="Native\PluginTestHelper.cs" />
     <Compile Include="NotifyIconHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

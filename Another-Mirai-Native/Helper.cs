@@ -50,6 +50,7 @@ namespace Another_Mirai_Native
         /// 时间戳转换为DateTime
         /// </summary>
         public static DateTime TimeStamp2DateTime(long timestamp) => new DateTime(1970, 1, 1, 8, 0, 0, DateTimeKind.Local).AddSeconds(timestamp);
+        public static long DateTime2TimeStamp(DateTime datetime) => (long)(datetime - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
         /// <summary>
         /// JToken中是否含有某个键
         /// </summary>

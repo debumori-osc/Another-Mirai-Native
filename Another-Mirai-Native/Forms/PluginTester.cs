@@ -43,7 +43,24 @@ namespace Another_Mirai_Native.Forms
 
             GroupID.Text = groupId.ToString();
             QQID.Text = QQId.ToString();
+
+            PluginTestHelper.Instance.EnableTest(TestingPlugin);
+            PluginTestHelper.Instance.OnPluginSendMsg += PluginTestHelper_OnPluginSendMsg;
+            PluginTestHelper.Instance.OnPluginChanged += Instance_OnPluginChanged;
         }
+
+        private void Instance_OnPluginChanged(CQPlugin plugin)
+        {
+            TestingPlugin = plugin;
+            PluginName.Text = TestingPlugin.appinfo.Name;
+            MessageBox.Show($"测试插件已变更，新的测试插件为: {plugin.appinfo.Name}");
+        }
+
+        private void PluginTestHelper_OnPluginSendMsg(string msg)
+        {
+            AddChatBlock(msg, true);
+        }
+
         public class ChatBox : PictureBox
         {
             int padding = 5;
@@ -140,34 +157,29 @@ namespace Another_Mirai_Native.Forms
             string text = MsgToSend.Text;
             AddChatBlock(text, false);
             MsgToSend.Text = "";
-
-            var b = Encoding.UTF8.GetBytes(text);
-            text = GB18030.GetString(Encoding.Convert(Encoding.UTF8, GB18030, b));
-            byte[] messageBytes = GB18030.GetBytes(text + "\0");
-            var messageIntptr = Marshal.AllocHGlobal(messageBytes.Length);
-            Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
             long groupId = Convert.ToInt64(GroupID.Text);
             long QQId = Convert.ToInt64(QQID.Text);
 
-            ConfigHelper.SetConfig("Tester_GroupID", groupId);
-            ConfigHelper.SetConfig("Tester_QQID", QQId);
-
             new Thread(() =>
             {
-                int result = 0;
+                bool result;
+                if(PluginTestHelper.Instance.CheckPlugin() is false)
+                {
+                    PluginTestHelper.Instance.EnableTest(TestingPlugin);
+                }
                 if (isPrivateMsg.Checked)
                 {
-                    result = TestingPlugin.dll.CallFunction(Enums.FunctionEnums.PrivateMsg, 11, 0, QQId, messageIntptr, 0);
+                    result = PluginTestHelper.Instance.SendPrivateMsg(text, QQId);
                 }
                 else
                 {
-                    result = TestingPlugin.dll.CallFunction(Enums.FunctionEnums.GroupMsg, 1, 0, groupId, QQId, "", messageIntptr, 0);
+                    result = PluginTestHelper.Instance.SendGroupMsg(text, groupId, QQId);
                 }
                 Instance.Invoke(() =>
                 {
                     if (ShowHandleMsg.Checked == false) return;
                     string msg = "插件放行了请求";
-                    if (result == 1)
+                    if (result)
                         msg = "插件结束了请求";
                     AddChatBlock(msg, true);
                 });

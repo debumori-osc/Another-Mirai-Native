@@ -84,7 +84,31 @@
         /// <summary>
         /// 心跳
         /// </summary>
-        HeartBeat
+        HeartBeat,
+        /// <summary>
+        /// 检查是否有插件在测试
+        /// </summary>
+        CheckTest,
+        /// <summary>
+        /// 启用插件测试
+        /// </summary>
+        EnableTest,
+        /// <summary>
+        /// 关闭插件测试
+        /// </summary>
+        DisableTest,
+        /// <summary>
+        /// 发送测试消息
+        /// </summary>
+        SendTestMsg,
+        /// <summary>
+        /// 激活消息转发器
+        /// </summary>
+        ActiveForwarder,
+        /// <summary>
+        /// 取消消息转发器
+        /// </summary>
+        InactiveForwarder,
     }
     public enum WsClientType
     {

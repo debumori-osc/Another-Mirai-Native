@@ -2,8 +2,10 @@
 using SqlSugar;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Metadata.Edm;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace Another_Mirai_Native.DB
 {
@@ -162,6 +164,22 @@ namespace Another_Mirai_Native.DB
                 return c;
             }
         }
+        public static List<LogModel> DetailQueryLogs(int priority, int pageSize, int pageIndex, string search, string sortName, bool desc, long dt1, long dt2)
+        {
+            using(var db = GetInstance())
+            {
+                List<LogModel> r = db.Queryable<LogModel>()
+                    .Where(x => x.priority >= priority)
+                    .WhereIF(dt1 !=0 , x => x.time >= dt1 && x.time <= dt2 + 86400)
+                    .CustomOrderBy(sortName, desc).ToList();
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    r = r.Where(x => x.source.Contains(search) || x.detail.Contains(search) ||
+                        x.name.Contains(search) || x.status.Contains(search)).ToList();
+                }
+                return r;
+            }
+        }
         public static LogModel GetLastLog()
         {
             using (var db = GetInstance())
@@ -169,5 +187,14 @@ namespace Another_Mirai_Native.DB
                 return db.SqlQueryable<LogModel>("select * from log order by id desc limit 1").First();
             }
         }
+        /// <summary>
+        /// 日志键排序用
+        /// </summary>
+        /// <param name="arr">调用</param>
+        /// <param name="key">需要排序的键</param>
+        /// <param name="desc">是否降序</param>
+        /// <typeparam name="T">调用的T</typeparam>
+        public static ISugarQueryable<T> CustomOrderBy<T>(this ISugarQueryable<T> arr, string key, bool desc) =>
+            arr.OrderByIF(!string.IsNullOrWhiteSpace(key), $"{key} {(desc ? "desc" : "asc")}");
     }
 }
