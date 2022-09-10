@@ -203,24 +203,28 @@ namespace Another_Mirai_Native
                 {
                     if (Ws_EnableTest(json) is false) return;
                 }
-                string msg = json["msg"].ToString();
-                bool isGroup = ((bool)json["isGroup"]);
-                long qqId = ((long)json["qqId"]);
+                string msg = json["data"]["msg"].ToString();
+                bool isGroup = ((bool)json["data"]["isGroup"]);
+                long qqId = ((long)json["data"]["qqId"]);
+                bool handleFlag = false;
+                Stopwatch sw = new();
+                sw.Start();
                 if (isGroup)
                 {
-                    long groupId = ((long)json["groupId"]);
-                    PluginTestHelper.Instance.SendGroupMsg(msg, groupId, qqId);
+                    long groupId = ((long)json["data"]["groupId"]);
+                    handleFlag = PluginTestHelper.Instance.SendGroupMsg(msg, groupId, qqId);
                 }
                 else
                 {
-                    PluginTestHelper.Instance.SendPrivateMsg(msg, qqId);
+                    handleFlag = PluginTestHelper.Instance.SendPrivateMsg(msg, qqId);
                 }
-                Send(new ApiResult { Type = "SendTestMsg" });
+                sw.Stop();
+                Send(new ApiResult { Type = "SendTestMsg", Data = new { flag=handleFlag, time=sw.ElapsedMilliseconds } });
             }
 
             private bool Ws_EnableTest(JObject json)
             {
-                int authCode = ((int)json["authCode"]);
+                int authCode = ((int)json["data"]["authCode"]);
                 CQPlugin plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == authCode);
                 if (plugin == null)
                 {
@@ -237,7 +241,7 @@ namespace Another_Mirai_Native
 
             private void PluginTestHelper_OnPluginSendMsg(string msg)
             {
-                Send(new ApiResult { Type = "TestMsgReceive", Data = msg });
+                Send(new ApiResult { Type = "TestMsgReceive", Data = CQCodeBuilder.BuildMessageChains(msg) });
             }
 
             private void Ws_GetTable()
@@ -296,7 +300,7 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_GetDirectory(JObject json)
             {
-                string dir = json["dir"].ToString(); // 全路径
+                string dir = json["data"]["dir"].ToString(); // 全路径
                 if (dir.IsNullOrEmpty())// 为空时传递驱动器列表
                 {
                     var drivels = DriveInfo.GetDrives();
@@ -304,7 +308,7 @@ namespace Another_Mirai_Native
                 }
                 else
                 {
-                    string filter = json["filter"]?.ToString();
+                    string filter = json["data"]["filter"]?.ToString();
                     if (string.IsNullOrWhiteSpace(filter)) filter = ".dll";// 默认筛选dll文件
                     var dirInfo = new DirectoryInfo(dir);
                     Send(new ApiResult
@@ -326,7 +330,7 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_AddPlugin(JObject json)
             {
-                string path = json["path"].ToString();
+                string path = json["data"]["path"].ToString();
                 if (File.Exists(path) is false)
                 {
                     Send(new ApiResult { Type = "AddPlugin", Msg = "文件不存在", Success = false });
@@ -375,12 +379,12 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_GetLog(JObject json)
             {
-                int priority = json["priority"].ToObject<int>();
-                int pageSize = ((int)json["itemsPerPage"]);
-                int pageIndex = ((int)json["page"]);
-                string search = json["search"].ToString();
+                int priority = json["data"]["priority"].ToObject<int>();
+                int pageSize = ((int)json["data"]["itemsPerPage"]);
+                int pageIndex = ((int)json["data"]["page"]);
+                string search = json["data"]["search"].ToString();
 
-                JArray sortBy = (json["sortBy"] as JArray);
+                JArray sortBy = (json["data"]["sortBy"] as JArray);
                 string orderBy = string.Empty;
                 bool orderByDesc = false;
                 if (sortBy != null && sortBy.Count != 0)
@@ -429,7 +433,7 @@ namespace Another_Mirai_Native
             {
                 if (json.ContainsKey("authCode"))// 需要重载单个插件时传递插件的AuthCode
                 {
-                    int authCode = (int)json["authCode"];
+                    int authCode = (int)json["data"]["authCode"];
                     var plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == authCode);
                     if (plugin == null)
                     {
@@ -442,6 +446,7 @@ namespace Another_Mirai_Native
                 {
                     PluginManagment.Instance.ReLoad();
                 }
+                PluginManagment.Instance.RefreshPluginList();
                 Send(new ApiResult { Type = "ReloadPlugin", });
             }
             /// <summary>
@@ -449,16 +454,30 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_GetPluginList()
             {
-                var pluginList = PluginManagment.Instance.Plugins.Select(x => { return new { x.Enable, x.Testing, AppInfo = x.appinfo }; }).ToList();
-                Send(new ApiResult { Type = "GetPluginList", Data = new { pluginList } });
+                var pluginList = PluginManagment.Instance.DistinctPluginList().Select(x => { return new { x.Enable, x.Testing, AppInfo = x.appinfo, json = x.json }; }).ToList();
+                Send(new ApiResult { Type = "GetPluginList", Data = pluginList });
             }
             /// <summary>
             /// 切换插件的禁用或启用状态
             /// </summary>
             private void Ws_SwitchPluginStatus(JObject json)
             {
-                var pluginId = (int)json["authCode"];
-                CQPlugin plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == pluginId);
+                var pluginAuthCode = (int)json["data"]["authCode"];
+                bool status = ((bool)json["data"]["status"]);
+                CQPlugin plugin = PluginManagment.Instance.SavedPlugins.FirstOrDefault(x => x.appinfo.AuthCode == pluginAuthCode);
+
+                if (status)
+                {
+                    if (plugin == null)
+                    {
+                        Send(new ApiResult { Type = "SwitchPluginStatus", Msg = "插件不存在", Success = false });
+                        return;
+                    }
+                    PluginManagment.Instance.FlipPluginState(plugin);
+                    Send(new ApiResult { Type = "SwitchPluginStatus" });
+                    return;
+                }
+                plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == pluginAuthCode);
                 if (plugin != null)
                 {
                     PluginManagment.Instance.FlipPluginState(plugin);
