@@ -39,16 +39,16 @@ namespace Another_Mirai_Native.Enums
         {
             public string type { get; set; } = "Source";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Source;
-            public int id { get; set; }
-            public int time { get; set; }
+            public long id { get; set; }
+            public long time { get; set; }
         }
 
         public class Quote : MiraiMessageBase
         {
             public string type { get; set; } = "Quote";
-            public int id { get; set; }
-            public int groupId { get; set; }
-            public int senderId { get; set; }
+            public long id { get; set; }
+            public long groupId { get; set; }
+            public long senderId { get; set; }
             public long targetId { get; set; }
             public Origin[] origin { get; set; }
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Quote;
@@ -117,7 +117,7 @@ namespace Another_Mirai_Native.Enums
             public string url { get; set; }
             public string path { get; set; }
             public string base64 { get; set; }
-            public int length { get; set; }
+            public long length { get; set; }
         }
 
         public class Xml : MiraiMessageBase
@@ -152,14 +152,14 @@ namespace Another_Mirai_Native.Enums
         {
             public string type { get; set; } = "Dice";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Dice;
-            public int value { get; set; }
+            public long value { get; set; }
         }
 
         public class MarketFace : MiraiMessageBase
         {
             public string type { get; set; } = "MarketFace";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.MarketFace;
-            public int id { get; set; }
+            public long id { get; set; }
             public string name { get; set; }
         }
 
@@ -183,11 +183,11 @@ namespace Another_Mirai_Native.Enums
             public Nodelist[] nodeList { get; set; }
             public class Nodelist
             {
-                public int senderId { get; set; }
-                public int time { get; set; }
+                public long senderId { get; set; }
+                public long time { get; set; }
                 public string senderName { get; set; }
                 public object[] messageChain { get; set; }
-                public int messageId { get; set; }
+                public long messageId { get; set; }
             }
         }
 
