@@ -97,6 +97,8 @@ namespace Another_Mirai_Native
                         return;
                     case "ReLoad":
                         PluginManagment.Instance.ReLoad();
+                        PluginManagment.Instance.RefreshPluginList();
+
                         return;
                     case "LogForm":
                         LogForm.Instance.Show();

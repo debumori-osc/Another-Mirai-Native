@@ -110,7 +110,8 @@ namespace Another_Mirai_Native.Forms
                 new Thread(() =>
                 {
                     PluginManagment.Instance.ReLoad();
-                    RefreshPluginList();
+                    PluginManagment.Instance.RefreshPluginList();
+                    this.Invoke(RefreshList);
                     MessageBox.Show("重载完成");
                 }).Start();
             }
@@ -182,13 +183,13 @@ namespace Another_Mirai_Native.Forms
                 if (plugin.Testing)
                 {
                     MessageBox.Show("此插件已经处在测试模式下，不可重复添加");
-                    return;
+                    // return;
                 }
                 plugin.Testing = true;
                 PluginTester pluginTester = new();
                 pluginTester.TestingPlugin = plugin;
-                LogHelper.WriteLog(LogLevel.Warning, "插件测试"
-                                , $"{plugin.appinfo.Name} 插件已处于测试模式，将忽略所有框架消息");
+                //LogHelper.WriteLog(LogLevel.Warning, "插件测试"
+                //                 , $"{plugin.appinfo.Name} 插件已处于测试模式，将忽略所有框架消息");
                 pluginTester.Show();
             }
         }
@@ -199,21 +200,12 @@ namespace Another_Mirai_Native.Forms
             new Thread(() =>
             {
                 PluginManagment.Instance.ReLoad(plugin);
-                RefreshPluginList();
+                PluginManagment.Instance.RefreshPluginList();
+                RefreshList();
                 MessageBox.Show("重载成功");
             }).Start();
         }
-        private void RefreshPluginList()
-        {
-            MenuItem menu = NotifyIconHelper.Instance.ContextMenu.MenuItems.Find("PluginMenu", false).First();
-            menu.MenuItems.Clear();
-            DistinctPluginList().ForEach(x =>
-            {
-                NotifyIconHelper.LoadMenu(JObject.Parse(x.json));
-            });
-            NotifyIconHelper.AddManageMenu();
-            RefreshList();
-        }
+        
         private void button_AddPlugin_Click(object sender, EventArgs e)
         {
             openFileDialog.InitialDirectory = Path.Combine(Application.StartupPath, "data", "plugins");
@@ -245,7 +237,7 @@ namespace Another_Mirai_Native.Forms
             {
                 listView_PluginList.Items.Clear();
 
-                List<CQPlugin> pluginList = DistinctPluginList();
+                List<CQPlugin> pluginList = PluginManagment.Instance.DistinctPluginList();
                 int index = 0;
                 foreach (var item in pluginList.OrderBy(x => x.appinfo.Name))
                 {
@@ -265,19 +257,5 @@ namespace Another_Mirai_Native.Forms
             });
         }
 
-        private static List<CQPlugin> DistinctPluginList()
-        {
-            var pluginList = new List<CQPlugin>();
-            PluginManagment.Instance.Plugins.ForEach(x => pluginList.Add(x));
-            foreach (var item in PluginManagment.Instance.SavedPlugins)
-            {
-                if (pluginList.Any(x => x.appinfo.Name == item.appinfo.Name) is false)
-                {
-                    pluginList.Add(item);
-                }
-            }
-
-            return pluginList;
-        }
     }
 }

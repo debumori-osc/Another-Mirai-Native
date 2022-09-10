@@ -14,6 +14,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Another_Mirai_Native.Native
 {
@@ -36,6 +37,21 @@ namespace Another_Mirai_Native.Native
             else
                 PluginStatus = new JObject();
         }
+        public List<CQPlugin> DistinctPluginList()
+        {
+            var pluginList = new List<CQPlugin>();
+            Plugins.ForEach(x => pluginList.Add(x));
+            foreach (var item in SavedPlugins)
+            {
+                if (pluginList.Any(x => x.appinfo.Name == item.appinfo.Name) is false)
+                {
+                    pluginList.Add(item);
+                }
+            }
+
+            return pluginList;
+        }
+
         /// <summary>
         /// 从 data\plugins 文件夹下载入所有拥有同名json的dll插件，不包含子文件夹
         /// </summary>
@@ -152,13 +168,23 @@ namespace Another_Mirai_Native.Native
                 loadedPlugin.dll.CallFunction(FunctionEnums.StartUp);
                 loadedPlugin.Enable = true;
             }
+            RefreshPluginList();
             var c = PluginStatus["Status"]
                             .Where(x => x["Name"].ToString() == pluginId)
                             .FirstOrDefault();
             c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
             File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
         }
-
+        public void RefreshPluginList()
+        {
+            MenuItem menu = NotifyIconHelper.Instance.ContextMenu.MenuItems.Find("PluginMenu", false).First();
+            menu.MenuItems.Clear();
+            DistinctPluginList().ForEach(x =>
+            {
+                NotifyIconHelper.LoadMenu(JObject.Parse(x.json));
+            });
+            NotifyIconHelper.AddManageMenu();
+        }
 
         /// <summary>
         /// 从配置获取插件启用状态
