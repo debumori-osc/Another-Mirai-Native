@@ -390,7 +390,7 @@ namespace Another_Mirai_Native
                 if (sortBy != null && sortBy.Count != 0)
                 {
                     orderBy = sortBy[0].ToString();
-                    orderByDesc = (bool)(sortBy["sortDesc"] as JArray)![0];// 是否降序, 第一项为bool表示是否降序
+                    orderByDesc = (bool)(json["data"]["sortDesc"] as JArray)![0];// 是否降序, 第一项为bool表示是否降序
                 }
                 List<DateTime> date = new();
                 if (json["date"] is JArray array)
@@ -407,7 +407,7 @@ namespace Another_Mirai_Native
                     dt2 = Helper.DateTime2TimeStamp(date[1]);
                 }
                 var logList = LogHelper.DetailQueryLogs(priority, pageSize, pageIndex, search, orderBy, orderByDesc, dt1, dt2);
-                Send(new ApiResult { Type = "GetLog", Data = new { logList } });
+                Send(new ApiResult { Type = "GetLog", Data = new { items=logList.Item1, totalCount = logList.Item2 } });
             }
             /// <summary>
             /// 退出应用

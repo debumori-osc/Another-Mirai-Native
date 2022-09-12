@@ -164,20 +164,21 @@ namespace Another_Mirai_Native.DB
                 return c;
             }
         }
-        public static List<LogModel> DetailQueryLogs(int priority, int pageSize, int pageIndex, string search, string sortName, bool desc, long dt1, long dt2)
+        public static (List<LogModel>, int) DetailQueryLogs(int priority, int pageSize, int pageIndex, string search, string sortName, bool desc, long dt1, long dt2)
         {
             using(var db = GetInstance())
             {
                 List<LogModel> r = db.Queryable<LogModel>()
                     .Where(x => x.priority >= priority)
                     .WhereIF(dt1 !=0 , x => x.time >= dt1 && x.time <= dt2 + 86400)
+                    .OrderByDescending(x=>x.time)
                     .CustomOrderBy(sortName, desc).ToList();
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     r = r.Where(x => x.source.Contains(search) || x.detail.Contains(search) ||
                         x.name.Contains(search) || x.status.Contains(search)).ToList();
                 }
-                return r;
+                return (r.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList(), r.Count);
             }
         }
         public static LogModel GetLastLog()
