@@ -39,6 +39,12 @@ namespace Another_Mirai_Native.Adapter
                 return string.Empty;
             }
         }
+        /// <summary>
+        /// 发送未转码的CQ码消息
+        /// </summary>
+        /// <param name="group"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public static int SendGroupMessage(long group, string message)
         {
             MiraiMessageBase[] msgChains = CQCodeBuilder.BuildMessageChains(message).ToArray();

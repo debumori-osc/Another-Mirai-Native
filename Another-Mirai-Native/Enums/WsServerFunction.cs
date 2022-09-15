@@ -124,11 +124,11 @@
         /// <summary>
         /// 上传图片至本机
         /// </summary>
-        SendImage,
+        UploadImage,
         /// <summary>
         /// 删除图片
         /// </summary>
-        RemoveImage,
+        DeleteImage,
         /// <summary>
         /// 创建本地Web服务器
         /// </summary>
@@ -136,7 +136,8 @@
         /// <summary>
         /// 销毁本地Web服务器
         /// </summary>
-        DestoryWebServer
+        DestoryWebServer,
+        SendMsg
     }
     public enum WsClientType
     {

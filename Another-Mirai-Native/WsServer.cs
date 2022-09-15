@@ -177,14 +177,17 @@ namespace Another_Mirai_Native
                     case WsServerFunction.InactiveForwarder:
                         MiraiAdapter.Instance.OnMessageArrived -= MiraiAdapter_OnMessageArrived;
                         break;
-                    case WsServerFunction.SendImage:
+                    case WsServerFunction.UploadImage:
                         Ws_SendImage(json);
                         break;
-                    case WsServerFunction.RemoveImage:
+                    case WsServerFunction.DeleteImage:
                         Ws_RemoveImage(json);
                         break;
                     case WsServerFunction.BuildWebServer:
                         Ws_BuildWebServer();
+                        break;
+                    case WsServerFunction.SendMsg:
+                        Ws_SendMsg(json);
                         break;
                     default:
                         break;
@@ -193,6 +196,26 @@ namespace Another_Mirai_Native
                 if (logid == 0) return;
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
+            }
+
+            private void Ws_SendMsg(JObject json)
+            {
+                bool isGroup = ((bool)json["data"]["isGroup"]);
+                string message = json["data"]["message"].ToString();
+                string parsedMsg = ParseRichText2CQCode(message);
+
+                bool success = false;
+                if (isGroup)
+                {
+                    long groupId = ((long)json["data"]["groupId"]);
+                    success =  MiraiAPI.SendGroupMessage(groupId, parsedMsg) != 0;
+                }
+                else
+                {
+                    long qqId = ((long)json["data"]["qqId"]);
+                    success = MiraiAPI.SendFriendMessage(qqId, parsedMsg) != 0;
+                }
+                Send(new ApiResult { Success = success });
             }
 
             private void Ws_GetFriendInfo(JObject json)
@@ -278,6 +301,7 @@ namespace Another_Mirai_Native
             {
                 if (text.Contains("<!IMG!>") is false) return text;
                 string cqcode = "";
+                int port = ConfigHelper.GetConfig<int>("LocalWebServer_Port");
                 var p = text.Split("<!IMG!>");
                 bool flag = false;
                 for (int i = 0; i < p.Length; i++)
@@ -290,7 +314,8 @@ namespace Another_Mirai_Native
                         string filePath = Path.Combine(@"data\image\serverTmp", imgPlaceHolder);
                         if (File.Exists(filePath))
                         {
-                            cqcode += CQApi.CQCode_Image($"serverTmp\\{imgPlaceHolder}").ToSendString();
+                            File.WriteAllText($@"data\image\{imgPlaceHolder.Replace(".jpg", "")}.cqimg", $"[image]\nmd5=0\nsize=0\nurl=http://localhost:{port}/{imgPlaceHolder}");
+                            cqcode += $"[CQ:image,file={imgPlaceHolder.Replace(".jpg", "")}]";
                         }
                         i++;
                     }
@@ -301,39 +326,6 @@ namespace Another_Mirai_Native
                 }
                 return cqcode;
             }
-            private List<MiraiMessageBase> ParseRichText2MiraiMessageChains(string text)
-            {
-                List<MiraiMessageBase> result = new();
-
-                if (text.Contains("<!IMG!>") is false)
-                {
-                    result.Add(new MiraiMessageTypeDetail.Plain { text = text });
-                    return result;
-                }
-                var p = text.Split("<!IMG!>");
-                bool flag = false;
-                for (int i = 0; i < p.Length; i++)
-                {
-                    if (p[i] == "<!IMG!>")
-                    {
-                        if (flag) continue;
-                        else flag = true;
-                        string imgPlaceHolder = p[i + 1];
-                        string filePath = Path.Combine(@"data\image\serverTmp", imgPlaceHolder);
-                        if (File.Exists(filePath))
-                        {
-                            result.Add(new MiraiMessageTypeDetail.Image { base64 = Convert.ToBase64String(File.ReadAllBytes(filePath)) });
-                        }
-                        i++;
-                    }
-                    else
-                    {
-                        result.Add(new MiraiMessageTypeDetail.Plain { text = p[i] });
-                    }
-                }
-                return result;
-            }
-
             private void MiraiAdapter_OnMessageArrived(string json)
             {
                 Send(new ApiResult { Type = "Msg", Data = json });
