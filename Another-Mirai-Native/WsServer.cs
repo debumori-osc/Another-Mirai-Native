@@ -15,6 +15,9 @@ using System.Threading;
 using System.Windows.Forms;
 using Another_Mirai_Native.Adapter.MiraiEventArgs;
 using System.Collections.Generic;
+using SqlSugar;
+using Another_Mirai_Native.Adapter.CQCode;
+using WebServerSupport;
 
 namespace Another_Mirai_Native
 {
@@ -164,6 +167,15 @@ namespace Another_Mirai_Native
                     case WsServerFunction.InactiveForwarder:
                         MiraiAdapter.Instance.OnMessageArrived -= MiraiAdapter_OnMessageArrived;
                         break;
+                    case WsServerFunction.SendImage:
+                        Ws_SendImage(json);
+                        break;
+                    case WsServerFunction.RemoveImage:
+                        Ws_RemoveImage(json);
+                        break;
+                    case WsServerFunction.BuildWebServer:
+                        Ws_BuildWebServer();
+                        break;
                     default:
                         break;
                 }
@@ -171,6 +183,111 @@ namespace Another_Mirai_Native
                 if (logid == 0) return;
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
+            }
+
+            private void Ws_BuildWebServer()
+            {
+                int port = ConfigHelper.GetConfig<int>("LocalWebServer_Port");
+                if (port == 0)
+                {
+                    port = 3080;
+                    ConfigHelper.SetConfig("LocalWebServer_Port", port);
+                }
+                try
+                {
+                    WebServerBuilder.Instance.BuildServer(port);
+                }
+                catch (Exception e)
+                {
+                    Send(new ApiResult { Success = false, Msg = e.Message });
+                }
+                WebServerBuilder.Instance.ListeningPortChanged -= Instance_ListeningPortChanged;
+                WebServerBuilder.Instance.ListeningPortChanged += Instance_ListeningPortChanged;
+            }
+
+            private void Instance_ListeningPortChanged(int port)
+            {
+                ConfigHelper.SetConfig("LocalWebServer_Port", port);
+            }
+
+            private void Ws_RemoveImage(JObject json)
+            {
+                string fileName = json["data"]["fileName"].ToString();
+                string path = Path.Combine(@"data\image\serverTmp", fileName + ".jpg");
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+                Send(new ApiResult { });
+            }
+
+            private void Ws_SendImage(JObject json)
+            {
+                string base64 = json["data"]["base64"].ToString();
+                string path = @"data\image\serverTmp";
+                string fileName = Guid.NewGuid().ToString() + ".jpg";
+                Directory.CreateDirectory(path);
+                File.WriteAllBytes($"{path}\\{fileName}", Convert.FromBase64String(base64));
+                Send(new ApiResult { Data = fileName });
+            }
+            private string ParseRichText2CQCode(string text)
+            {
+                if (text.Contains("<!IMG!>") is false) return text;
+                string cqcode = "";
+                var p = text.Split("<!IMG!>");
+                bool flag = false;
+                for (int i = 0; i < p.Length; i++)
+                {
+                    if (p[i] == "<!IMG!>")
+                    {
+                        if (flag) continue;
+                        else flag = true;
+                        string imgPlaceHolder = p[i + 1];
+                        string filePath = Path.Combine(@"data\image\serverTmp", imgPlaceHolder);
+                        if (File.Exists(filePath))
+                        {
+                            cqcode += CQApi.CQCode_Image($"serverTmp\\{imgPlaceHolder}").ToSendString();
+                        }
+                        i++;
+                    }
+                    else
+                    {
+                        cqcode += p[i];
+                    }
+                }
+                return cqcode;
+            }
+            private List<MiraiMessageBase> ParseRichText2MiraiMessageChains(string text)
+            {
+                List<MiraiMessageBase> result = new();
+
+                if (text.Contains("<!IMG!>") is false)
+                {
+                    result.Add(new MiraiMessageTypeDetail.Plain { text = text });
+                    return result;
+                }
+                var p = text.Split("<!IMG!>");
+                bool flag = false;
+                for (int i = 0; i < p.Length; i++)
+                {
+                    if (p[i] == "<!IMG!>")
+                    {
+                        if (flag) continue;
+                        else flag = true;
+                        string imgPlaceHolder = p[i + 1];
+                        string filePath = Path.Combine(@"data\image\serverTmp", imgPlaceHolder);
+                        if (File.Exists(filePath))
+                        {
+                            result.Add(new MiraiMessageTypeDetail.Image { base64 = Convert.ToBase64String(File.ReadAllBytes(filePath)) });
+                        }
+                        i++;
+                    }
+                    else
+                    {
+                        result.Add(new MiraiMessageTypeDetail.Plain { text = p[i] });
+                    }
+                }
+                return result;
             }
 
             private void MiraiAdapter_OnMessageArrived(string json)
@@ -207,6 +324,7 @@ namespace Another_Mirai_Native
                 bool isGroup = ((bool)json["data"]["isGroup"]);
                 long qqId = ((long)json["data"]["qqId"]);
                 bool handleFlag = false;
+                msg = ParseRichText2CQCode(msg);
                 Stopwatch sw = new();
                 sw.Start();
                 if (isGroup)
@@ -219,7 +337,7 @@ namespace Another_Mirai_Native
                     handleFlag = PluginTestHelper.Instance.SendPrivateMsg(msg, qqId);
                 }
                 sw.Stop();
-                Send(new ApiResult { Type = "SendTestMsg", Data = new { flag=handleFlag, time=sw.ElapsedMilliseconds } });
+                Send(new ApiResult { Type = "SendTestMsg", Data = new { flag = handleFlag, time = sw.ElapsedMilliseconds } });
             }
 
             private bool Ws_EnableTest(JObject json)
@@ -407,7 +525,7 @@ namespace Another_Mirai_Native
                     dt2 = Helper.DateTime2TimeStamp(date[1]);
                 }
                 var logList = LogHelper.DetailQueryLogs(priority, pageSize, pageIndex, search, orderBy, orderByDesc, dt1, dt2);
-                Send(new ApiResult { Type = "GetLog", Data = new { items=logList.Item1, totalCount = logList.Item2 } });
+                Send(new ApiResult { Type = "GetLog", Data = new { items = logList.Item1, totalCount = logList.Item2 } });
             }
             /// <summary>
             /// 退出应用

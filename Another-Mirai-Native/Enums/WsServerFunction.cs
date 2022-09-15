@@ -109,6 +109,10 @@
         /// 取消消息转发器
         /// </summary>
         InactiveForwarder,
+        SendImage,
+        RemoveImage,
+        BuildWebServer,
+        DestoryWebServer
     }
     public enum WsClientType
     {
