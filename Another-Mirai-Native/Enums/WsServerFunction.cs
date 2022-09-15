@@ -62,6 +62,18 @@
         /// </summary>
         GetFriendList,
         /// <summary>
+        /// 获取群成员列表
+        /// </summary>
+        GetMemberList,
+        /// <summary>
+        /// 获取群成员信息
+        /// </summary>
+        GetMemberInfo,
+        /// <summary>
+        /// 获取好友信息
+        /// </summary>
+        GetFriendInfo,
+        /// <summary>
         /// 获取目录以及文件列表
         /// </summary>
         GetDirectroy,
@@ -109,9 +121,21 @@
         /// 取消消息转发器
         /// </summary>
         InactiveForwarder,
+        /// <summary>
+        /// 上传图片至本机
+        /// </summary>
         SendImage,
+        /// <summary>
+        /// 删除图片
+        /// </summary>
         RemoveImage,
+        /// <summary>
+        /// 创建本地Web服务器
+        /// </summary>
         BuildWebServer,
+        /// <summary>
+        /// 销毁本地Web服务器
+        /// </summary>
         DestoryWebServer
     }
     public enum WsClientType
