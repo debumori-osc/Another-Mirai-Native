@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Another_Mirai_Native
 {
@@ -204,7 +205,7 @@ namespace Another_Mirai_Native
         /// <param name="picPath">图片路径</param>
         public static string ParsePic2Base64(string picPath)
         {
-            if(File.Exists(picPath) is false)
+            if (File.Exists(picPath) is false)
             {
                 return "";
             }
@@ -220,6 +221,29 @@ namespace Another_Mirai_Native
             Process.Start(path, $"-r");
             NotifyIconHelper.HideNotifyIcon();
             Environment.Exit(0);
+        }
+        public static string[] Split(this string message, string pattern)
+        {
+            List<string> p = new();// 记录下文本与CQ码的位置关系
+            string tmp = "";
+            for (int i = 0; i < message.Length; i++)// 将消息中的CQ码与文本分离开
+            {
+                tmp += message[i];// 文本
+                if (tmp == pattern)// 此消息中没有其他文本, 只有CQ码
+                {
+                    p.Add(pattern);
+                    tmp = "";
+                }
+                else if (tmp.EndsWith(pattern))// 消息以CQ码结尾
+                {
+                    p.Add(tmp[..^10]);// 记录文本位置
+                    p.Add(pattern);// 记录CQ码位置
+                    tmp = "";
+                }
+            }
+            if (tmp != "")// 文本中没有CQ码, 或不以CQ码结尾
+                p.Add(tmp);
+            return p.ToArray();
         }
     }
 }
