@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -312,6 +313,7 @@ namespace Another_Mirai_Native.Native
         /// <param name="ApiName">调用的事件名称，前端统一名称，或许应该写成枚举</param>
         /// <param name="args">参数表</param>
         [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
         public CQPlugin CallFunction(FunctionEnums ApiName, params object[] args)
         {
             JObject json = new JObject
