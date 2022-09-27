@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Another_Mirai_Native.Adapter
@@ -19,7 +20,11 @@ namespace Another_Mirai_Native.Adapter
             {
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.botProfile, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.botProfile, request);
+            if(json == null)
+            {
+                return "";
+            }
             return json["nickname"].ToString();
         }
         public static string GetMessageByMsgId(int messageId)
@@ -29,7 +34,11 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 id = messageId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.messageFromId, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.messageFromId, request);
+            if (json == null)
+            {
+                return "";
+            }
             if (((int)json["code"]) == 0)
             {
                 return CQCodeBuilder.Parse(CQCodeBuilder.ParseJArray2MiraiMessageBaseList(json["data"]["messageChain"] as JArray));
@@ -54,16 +63,20 @@ namespace Another_Mirai_Native.Adapter
                 target = group,
                 messageChain = msgChains
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.sendGroupMessage, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.sendGroupMessage, request);
+            if (json == null)
+            {
+                return 0;
+            }
             if (((int)json["code"]) == 0)
             {
                 return (int)json["messageId"];
             }
             else
             {
-                Debug.WriteLine(json["msg"].ToString());
+                Debug.WriteLine(json["msg"].ToString());            
+                return 0;
             }
-            return 0;
         }
         public static int SendFriendMessage(long QQ, string message)
         {
@@ -74,7 +87,11 @@ namespace Another_Mirai_Native.Adapter
                 target = QQ,
                 messageChain = msgChains
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.sendFriendMessage, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.sendFriendMessage, request);
+            if (json == null)
+            {
+                return 0;
+            }
             if (((int)json["code"]) == 0)
             {
                 return (int)json["messageId"];
@@ -89,7 +106,11 @@ namespace Another_Mirai_Native.Adapter
                 target,
                 messageId = msgId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.recall, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.recall, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int KickGroupMember(long groupId, long QQId)
@@ -100,7 +121,11 @@ namespace Another_Mirai_Native.Adapter
                 target = groupId,
                 memberId = QQId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.kick, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.kick, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int MuteGroupMemeber(long groupId, long QQId, long time)
@@ -112,7 +137,11 @@ namespace Another_Mirai_Native.Adapter
                 memberId = QQId,
                 time
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.mute, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.mute, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int UnmuteGroupMemeber(long groupId, long QQId)
@@ -123,7 +152,11 @@ namespace Another_Mirai_Native.Adapter
                 target = groupId,
                 memberId = QQId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.unmute, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.unmute, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int SetAdmin(long groupId, long QQId, bool set)
@@ -135,7 +168,11 @@ namespace Another_Mirai_Native.Adapter
                 memberId = QQId,
                 assign = set
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberAdmin, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberAdmin, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int SetSpecialTitle(long groupId, long QQId, string title)
@@ -150,7 +187,11 @@ namespace Another_Mirai_Native.Adapter
                     specialTitle = title
                 }
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_update, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_update, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int GroupMute(long groupId)
@@ -160,7 +201,11 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 target = groupId,
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.muteAll, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.muteAll, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int GroupUnmute(long groupId)
@@ -170,7 +215,11 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 target = groupId,
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.unmuteAll, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.unmuteAll, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int SetGroupCard(long groupId, long QQId, string newCard)
@@ -185,7 +234,11 @@ namespace Another_Mirai_Native.Adapter
                     name = newCard
                 }
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_update, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_update, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int QuitGroup(long groupId)
@@ -195,7 +248,11 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 target = groupId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.quit, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.quit, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int HandleFriendRequest(long eventId, int operate, string message)
@@ -207,7 +264,11 @@ namespace Another_Mirai_Native.Adapter
                 operate,
                 message
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_newFriendRequestEvent, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_newFriendRequestEvent, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int HandleGroupRequest(long eventId, int operate, string message)
@@ -219,7 +280,11 @@ namespace Another_Mirai_Native.Adapter
                 operate,
                 message
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_memberJoinRequestEvent, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_memberJoinRequestEvent, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static int HandleInviteRequest(long eventId, int operate, string message)
@@ -231,7 +296,11 @@ namespace Another_Mirai_Native.Adapter
                 operate,
                 message
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_botInvitedJoinGroupRequestEvent, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.resp_botInvitedJoinGroupRequestEvent, request);
+            if (json == null)
+            {
+                return 0;
+            }
             return (int)json["code"];
         }
         public static string ParseGroupList2CQData(JArray groupList)
@@ -259,7 +328,11 @@ namespace Another_Mirai_Native.Adapter
             {
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.groupList, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.groupList, request);
+            if (json == null)
+            {
+                return null;
+            }
             if (((int)json["code"]) == 0)
             {
                 return json["data"] as JArray;
@@ -296,7 +369,11 @@ namespace Another_Mirai_Native.Adapter
             {
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.friendList, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.friendList, request);
+            if (json == null)
+            {
+                return null;
+            }
             if (((int)json["code"]) == 0)
             {
                return json["data"] as JArray;
@@ -344,7 +421,7 @@ namespace Another_Mirai_Native.Adapter
                 BinaryWriterExpand.Write_Ex(binaryWriter, admin_num);
                 BinaryWriterExpand.Write_Ex(binaryWriter, 0);
                 BinaryWriterExpand.Write_Ex(binaryWriter, item["specialTitle"].ToString());
-                BinaryWriterExpand.Write_Ex(binaryWriter, -1);
+                BinaryWriterExpand.Write_Ex(binaryWriter, Helper.DateTime2TimeStamp(DateTime.Now.AddYears(10)));
                 BinaryWriterExpand.Write_Ex(binaryWriter, 1);
 
                 BinaryWriterExpand.Write_Ex(binaryWriterMain, (short)stream.Length);
@@ -359,7 +436,11 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 target
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberList, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberList, request);
+            if (json == null)
+            {
+                return null;
+            }
             if (((int)json["code"]) == 0)
             {
                 return json["data"] as JArray;
@@ -369,11 +450,13 @@ namespace Another_Mirai_Native.Adapter
                 return null;
             }
         }
-        public static string ParseGroupMemberInfo2CQData(JObject json, long groupId, long QQId)
+        public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject json, long groupId, long QQId)
         {
             if (json == null) return null;
+            JObject appendInfo = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
+            if (appendInfo == null) return null;
             var targetuser = json;
-            int userPermission = 0;
+            int userPermission = 0, sex = 0;
             switch (targetuser["permission"].ToString())
             {
                 case "MEMBER":
@@ -388,6 +471,20 @@ namespace Another_Mirai_Native.Adapter
                 default:
                     break;
             }
+            switch (appendInfo["sex"].ToString())
+            {
+                case "UNKNOWN":
+                    sex = 255;
+                    break;
+                case "MALE":
+                    sex = 0;
+                    break;
+                case "FEMALE":
+                    sex = 1;
+                    break;
+                default:
+                    break;
+            }
             MemoryStream stream = new();
             BinaryWriter binaryWriter = new(stream);
 
@@ -395,16 +492,16 @@ namespace Another_Mirai_Native.Adapter
             BinaryWriterExpand.Write_Ex(binaryWriter, QQId);
             BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
             BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
-            BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-            BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-            BinaryWriterExpand.Write_Ex(binaryWriter, "unkown");
+            BinaryWriterExpand.Write_Ex(binaryWriter, sex);
+            BinaryWriterExpand.Write_Ex(binaryWriter, ((int)appendInfo["age"]));
+            BinaryWriterExpand.Write_Ex(binaryWriter, "中国");
             BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["joinTimestamp"]);
             BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["lastSpeakTimestamp"]);
-            BinaryWriterExpand.Write_Ex(binaryWriter, $"头衔{0}级");
+            BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["level"].ToString());
             BinaryWriterExpand.Write_Ex(binaryWriter, userPermission);
             BinaryWriterExpand.Write_Ex(binaryWriter, 0);
             BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["specialTitle"].ToString());
-            BinaryWriterExpand.Write_Ex(binaryWriter, -1);
+            BinaryWriterExpand.Write_Ex(binaryWriter, Helper.DateTime2TimeStamp(DateTime.Now.AddYears(10)));
             BinaryWriterExpand.Write_Ex(binaryWriter, 1);
             return Convert.ToBase64String(stream.ToArray());
         }
@@ -416,7 +513,7 @@ namespace Another_Mirai_Native.Adapter
                 target = groupId,
                 memberId = QQId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_get, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_get, request);
             if (json != null)
             {
                 return json;
@@ -433,7 +530,7 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
                 target = QQId
             };
-            JObject json = JObject.Parse(MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.friendProfile, request));
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.friendProfile, request);
             if (json != null)
             {
                 return json;
@@ -442,6 +539,17 @@ namespace Another_Mirai_Native.Adapter
             {
                 return null;
             }
+        }
+        public static string ParseGroupInfo2CQData(long groupId, string name, int memberCount)
+        {
+            MemoryStream stream = new();
+            BinaryWriter binaryWriter = new(stream);
+
+            BinaryWriterExpand.Write_Ex(binaryWriter, groupId);
+            BinaryWriterExpand.Write_Ex(binaryWriter, name);
+            BinaryWriterExpand.Write_Ex(binaryWriter, memberCount);
+            BinaryWriterExpand.Write_Ex(binaryWriter, memberCount + 100); // 群容量 无法获取
+            return Convert.ToBase64String(stream.ToArray());
         }
     }
 }

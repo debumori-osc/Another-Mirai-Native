@@ -597,7 +597,7 @@ namespace Another_Mirai_Native.Adapter
         /// </summary>
         /// <param name="type">API类别</param>
         /// <param name="data">调用内容</param>
-        public string CallMiraiAPI(MiraiApiType type, object data)
+        public JObject CallMiraiAPI(MiraiApiType type, object data)
         {
             string apiType = Enum.GetName(typeof(MiraiApiType), type);
             string command = apiType, subCommand = "";
@@ -612,24 +612,31 @@ namespace Another_Mirai_Native.Adapter
             if (ApiQueue.Count == 1)// 无需队列等待 直接发送请求
                 MessageSocket.Send(queueObject.request);
             // 超时脱出
-            int timoutCountMax = 1000;
+            int timoutCountMax = ConfigHelper.GetConfig("API_Timeout", 6000);
             int timoutCount = 0;
             // 等待消息处理后将结果放置在对象中
             while (queueObject.result == "")
             {
                 if (timoutCount > timoutCountMax)// 超时
                 {
-                    // TODO: 请求是否需要设置默认值
+                    queueObject.result = "err";
                     break;
                 }
                 Thread.Sleep(10);
-                timoutCount++;
+                if (ApiQueue.Peek() == queueObject)
+                { 
+                    timoutCount++; // 只有当前函数执行时才计时，防止所有排队函数均超时
+                }
             }
             // 从队列排出
             ApiQueue.Dequeue();
             if (ApiQueue.Count != 0)// 将队列下一元素的请求发送
                 MessageSocket.Send(ApiQueue.Peek().request);
-            return queueObject.result;// 返回请求结果
+            if (queueObject.result == "err")
+            {
+                return null;
+            }
+            return JObject.Parse(queueObject.result);// 返回请求结果
         }
     }
 }

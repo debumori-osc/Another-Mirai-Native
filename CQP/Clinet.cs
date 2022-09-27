@@ -16,9 +16,9 @@ namespace CQP
         public class ApiResult
         {
             /// <summary>
-            /// 调用是否成功
+            /// 调用是否失败
             /// </summary>
-            public bool Success { get; set; } = true;
+            public bool Fail { get; set; } = false;
             /// <summary>
             /// 调用返回的结果
             /// </summary>
@@ -79,7 +79,8 @@ namespace CQP
         }
         public ApiResult Send(WsServerFunction type, object data, bool queue = true)
         {
-            if(ServerConnection.ReadyState == WebSocketState.Open)
+            GC.Collect();
+            if (ServerConnection.ReadyState == WebSocketState.Open)
             {
                 if (!queue)
                 {
@@ -91,16 +92,19 @@ namespace CQP
                 if (ApiQueue.Count == 1)
                     ServerConnection.Send(queueObject.request);
                 // 超时脱出
-                int timoutCountMax = 1000;
+                int timoutCountMax = ConfigHelper.GetConfig("API_Timeout", 6000);
                 int timoutCount = 0;
                 while (queueObject.result == "")
                 {
                     if (timoutCount > timoutCountMax)
                     {
-                        queueObject.result = "{\"data\": \"\\\"callResult\\\": null\"}";
+                        queueObject.result = new { Fail = true }.ToJson();
                     }
                     Thread.Sleep(10);
-                    timoutCount++;
+                    if (ApiQueue.Peek() == queueObject)
+                    {
+                        timoutCount++; // 只有当前函数执行时才计时，防止所有排队函数均超时
+                    }
                 }
                 ApiQueue.Dequeue();
                 if (ApiQueue.Count != 0)
