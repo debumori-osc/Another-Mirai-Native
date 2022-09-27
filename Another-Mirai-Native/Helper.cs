@@ -39,8 +39,7 @@ namespace Another_Mirai_Native
         /// <summary>
         /// 最大获取或显示日志数量
         /// </summary>
-        // TODO: 设置为配置
-        public static int MaxLogCount { get; set; } = 500;
+        public static int MaxLogCount { get; set; } = ConfigHelper.GetConfig("MaxLogCount", 500);
         public static List<DateTime> MsgSpeed { get; set; } = new();
         public static DateTime StartUpTime { get; set; } = DateTime.Now;
         /// <summary>

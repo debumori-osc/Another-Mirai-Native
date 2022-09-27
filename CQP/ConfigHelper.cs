@@ -23,15 +23,20 @@ namespace CQP
         /// <param name="sectionName">需要读取的配置键名</param>
         /// <typeparam name="T">类型</typeparam>
         /// <returns>目标类型的配置</returns>
-        public static T GetConfig<T>(string sectionName)
+        public static T GetConfig<T>(string sectionName, T defaultValue = default)
         {
-            if (Directory.Exists("conf") is false) 
+            if (Directory.Exists("conf") is false)
                 Directory.CreateDirectory("conf");
             if (File.Exists(ConfigFileName) is false)
                 File.WriteAllText(ConfigFileName, "{}");
             var o = JObject.Parse(File.ReadAllText(ConfigFileName));
             if (o.ContainsKey(sectionName))
                 return o[sectionName]!.ToObject<T>();
+            if (defaultValue != null)
+            {
+                SetConfig<T>(sectionName, defaultValue);
+                return defaultValue;
+            }
             if (typeof(T) == typeof(string))
                 return (T)(object)"";
             if (typeof(T) == typeof(int))

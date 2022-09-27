@@ -82,18 +82,7 @@ namespace Another_Mirai_Native
             Helper.QQ = QQText.Text;
             Helper.WsURL = WSUrl.Text;
             Helper.WsAuthKey = AuthKeyText.Text;
-            Helper.MaxLogCount = ConfigHelper.GetConfig<int>("MaxLogCount");
-            if(Helper.MaxLogCount == 0)
-            {
-                Helper.MaxLogCount = 500;
-                ConfigHelper.SetConfig("MaxLogCount", 500);
-            }
-            int wsServerPort = ConfigHelper.GetConfig<int>("Ws_ServerPort");
-            if(wsServerPort == 0)
-            {
-                wsServerPort = 30303;
-                ConfigHelper.SetConfig("Ws_ServerPort", 30303);
-            }
+            int wsServerPort = ConfigHelper.GetConfig<int>("Ws_ServerPort", 30303);
             try
             {
                 WsServer.Init(wsServerPort);
