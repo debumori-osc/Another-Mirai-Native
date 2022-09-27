@@ -453,9 +453,9 @@ namespace Another_Mirai_Native.Adapter
         public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject json, long groupId, long QQId)
         {
             if (json == null) return null;
-            JObject appendInfo = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
-            if (appendInfo == null) return null;
-            var targetuser = json;
+            JObject targetuser = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
+            if (targetuser == null) return null;
+            var appendInfo = json;
             int userPermission = 0, sex = 0;
             switch (targetuser["permission"].ToString())
             {
@@ -497,7 +497,7 @@ namespace Another_Mirai_Native.Adapter
             BinaryWriterExpand.Write_Ex(binaryWriter, "中国");
             BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["joinTimestamp"]);
             BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["lastSpeakTimestamp"]);
-            BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["level"].ToString());
+            BinaryWriterExpand.Write_Ex(binaryWriter, appendInfo["level"].ToString());
             BinaryWriterExpand.Write_Ex(binaryWriter, userPermission);
             BinaryWriterExpand.Write_Ex(binaryWriter, 0);
             BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["specialTitle"].ToString());
@@ -513,7 +513,7 @@ namespace Another_Mirai_Native.Adapter
                 target = groupId,
                 memberId = QQId
             };
-            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_get, request);
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberProfile, request);
             if (json != null)
             {
                 return json;

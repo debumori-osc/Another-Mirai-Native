@@ -150,7 +150,13 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public void FlipPluginState(CQPlugin CQPlugin)
         {
-            string pluginId = CQPlugin.appinfo.Id;
+            string pluginId = CQPlugin.appinfo.Id; 
+            var c = PluginStatus["Status"]
+                            .Where(x => x["Name"].ToString() == pluginId)
+                            .FirstOrDefault();
+            c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
+            File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
+
             if (CQPlugin.Enable)
             {
                 CQPlugin.dll.CallFunction(FunctionEnums.Exit);
@@ -170,11 +176,6 @@ namespace Another_Mirai_Native.Native
                 loadedPlugin.Enable = true;
             }
             RefreshPluginList();
-            var c = PluginStatus["Status"]
-                            .Where(x => x["Name"].ToString() == pluginId)
-                            .FirstOrDefault();
-            c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
-            File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
         }
         public void RefreshPluginList()
         {

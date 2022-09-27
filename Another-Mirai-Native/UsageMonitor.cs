@@ -28,6 +28,7 @@ namespace Another_Mirai_Native
         {
             using (var db = GetInstance())
             {
+                Directory.CreateDirectory("logs");
                 string DBPath = MonitorFile;
                 db.DbMaintenance.CreateDatabase(DBPath);
                 db.CodeFirst.InitTables(typeof(SystemMonitor));

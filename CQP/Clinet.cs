@@ -60,6 +60,7 @@ namespace CQP
 
         private void ServerConnection_OnMessage(object sender, MessageEventArgs e)
         {
+            if (e.Data.Contains("AddLog")) return;
             if (ApiQueue.Count != 0)
             {
                 ApiQueue.Peek().result = e.Data;

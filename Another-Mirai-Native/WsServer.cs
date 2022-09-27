@@ -717,7 +717,7 @@ namespace Another_Mirai_Native
                         Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = Path.Combine(imgDir, imgFileName) } });
                         break;
                     case "GetGroupInfo":
-                        long groupId = ((long)json["groupId"]);
+                        long groupId = ((long)json["data"]["args"]["groupId"]);
                         var group = MiraiAPI.GetGroupList().FirstOrDefault(x => ((long)x["id"]) == groupId);
                         var groupMemCount = MiraiAPI.GetGroupMemberList(groupId).Count;
                         Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = MiraiAPI.ParseGroupInfo2CQData(groupId, group["name"].ToString(), groupMemCount) } });

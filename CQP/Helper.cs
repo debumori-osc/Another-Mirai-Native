@@ -81,6 +81,6 @@ namespace CQP
             Marshal.Copy(strPtr, buffer, 0, len);
             return encoding.GetString(buffer);
         }
-        public static byte[] ToNative(this JToken json) => Encoding.Convert(Encoding.Unicode, GB18030, Encoding.Unicode.GetBytes(json.ToString()));
+        public static IntPtr ToNative(this JToken json) => Marshal.UnsafeAddrOfPinnedArrayElement(Encoding.Convert(Encoding.Unicode, GB18030, Encoding.Unicode.GetBytes(json.ToString())), 0);
     }
 }
