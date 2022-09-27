@@ -58,13 +58,14 @@ namespace CQP
             return (T)Enum.Parse(typeof(T), Enum.GetName(typeof(T), value));
         }
         public static string ToJson(this object obj) => JsonConvert.SerializeObject(obj);
+        static Encoding GB18030 = Encoding.GetEncoding("GB18030");
         /// <summary>
 		/// 读取指针内所有的字节数组并编码为指定字符串
 		/// </summary>
 		/// <param name="strPtr">字符串的 <see cref="IntPtr"/> 对象</param>
 		/// <param name="encoding">目标编码格式</param>
 		/// <returns></returns>
-		public static string ToString(this IntPtr strPtr, Encoding encoding = null)
+		public static string ToString(this IntPtr strPtr, Encoding encoding)
         {
             if (encoding == null)
             {
@@ -80,15 +81,6 @@ namespace CQP
             Marshal.Copy(strPtr, buffer, 0, len);
             return encoding.GetString(buffer);
         }
-        public static string ToString(this JToken json, Encoding encoding)
-        {
-            string c = json.ToString();
-            var b = Encoding.UTF8.GetBytes(c);
-            c = encoding.GetString(Encoding.Convert(Encoding.UTF8, encoding, b));
-            byte[] messageBytes = encoding.GetBytes(c + "\0");
-            var messageIntptr = Marshal.AllocHGlobal(messageBytes.Length);
-            Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
-            return ToString(messageIntptr);
-        }
+        public static byte[] ToNative(this JToken json) => Encoding.Convert(Encoding.Unicode, GB18030, Encoding.Unicode.GetBytes(json.ToString()));
     }
 }
