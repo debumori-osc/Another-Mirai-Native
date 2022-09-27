@@ -5,6 +5,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Threading;
 using System.Windows.Forms;
 using Another_Mirai_Native.Adapter;
@@ -76,6 +78,8 @@ namespace Another_Mirai_Native
         private delegate int Type_Menu();//窗口事件均为无参数
         private static Type_Menu menu;
 
+        [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
         private static void MenuItem_Click(object sender, EventArgs e)
         {
             var targetItem = sender as MenuItem;
