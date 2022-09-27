@@ -253,13 +253,13 @@ namespace Another_Mirai_Native.Native
             AppDomain.Unload(appdomain.Value);
             GC.Collect();
             Load(path);
-            Loading = false;
             var pluginReload = Plugins.Find(x => x.appinfo.Name == name);
             if (pluginReload.Enable)
             {
                 pluginReload.dll.CallFunction(FunctionEnums.StartUp);
                 pluginReload.dll.CallFunction(FunctionEnums.Enable);
             }
+            Loading = false;
         }
 
         /// <summary>

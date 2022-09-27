@@ -51,7 +51,7 @@ namespace Another_Mirai_Native
             //未处理的异常捕获
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            Application.SetCompatibleTextRenderingDefault(true);
             Application.Run(new Login());
         }
         /// <summary>
