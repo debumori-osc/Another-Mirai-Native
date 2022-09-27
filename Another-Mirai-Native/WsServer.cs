@@ -142,7 +142,7 @@ namespace Another_Mirai_Native
                         Ws_GetFriendInfo(json);
                         break;
                     case WsServerFunction.GetFriendList:
-                        Ws_GetFriendList();
+                        Ws_GetFriendList(json);
                         break;
                     case WsServerFunction.GetDirectroy:
                         Ws_GetDirectory(json);
@@ -246,9 +246,18 @@ namespace Another_Mirai_Native
                 Send(new ApiResult { Data = groupList });
             }
 
-            private void Ws_GetFriendList()
+            private void Ws_GetFriendList(JObject json)
             {
                 var friendList = MiraiAPI.GetFriendList();
+                if (((bool)json["reserved"]))
+                {
+                    JArray arr = new();
+                    for(int i = friendList.Count - 1; i >= 0; i--)
+                    {
+                        arr.Add(friendList[i]);
+                    }
+                    friendList = arr;
+                }
                 Send(new ApiResult { Data = friendList });
             }
 
@@ -707,9 +716,16 @@ namespace Another_Mirai_Native
                         downloadTask.Wait();
                         Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = Path.Combine(imgDir, imgFileName) } });
                         break;
+                    case "GetGroupInfo":
+                        long groupId = ((long)json["groupId"]);
+                        var group = MiraiAPI.GetGroupList().FirstOrDefault(x => ((long)x["id"]) == groupId);
+                        var groupMemCount = MiraiAPI.GetGroupMemberList(groupId).Count;
+                        Send(new ApiResult { Type = "HandleCQFunction", Data = new { callResult = MiraiAPI.ParseGroupInfo2CQData(groupId, group["name"].ToString(), groupMemCount) } });
+                        break;
                     default:
                         break;
                 }
+                GC.Collect();
             }
             public int HandleMiraiFunction(JObject json, int logid)
             {
@@ -747,7 +763,8 @@ namespace Another_Mirai_Native
                     case MiraiApiType.memberProfile:
                         long memberProfile_groupid = json["data"]["args"]["groupId"].ToObject<long>();
                         long memberProfile_QQId = json["data"]["args"]["qqId"].ToObject<long>();
-                        callResult = MiraiAPI.ParseGroupMemberInfo2CQData(MiraiAPI.GetGroupMemberInfo(memberProfile_groupid, memberProfile_QQId), memberProfile_groupid, memberProfile_QQId);
+                        var memeberArr = MiraiAPI.GetGroupMemberList(memberProfile_groupid);
+                        callResult = MiraiAPI.ParseGroupMemberInfo2CQData(memeberArr, MiraiAPI.GetGroupMemberInfo(memberProfile_groupid, memberProfile_QQId), memberProfile_groupid, memberProfile_QQId);
                         break;
                     case MiraiApiType.userProfile:
                         break;
