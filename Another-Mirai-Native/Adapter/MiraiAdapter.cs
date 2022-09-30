@@ -300,12 +300,12 @@ namespace Another_Mirai_Native.Adapter
                 case MiraiEvents.BotMuteEvent:
                     var botMute = raw.ToObject<BotMuteEvent>();
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "Bot被禁言", $"群:{botMute._operator.group.id}({botMute._operator.group.name}) 禁言时长:{botMute.durationSeconds} 秒 操作人:{botMute._operator.id}({botMute._operator.memberName})", "处理中...");
-                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 2, Helper.TimeStamp, botMute._operator.group.id, Helper.QQ, botMute.durationSeconds);
+                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 2, Helper.TimeStamp, botMute._operator.group.id, botMute._operator.id, Helper.QQ, botMute.durationSeconds);
                     break;
                 case MiraiEvents.BotUnmuteEvent:
                     var botUnmute = raw.ToObject<BotUnmuteEvent>();
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "Bot解除禁言", $"群:{botUnmute._operator.group.id}({botUnmute._operator.group.name}) 操作人:{botUnmute._operator.id}({botUnmute._operator.memberName})", "处理中...");
-                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 1, Helper.TimeStamp, botUnmute._operator.group.id, Helper.QQ, 0);
+                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 1, Helper.TimeStamp, botUnmute._operator.group.id, botUnmute._operator.id, Helper.QQ, 0);
                     break;
                 case MiraiEvents.BotJoinGroupEvent:
                     var botJoinGroup = raw.ToObject<BotJoinGroupEvent>();
@@ -368,8 +368,8 @@ namespace Another_Mirai_Native.Adapter
                     break;
                 case MiraiEvents.GroupMuteAllEvent:
                     var groupMuteAllRecall = raw.ToObject<GroupMuteAllEvent>();
-                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "全体禁言", $"群:{groupMuteAllRecall._operator.group.id}({groupMuteAllRecall._operator.group.name}) 操作人:{groupMuteAllRecall._operator.id}({groupMuteAllRecall._operator.memberName})", "处理中...");
-                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 2, Helper.TimeStamp, groupMuteAllRecall._operator.group.id, 0, 0);
+                    logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", $"全体{(groupMuteAllRecall.current?"":"解除")}禁言", $"群:{groupMuteAllRecall._operator.group.id}({groupMuteAllRecall._operator.group.name}) 操作人:{groupMuteAllRecall._operator.id}({groupMuteAllRecall._operator.memberName})", "处理中...");
+                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, groupMuteAllRecall.current ? 1 : 2, Helper.TimeStamp, groupMuteAllRecall._operator.group.id, groupMuteAllRecall._operator.id, 0, 0);
                     break;
                 case MiraiEvents.GroupAllowAnonymousChatEvent:
                     var groupAllowAnonymousChat = raw.ToObject<GroupAllowAnonymousChatEvent>();
@@ -417,12 +417,12 @@ namespace Another_Mirai_Native.Adapter
                 case MiraiEvents.MemberMuteEvent:
                     var memberMuteEvent = raw.ToObject<MemberMuteEvent>();
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群员被禁言", $"群:{memberMuteEvent.member.group.id}({memberMuteEvent.member.group.name}) QQ:{memberMuteEvent.member.id}({memberMuteEvent.member.memberName}) 禁言时长:{memberMuteEvent.durationSeconds} 秒 操作人:{memberMuteEvent._operator.id}({memberMuteEvent._operator.memberName})", "处理中...");
-                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 2, Helper.TimeStamp, memberMuteEvent._operator.group.id, memberMuteEvent.member.id, memberMuteEvent.durationSeconds);
+                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 2, Helper.TimeStamp, memberMuteEvent._operator.group.id, memberMuteEvent._operator.id, memberMuteEvent.member.id, memberMuteEvent.durationSeconds);
                     break;
                 case MiraiEvents.MemberUnmuteEvent:
                     var memberUnmuteEvent = raw.ToObject<MemberUnmuteEvent>();
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群员被解除禁言", $"群:{memberUnmuteEvent.member.group.id}({memberUnmuteEvent.member.group.name}) QQ:{memberUnmuteEvent.member.id}({memberUnmuteEvent.member.memberName}) 操作人:{memberUnmuteEvent._operator.id}({memberUnmuteEvent._operator.memberName})", "处理中...");
-                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 1, Helper.TimeStamp, memberUnmuteEvent._operator.group.id, memberUnmuteEvent.member.id, 0);
+                    handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupBan, 1, Helper.TimeStamp, memberUnmuteEvent._operator.group.id, memberUnmuteEvent._operator.id, memberUnmuteEvent.member.id, 0);
                     break;
                 case MiraiEvents.MemberHonorChangeEvent:
                     var memberHonorChangeEvent = raw.ToObject<MemberHonorChangeEvent>();
