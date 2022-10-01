@@ -14,6 +14,7 @@ namespace Another_Mirai_Native
     {
         public static Login Instance { get; set; }
         public static IntPtr Instance_Handle { get; set; }
+        public bool CLILogin { get; set; } = false;
         public Login()
         {
             InitializeComponent();
@@ -33,10 +34,13 @@ namespace Another_Mirai_Native
                 LoginBtn.Text = "连接中...";
                 LoginBtn.Enabled = false;
                 Helper.QQ = QQText.Text;
-                ConfigHelper.SetConfig("AutoLogin", AutoLoginCheck.Checked);
-                ConfigHelper.SetConfig("QQ", QQText.Text);
-                ConfigHelper.SetConfig("Ws_Url", WSUrl.Text);
-                ConfigHelper.SetConfig("Ws_AuthKey", AuthKeyText.Text);
+                if(!CLILogin)
+                {
+                    ConfigHelper.SetConfig("AutoLogin", AutoLoginCheck.Checked);
+                    ConfigHelper.SetConfig("QQ", QQText.Text);
+                    ConfigHelper.SetConfig("Ws_Url", WSUrl.Text);
+                    ConfigHelper.SetConfig("Ws_AuthKey", AuthKeyText.Text);
+                }
                 adapter = new(WSUrl.Text, QQText.Text, AuthKeyText.Text);
                 adapter.ConnectedStateChanged += Adapter_ConnectedStateChanged;
                 adapter.Connect();
@@ -75,13 +79,25 @@ namespace Another_Mirai_Native
 
         private void Login_Load(object sender, EventArgs e)
         {
-            AutoLoginCheck.Checked = ConfigHelper.GetConfig<bool>("AutoLogin");
-            QQText.Text = ConfigHelper.GetConfig<string>("QQ");
-            WSUrl.Text = ConfigHelper.GetConfig<string>("Ws_Url");
-            AuthKeyText.Text = ConfigHelper.GetConfig<string>("Ws_AuthKey");
-            Helper.QQ = QQText.Text;
-            Helper.WsURL = WSUrl.Text;
-            Helper.WsAuthKey = AuthKeyText.Text;
+            if(string.IsNullOrEmpty(Helper.QQ))
+            {
+                AutoLoginCheck.Checked = ConfigHelper.GetConfig<bool>("AutoLogin");
+                QQText.Text = ConfigHelper.GetConfig<string>("QQ");
+                WSUrl.Text = ConfigHelper.GetConfig<string>("Ws_Url");
+                AuthKeyText.Text = ConfigHelper.GetConfig<string>("Ws_AuthKey");
+                Helper.QQ = QQText.Text;
+                Helper.WsURL = WSUrl.Text;
+                Helper.WsAuthKey = AuthKeyText.Text;
+            }
+            else
+            {
+                CLILogin = true;
+                QQText.Text = Helper.QQ;
+                WSUrl.Text = Helper.WsURL;
+                AuthKeyText.Text = Helper.WsAuthKey;
+                AutoLoginCheck.Checked = true;
+            }
+
             int wsServerPort = ConfigHelper.GetConfig<int>("Ws_ServerPort", 30303);
             try
             {

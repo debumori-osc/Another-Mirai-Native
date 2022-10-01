@@ -18,24 +18,61 @@ namespace Another_Mirai_Native
         [STAThread]
         static void Main(string[] args)
         {
+            bool ignoreProcessCheck = false, waitForExit = false, customArg = false;
             // 防止启动多个程序
             Process[] process = Process.GetProcessesByName("AnotherMiraiNative");
-            if (args.Length != 0 && args[0] == "-r")// 如果含有 -r 参数 则等待前者进程退出之后再启动
+            if(args.Length > 0)
+            {
+                for(int i = 0; i < args.Length; i++)
+                {
+                    switch (args[i])
+                    {
+                        case "-i":
+                            ignoreProcessCheck = true;
+                            break;
+                        case "-r":
+                            waitForExit = true;
+                            break;
+                        case "-q":
+                        case "-ws":
+                        case "-wsk":
+                            customArg = true;
+                            i++;
+                            if (i >= args.Length)
+                            {
+                                MessageBox.Show("命令行参数错误");
+                                Environment.Exit(0);
+                            }
+                            if (args[i - 1] == "-q") Helper.QQ = args[i];
+                            else if (args[i - 1] == "-ws") Helper.WsURL = args[i];
+                            else if (args[i - 1] == "-wsk") Helper.WsAuthKey = args[i];
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if (customArg && (string.IsNullOrEmpty(Helper.QQ)
+                    || string.IsNullOrEmpty(Helper.WsURL)
+                    || string.IsNullOrEmpty(Helper.WsAuthKey)))
+                {
+                    MessageBox.Show("命令行参数错误");
+                    Environment.Exit(0);
+                }
+            }            
+            if (waitForExit)// 如果含有 -r 参数 则等待前者进程退出之后再启动
             {
                 int initialNum = process.Length;
                 if (initialNum != 1)
                 {
-                    while (Process.GetProcessesByName("AnotherMiraiNative").Length != initialNum - 1)
+                    process = Process.GetProcessesByName("AnotherMiraiNative");
+                    while (process.Length != initialNum - 1)
                     {
                         Thread.Sleep(1000);
                     }
                 }
             }
-            else if(args.Length != 0 && args[0] == "-i")// 含有 -i 参数 忽略进程检测
-            {
-                // 忽略进程检测
-            }
-            else
+
+            if (ignoreProcessCheck is false)
             {
                 if (process.Length != 1)
                 {
