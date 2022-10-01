@@ -581,7 +581,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 MessageSocket.Connect();
                 EventSocket.Connect();
-                return true;
+                return MessageSocket.ReadyState == WebSocketState.Open && EventSocket.ReadyState == WebSocketState.Open;
             }
             catch { }
             return false;
