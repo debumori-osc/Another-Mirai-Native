@@ -18,8 +18,25 @@ https://github.com/project-mirai/mirai-api-http#安装mirai-api-http
 - 开放`ws`，配置`verifyKey`
 - 如需公网访问，请将`ws-host`设置为`0.0.0.0`，服务器开放ws的监听端口
 
+## 使用流程
+1. 下载最老版本的[Release](https://github.com/Hellobaka/Another-Mirai-Native/releases/download/1.5.0/Release.zip)并解压
+2. 下载最新版本的[Release](https://github.com/Hellobaka/Another-Mirai-Native/releases/latest)，按照发行说明替换对应文件
+3. 启动`AnotherMiraiNative.exe`，填入对应的配置，关于`ws`与`Authkey`在上一节
+
+## 命令行参数
+- `-i`：忽略进程检查
+- `-q`：提供自动登录的QQ号
+- `-ws`：提供自动登录的ws连接
+- `-wsk`：提供自动登录的Authkey
+
+- 程序默认阻止启动多个同名进程
+- 当使用自动登录参数时，若缺少参数将无法启动程序
+
 ## 音频支持
 https://github.com/Hellobaka/Another-Mirai-Native/releases/tag/1.5.5 下载其中的`tools.7z`并按说明解压即可
+
+### 交流群
+671467200
 
 ## 待实现功能
 - [ ] WebUI
