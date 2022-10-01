@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Another_Mirai_Native.Adapter;
 using Another_Mirai_Native.Enums;
 using Another_Mirai_Native.Native;
 
@@ -80,11 +81,14 @@ namespace Another_Mirai_Native
                     return;
                 }
             }
-            UsageMonitor.CreateDB();
-            UsageMonitor.StartRecord();
+            if(ConfigHelper.GetConfig<bool>("Enable_UsageMonitor", false))
+            {
+                UsageMonitor.CreateDB();
+                UsageMonitor.StartRecord();
+            }
 
             Application.ThreadException += Application_ThreadException;
-            Application.ApplicationExit += (a, b) => { UsageMonitor.ExitFlag = true; };
+            Application.ApplicationExit += (a, b) => { UsageMonitor.ExitFlag = true; MiraiAdapter.Instance.ExitFlag = true; };
             //未处理的异常捕获
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Application.EnableVisualStyles();

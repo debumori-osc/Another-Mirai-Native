@@ -208,7 +208,7 @@ namespace Another_Mirai_Native
                 if (isGroup)
                 {
                     long groupId = ((long)json["data"]["groupId"]);
-                    success =  MiraiAPI.SendGroupMessage(groupId, parsedMsg) != 0;
+                    success = MiraiAPI.SendGroupMessage(groupId, parsedMsg) != 0;
                 }
                 else
                 {
@@ -252,7 +252,7 @@ namespace Another_Mirai_Native
                 if (((bool)json["reserved"]))
                 {
                     JArray arr = new();
-                    for(int i = friendList.Count - 1; i >= 0; i--)
+                    for (int i = friendList.Count - 1; i >= 0; i--)
                     {
                         arr.Add(friendList[i]);
                     }
@@ -414,12 +414,29 @@ namespace Another_Mirai_Native
 
             private void Ws_GetStatus()
             {
-                DeviceInformation instance = DeviceInformation.Instance;
                 int PluginNum = 0;
                 if (PluginManagment.Instance != null)
                 {
                     PluginNum = PluginManagment.Instance.Plugins.Count;
                 }
+
+                if (ConfigHelper.GetConfig("Enable_UsageMonitor", false) is false)
+                {
+                    Send(new ApiResult
+                    {
+                        Type = "Status",
+                        Msg = "性能监测模块未启用",
+                        Data = new
+                        {
+                            MessageSpeed = Helper.MsgSpeed.Count,
+                            SystemUpTime = Environment.TickCount / 1000,
+                            AMNUpTime = (DateTime.Now - Helper.StartUpTime).TotalSeconds,
+                            PluginNum
+                        }
+                    });
+                    return;
+                }
+                DeviceInformation instance = DeviceInformation.Instance;
 
                 Send(new ApiResult
                 {
