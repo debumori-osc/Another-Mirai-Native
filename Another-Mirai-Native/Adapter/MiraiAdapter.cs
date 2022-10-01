@@ -50,6 +50,7 @@ namespace Another_Mirai_Native.Adapter
         /// 重连次数
         /// </summary>
         public int reConnect { get; set; }
+        public bool CanReconnect { get; set; } = false;
 
         public WebSocket MessageSocket;
         public WebSocket EventSocket;
@@ -103,6 +104,8 @@ namespace Another_Mirai_Native.Adapter
 
         private void EventSocket_OnOpen(object sender, EventArgs e)
         {
+            CanReconnect = true;
+
             LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
             reConnect = 0;
             new Thread(() =>
@@ -120,6 +123,7 @@ namespace Another_Mirai_Native.Adapter
         private long NoMsgTimeoutMax = 600;
         private void MessageSocket_OnOpen(object sender, EventArgs e)
         {
+            CanReconnect = true;
             LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
             reConnect = 0;
             new Thread(() =>
@@ -136,6 +140,7 @@ namespace Another_Mirai_Native.Adapter
         bool eventNoWarning = false;
         private void EventSocket_OnClose(object sender, CloseEventArgs e)
         {
+            if (CanReconnect is false) return;
             SessionKey_Event = "";
             reConnect++;
             if (eventNoWarning)
@@ -154,6 +159,8 @@ namespace Another_Mirai_Native.Adapter
         bool msgNoWarning = false;
         private void MessageSocket_OnClose(object sender, CloseEventArgs e)
         {
+            if (CanReconnect is false) return;
+
             SessionKey_Message = "";
             reConnect++;
             if (msgNoWarning)
@@ -570,9 +577,14 @@ namespace Another_Mirai_Native.Adapter
         /// <returns></returns>
         public bool Connect()
         {
-            MessageSocket.Connect();
-            EventSocket.Connect();
-            return false;// ?
+            try
+            {
+                MessageSocket.Connect();
+                EventSocket.Connect();
+                return true;
+            }
+            catch { }
+            return false;
         }
         /// <summary>
         /// 描述消息队列的对象

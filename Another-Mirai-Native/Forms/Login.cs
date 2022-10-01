@@ -43,7 +43,10 @@ namespace Another_Mirai_Native
                 }
                 adapter = new(WSUrl.Text, QQText.Text, AuthKeyText.Text);
                 adapter.ConnectedStateChanged += Adapter_ConnectedStateChanged;
-                adapter.Connect();
+                if (adapter.Connect())
+                {
+                    throw new Exception("无法与Mirai-api-http建立连接");
+                }
             }
             catch (Exception exc)
             {
