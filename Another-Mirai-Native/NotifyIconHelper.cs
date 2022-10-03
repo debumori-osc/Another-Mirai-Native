@@ -106,6 +106,8 @@ namespace Another_Mirai_Native
                         return;
                     case "LogForm":
                         LogForm.Instance.Show();
+                        LogForm.Instance.WindowState = FormWindowState.Normal;
+                        LogForm.Instance.Activate();
                         return;
                     case "Displaywindow":
                         targetItem.Checked = !targetItem.Checked;
