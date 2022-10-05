@@ -38,7 +38,7 @@ https://github.com/Hellobaka/Another-Mirai-Native/releases/tag/1.5.5 下载其�
 ## 配置文件
 |配置键|含义|类型|默认值|
 |----|----|----|----|
-|AutoLogin|启动程序是否自动启动|bool|false|
+|AutoLogin|启动程序时是否自动连接|bool|false|
 |QQ|默认填入的QQ号|long||
 |Ws_Url|默认填入的Ws_Url|string||
 |Ws_AuthKey|默认填入的Ws_AuthKey|string||
