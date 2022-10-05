@@ -35,6 +35,9 @@ https://github.com/project-mirai/mirai-api-http#安装mirai-api-http
 ## 音频支持
 https://github.com/Hellobaka/Another-Mirai-Native/releases/tag/1.5.5 下载其中的`tools.7z`并按说明解压即可
 
+## 内置WebSocket接口
+[使用文档](https://github.com/Hellobaka/Another-Mirai-Native/blob/master/Wsapi.md)
+
 ### 交流群
 671467200
 

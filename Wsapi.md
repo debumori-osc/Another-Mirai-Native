@@ -123,12 +123,13 @@
 |sortDesc|bool|是否降序排序|
 
 ### CallMiraiAPI: 3
-调用MiraiAPI原生API
+调用MiraiAPI原生API，并非所有API都做了实现，只实现了所需的功能
 |参数名称|类型|描述|是否可空|
 |----|----|----|----|
 |type|int|MiraiAPI[枚举](#miraiapi枚举)|
 |authCode|int|来源插件的AuthCode|
 |args|object|各个函数所需的不同参数表，详情请查阅[代码](https://github.com/Hellobaka/Another-Mirai-Native/blob/master/Another-Mirai-Native/WsServer.cs#L759)填写具体参数列表|
+
 ### CallCQFunction: 4
 实现部分CQP.dll函数
 |参数名称|类型|描述|是否可空|
@@ -136,6 +137,7 @@
 |type|string|指令类型|
 |authCode|int|来源插件的AuthCode|
 |args|object|各个函数所需的不同参数表，详情请查阅[代码](https://github.com/Hellobaka/Another-Mirai-Native/blob/master/Another-Mirai-Native/WsServer.cs#L713)填写具体参数列表|
+
 #### 可用CQP函数
 |名称|含义|
 |----|----|
