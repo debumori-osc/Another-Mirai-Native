@@ -5,7 +5,7 @@
 当连接鉴权成功之后，服务器会回应每条在指令枚举中的请求，不在指令枚举中的指令将不会回应
 ### 消息结构
 #### 发送
-```json
+```jsonc
 {
     "type": 0, // 指令枚举
     "data": {
@@ -14,7 +14,7 @@
 }
 ```
 示例:
-```json
+```jsonc
 {
     "type": 8, // ReloadPlugin
     "data": {
@@ -23,7 +23,7 @@
 }
 ```
 #### 接收
-```json
+```jsonc
 {
     "Success": true, // 处理结果是否成功，如果失败Msg字段会包含错误信息
     "Data": {
@@ -34,7 +34,7 @@
 }
 ```
 示例:
-```json
+```jsonc
 {
     "Success": false,
     "Msg": "插件不存在",
@@ -48,7 +48,7 @@
 
 ### 传递身份
 在连接建立之后，发送一条如下所示的消息
-```json
+```jsonc
 {
     "type": 0, // Info
     "data": {
@@ -105,7 +105,7 @@
 添加日志
 |参数名称|类型|描述|是否可空|
 |----|----|----|----|
-|priority|int|日志级别枚举|
+|priority|int|日志级别[枚举](#日志枚举)|
 |msg|string|日志消息|
 |type|string|日志类型|true
 |authCode|int|日志来源插件的AuthCode|true
@@ -126,7 +126,7 @@
 调用MiraiAPI原生API
 |参数名称|类型|描述|是否可空|
 |----|----|----|----|
-|type|int|MiraiAPI枚举|
+|type|int|MiraiAPI[枚举](#miraiapi枚举)|
 |authCode|int|来源插件的AuthCode|
 |args|object|各个函数所需的不同参数表，详情请查阅[代码](https://github.com/Hellobaka/Another-Mirai-Native/blob/master/Another-Mirai-Native/WsServer.cs#L759)填写具体参数列表|
 ### CallCQFunction: 4
