@@ -78,7 +78,7 @@ namespace Another_Mirai_Native
                 if (process.Length != 1)
                 {
                     MessageBox.Show("已经启动了一个程序");
-                    return;
+                    Environment.Exit(0);
                 }
             }
             if(ConfigHelper.GetConfig<bool>("Enable_UsageMonitor", false))
@@ -88,7 +88,11 @@ namespace Another_Mirai_Native
             }
 
             Application.ThreadException += Application_ThreadException;
-            Application.ApplicationExit += (a, b) => { UsageMonitor.ExitFlag = true; MiraiAdapter.Instance.ExitFlag = true; };
+            Application.ApplicationExit += (a, b) =>
+            { 
+                UsageMonitor.ExitFlag = true; 
+                MiraiAdapter.ExitFlag = true; 
+            };
             //未处理的异常捕获
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             Application.EnableVisualStyles();
