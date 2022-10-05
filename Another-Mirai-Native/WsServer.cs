@@ -144,7 +144,7 @@ namespace Another_Mirai_Native
                     case WsServerFunction.GetFriendList:
                         Ws_GetFriendList(json);
                         break;
-                    case WsServerFunction.GetDirectroy:
+                    case WsServerFunction.GetDirectory:
                         Ws_GetDirectory(json);
                         break;
                     case WsServerFunction.HeartBeat:
@@ -249,7 +249,7 @@ namespace Another_Mirai_Native
             private void Ws_GetFriendList(JObject json)
             {
                 var friendList = MiraiAPI.GetFriendList();
-                if (((bool)json["reserved"]))
+                if (((bool)json["data"]["reserved"]))
                 {
                     JArray arr = new();
                     for (int i = friendList.Count - 1; i >= 0; i--)
@@ -458,6 +458,16 @@ namespace Another_Mirai_Native
 
             private void Ws_GetDeviceInfo()
             {
+                if (ConfigHelper.GetConfig("Enable_UsageMonitor", false) is false)
+                {
+                    Send(new ApiResult
+                    {
+                        Type = "DeviceInfo",
+                        Msg = "性能监测模块未启用",
+                        Success = false
+                    }) ;
+                    return;
+                }
                 DeviceInformation instance = DeviceInformation.Instance;
                 Send(new ApiResult
                 {
@@ -534,17 +544,17 @@ namespace Another_Mirai_Native
             /// </summary>
             private void Ws_AddLog(JObject json)
             {
-                Enums.LogLevel log_priority = json["data"]["args"]["priority"].ToObject<Enums.LogLevel>();
-                string log_msg = json["data"]["args"]["msg"].ToObject<string>();
+                Enums.LogLevel log_priority = json["data"]["priority"].ToObject<Enums.LogLevel>();
+                string log_msg = json["data"]["msg"].ToObject<string>();
                 string log_type = "致命错误";
                 string log_origin = "AMN框架";
-                if (json["data"]["args"].ContainsKey("type"))
+                if (json["data"].ContainsKey("type"))
                 {
-                    log_type = json["data"]["args"]["type"].ToObject<string>();
+                    log_type = json["data"]["type"].ToObject<string>();
                 }
-                if (json["data"]["args"].ContainsKey("authCode"))
+                if (json["data"].ContainsKey("authCode"))
                 {
-                    int authcode = json["data"]["args"]["authCode"].ToObject<int>();
+                    int authcode = json["data"]["authCode"].ToObject<int>();
                     var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                     if (plugin != null)
                     {
@@ -573,7 +583,7 @@ namespace Another_Mirai_Native
                     orderByDesc = (bool)(json["data"]["sortDesc"] as JArray)![0];// 是否降序, 第一项为bool表示是否降序
                 }
                 List<DateTime> date = new();
-                if (json["date"] is JArray array)
+                if (json["data"]["date"] is JArray array)
                 {
                     foreach (var item in array)// 日志时间筛选
                     {
@@ -702,7 +712,7 @@ namespace Another_Mirai_Native
             public void HandleCQFunction(JObject json)
             {
                 var apiType = json["data"]["type"].ToObject<string>();
-                int authcode = json["data"]["args"]["authCode"].ToObject<int>();
+                int authcode = json["data"]["authCode"].ToObject<int>();
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
@@ -747,12 +757,12 @@ namespace Another_Mirai_Native
             public int HandleMiraiFunction(JObject json, int logid)
             {
                 var apiType = json["data"]["type"].ToObject<MiraiApiType>();
-                int authcode = json["data"]["args"]["authCode"].ToObject<int>();
+                int authcode = json["data"]["authCode"].ToObject<int>();
                 object callResult = 0;
                 var plugin = PluginManagment.Instance.Plugins.Find(x => x.appinfo.AuthCode == authcode);
                 if (plugin == null)
                 {
-                    Send(new ApiResult { Type = "HandleMiraiFunction", Success = false });
+                    Send(new ApiResult { Type = "HandleMiraiFunction", Success = false, Msg = "Authcode无效" });
                     LogHelper.WriteLog("Authcode无效", "");
                     return logid;
                 }
@@ -986,6 +996,7 @@ namespace Another_Mirai_Native
                         break;
                 }
                 Send(new ApiResult { Type = "HandleMiraiFunction", Data = new { callResult } });
+                // LogHelper.WriteLog(Enums.LogLevel.Debug, "debug", $"miraiApi: {apiType}, result: {callResult}", "");
                 return logid;
             }
             public void Send(object objData)
@@ -1027,6 +1038,8 @@ namespace Another_Mirai_Native
             Instance = this;
             new Thread(() =>
             {
+                if (ConfigHelper.GetConfig("Enable_UsageMonitor", false) is false) return;
+
                 DeviceInformation.Instance = new()
                 {
                     CpuCounter = new PerformanceCounter("Processor Information", "% Processor Utility", "_Total"),
