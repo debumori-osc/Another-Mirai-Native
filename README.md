@@ -23,6 +23,9 @@ https://github.com/project-mirai/mirai-api-http#安装mirai-api-http
 2. 下载最新版本的[Release](https://github.com/Hellobaka/Another-Mirai-Native/releases/latest)，按照发行说明替换对应文件
 3. 启动`AnotherMiraiNative.exe`，填入对应的配置，关于`ws`与`Authkey`在上一节
 
+## 音频支持
+https://github.com/Hellobaka/Another-Mirai-Native/releases/tag/1.5.5 下载其中的`tools.7z`并按说明解压即可
+
 ## 命令行参数
 - `-i`：忽略进程检查
 - `-q`：提供自动登录的QQ号
@@ -32,8 +35,22 @@ https://github.com/project-mirai/mirai-api-http#安装mirai-api-http
 - 程序默认阻止启动多个同名进程
 - 当使用自动登录参数时，若缺少参数将无法启动程序
 
-## 音频支持
-https://github.com/Hellobaka/Another-Mirai-Native/releases/tag/1.5.5 下载其中的`tools.7z`并按说明解压即可
+## 配置文件
+|配置键|含义|类型|默认值|
+|----|----|----|----|
+|AutoLogin|启动程序是否自动启动|bool|false|
+|QQ|默认填入的QQ号|long||
+|Ws_Url|默认填入的Ws_Url|string||
+|Ws_AuthKey|默认填入的Ws_AuthKey|string||
+|Ws_ServerPort|本地Ws服务器需要的端口|ushort|30303|
+|MaxLogCount|日志窗口最大日志数量|int|500|
+|FloatWindow_Location|悬浮窗位置|string(示例: 1841,903)||
+|FloatWindow_Visible|悬浮窗是否可见|bool|false|
+|FloatWindow_TopMost|悬浮窗是否置顶|bool|false|
+|Tester_GroupID|最后一次插件测试的群号|long|随机生成|
+|Tester_QQID|最后一次插件测试的QQ号|long|随机生成|
+|API_Timeout|接口调用超时最大时长(100=1s)|int|6000(60s)|
+|Enable_UsageMonitor|是否启用性能检测模块|bool|false|
 
 ## 内置WebSocket接口
 [使用文档](https://github.com/Hellobaka/Another-Mirai-Native/blob/master/Wsapi.md)
