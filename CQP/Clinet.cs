@@ -111,7 +111,8 @@ namespace CQP
                 if (ApiQueue.Count != 0)
                     ServerConnection.Send(ApiQueue.Peek().request);
                 var r = JsonConvert.DeserializeObject<ApiResult>(queueObject.result);
-                r.json = JObject.FromObject(r.Data);
+                if(r.Fail is false)
+                    r.json = JObject.FromObject(r.Data);
                 return r;
             }
             return null;
