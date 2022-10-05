@@ -45,7 +45,7 @@ namespace Another_Mirai_Native.Adapter
         /// 保存事件服务器的SessionKey
         /// </summary>
         public string SessionKey_Event { get; set; }
-        public bool ExitFlag { get; set; }
+        public static bool ExitFlag { get; set; }
         /// <summary>
         /// 重连次数
         /// </summary>
@@ -56,6 +56,7 @@ namespace Another_Mirai_Native.Adapter
         public WebSocket EventSocket;
         public delegate void MessageArrived(string json);
         public event MessageArrived OnMessageArrived;
+        public Thread HeartBeatThread { get; set; }
 
         public delegate void ConnectedStateChange(bool status, string msg);
         /// <summary>
@@ -83,6 +84,8 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.OnClose += EventSocket_OnClose;
             EventSocket.OnOpen += EventSocket_OnOpen;
 
+            StartHearbeat();
+
             new Thread(() =>
             {
                 while (!ExitFlag)
@@ -99,56 +102,50 @@ namespace Another_Mirai_Native.Adapter
                 }
             }).Start();
         }
-        private long NoEventTimeout = 0;
-        private long NoEventTimeoutMax = 600;
 
         private void EventSocket_OnOpen(object sender, EventArgs e)
         {
             CanReconnect = true;
-
             LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
             reConnect = 0;
-            new Thread(() =>
-            {
-                while (NoEventTimeout < NoEventTimeoutMax)
-                {
-                    Thread.Sleep(1000);
-                    NoEventTimeout++;
-                }
-                LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器疑似无响应", $"status={EventSocket.ReadyState}");
-                EventSocket.Close();
-            }).Start();
         }
-        private long NoMsgTimeout = 0;
-        private long NoMsgTimeoutMax = 600;
         private void MessageSocket_OnOpen(object sender, EventArgs e)
         {
             CanReconnect = true;
             LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
             reConnect = 0;
-            new Thread(() =>
-            {
-                while (NoMsgTimeout < NoMsgTimeoutMax)
-                {
-                    Thread.Sleep(1000);
-                    NoMsgTimeout++;
-                }
-                LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器疑似无响应", $"status={MessageSocket.ReadyState}");
-                MessageSocket.Close();
-            }).Start();
         }
-        bool eventNoWarning = false;
+        private long HeartBeatTimeout = 0;
+        private long HeartBeatTimeoutMax = 60;
+        private void StartHearbeat()
+        {
+            HeartBeatThread = new Thread(() =>
+            {
+                while(!ExitFlag)
+                {
+                    while (HeartBeatTimeout < HeartBeatTimeoutMax)
+                    {
+                        Thread.Sleep(1000);
+                        HeartBeatTimeout++;
+                    }
+                    HeartBeatTimeout = 0;
+                    if (MessageSocket.ReadyState == WebSocketState.Open)
+                        MessageSocket.Send("heartbeat");
+                    if(EventSocket.ReadyState == WebSocketState.Open)
+                        EventSocket.Send("heartbeat");
+                }
+            });
+            HeartBeatThread.Start();
+        }
+
         private void EventSocket_OnClose(object sender, CloseEventArgs e)
         {
             if (CanReconnect is false) return;
             SessionKey_Event = "";
             reConnect++;
-            if (eventNoWarning)
-            {
-                LogHelper.WriteLog($"与事件服务器断开连接...第 {reConnect} 次重连");
-                eventNoWarning = false;
-            }
+            LogHelper.WriteLog($"与事件服务器断开连接...第 {reConnect} 次重连");
             Thread.Sleep(3000);
+
             string event_connecturl = $"{WsURL}/event?verifyKey={AuthKey}&qq={QQ}";
             EventSocket = new WebSocket(event_connecturl);
             EventSocket.OnMessage += EventSocket_OnMessage;
@@ -156,19 +153,15 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.OnOpen += EventSocket_OnOpen;
             EventSocket.Connect();
         }
-        bool msgNoWarning = false;
         private void MessageSocket_OnClose(object sender, CloseEventArgs e)
         {
             if (CanReconnect is false) return;
 
             SessionKey_Message = "";
             reConnect++;
-            if (msgNoWarning)
-            {
-                LogHelper.WriteLog($"与消息服务器断开连接...第 {reConnect} 次重连");
-                msgNoWarning = false;
-            }
+            LogHelper.WriteLog($"与消息服务器断开连接...第 {reConnect} 次重连");
             Thread.Sleep(3000);
+
             string message_connecturl = $"{WsURL}/message?verifyKey={AuthKey}&qq={QQ}";
             MessageSocket = new WebSocket(message_connecturl);
             MessageSocket.OnMessage += MessageSocket_OnMessage;
@@ -178,8 +171,6 @@ namespace Another_Mirai_Native.Adapter
         }
         public void ActiveDropConnection()
         {
-            eventNoWarning = true;
-            msgNoWarning = true;
             EventSocket.Close();
             MessageSocket.Close();
         }
@@ -188,8 +179,12 @@ namespace Another_Mirai_Native.Adapter
         /// </summary>
         private void MessageSocket_OnMessage(object sender, MessageEventArgs e)
         {
-            NoMsgTimeout = 0;
+            HeartBeatTimeout = 0;
             JObject json = JObject.Parse(e.Data);
+            if (json.ContainsKey("code") && ((int)json["code"]) == 400)
+            {
+                return;
+            }
             if (string.IsNullOrWhiteSpace(SessionKey_Message))
             {
                 if (json["data"]["code"].ToString() == "0")
@@ -230,8 +225,12 @@ namespace Another_Mirai_Native.Adapter
 
         private void EventSocket_OnMessage(object sender, MessageEventArgs e)
         {
-            NoEventTimeout = 0;
             JObject json = JObject.Parse(e.Data);
+            if (json.ContainsKey("code") && ((int)json["code"]) == 400)
+            {
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(SessionKey_Event))
             {
                 if (json["data"]["code"].ToString() == "0")
@@ -255,7 +254,7 @@ namespace Another_Mirai_Native.Adapter
             }
             if (json["data"].ContainsKey("code"))// 将结果写入队列第一个元素 并排出队列
             {
-                ApiQueue.Peek().result = json["data"].ToString();// TODO: 验证
+                ApiQueue.Peek().result = json["data"].ToString();
                 return;
             }
             ParseEvent(json);
