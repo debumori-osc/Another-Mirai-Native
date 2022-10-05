@@ -203,9 +203,12 @@ namespace Another_Mirai_Native.Forms
             {
                 Thread thread = new(() =>
                 {
-                    label_Desc.Invoke(new MethodInvoker(() => { label_Desc.Visible = true; }));
-                    listView_LogMain.EnsureVisible(listView_LogMain.Items.Count - 1);
-                    listView_LogMain.Items[listView_LogMain.Items.Count - 1].Selected = true;
+                    label_Desc.Invoke(new MethodInvoker(() => 
+                    { 
+                        label_Desc.Visible = true; 
+                        listView_LogMain.EnsureVisible(listView_LogMain.Items.Count - 1);
+                        listView_LogMain.Items[listView_LogMain.Items.Count - 1].Selected = true;
+                    }));
                     Thread.Sleep(2000);
                     label_Desc.Invoke(new MethodInvoker(() => { label_Desc.Visible = false; }));
                 });
