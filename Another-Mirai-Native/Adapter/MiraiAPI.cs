@@ -1,4 +1,5 @@
 ﻿using Another_Mirai_Native.Adapter.CQCode.Expand;
+using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
 using Newtonsoft.Json.Linq;
 using System;
@@ -450,13 +451,26 @@ namespace Another_Mirai_Native.Adapter
                 return null;
             }
         }
-        public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject json, long groupId, long QQId)
+        public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject appendInfo, long groupId, long QQId)
         {
-            if (json == null) return null;
+            if (appendInfo == null) return null;
             JObject targetuser = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
             if (targetuser == null) return null;
-            var appendInfo = json;
-            int userPermission = 0, sex = 0;
+            if(appendInfo.ContainsKey("code") && ((int)appendInfo["code"]) == 500)
+            {
+                if(Cache.GroupMemberInfo.TryGetValue((groupId, QQId), out appendInfo) is false)
+                {
+                    LogHelper.WriteLog(LogLevel.Warning, "读取群成员信息缓存", "读取失败");
+                    return null;
+                }
+            }
+            if (Cache.GroupList.ContainsKey(groupId)) Cache.GroupList[groupId] = groupMemArr;
+            else Cache.GroupList.Add(groupId, groupMemArr);
+
+            if (Cache.GroupMemberInfo.ContainsKey((groupId, QQId))) Cache.GroupMemberInfo[(groupId, QQId)] = appendInfo;
+            else Cache.GroupMemberInfo.Add((groupId, QQId),  appendInfo);
+
+            int userPermission = 0, sex = 255;
             switch (targetuser["permission"].ToString())
             {
                 case "MEMBER":
@@ -471,7 +485,7 @@ namespace Another_Mirai_Native.Adapter
                 default:
                     break;
             }
-            switch (appendInfo["sex"].ToString())
+            switch (appendInfo["sex"]?.ToString())
             {
                 case "UNKNOWN":
                     sex = 255;
