@@ -60,6 +60,39 @@
 若根据返回结果判断是否鉴权成功即可
 
 ## 可用指令与参数表
+### 目录
+- [Info: 0](#info-0)
+- [AddLog: 1](#addlog-1)
+- [GetLog: 2](#getlog-2)
+- [CallMiraiAPI: 3](#callmiraiapi-3)
+- [CallCQFunction: 4](#callcqfunction-4)
+- [Exit: 5](#exit-5)
+- [Restart: 6](#restart-6)
+- [AddPlugin: 7](#addplugin-7)
+- [ReloadPlugin: 8](#reloadplugin-8)
+- [GetPluginList: 9](#getpluginlist-9)
+- [SwitchPluginStatus: 10](#switchpluginstatus-10)
+- [BotInfo: 11](#botinfo-11)
+- [GetGroupList: 12](#getgrouplist-12)
+- [GetFriendList: 13](#getfriendlist-13)
+- [GetMemberList: 14](#getmemberlist-14)
+- [GetMemberInfo: 15](#getmemberinfo-15)
+- [GetFriendInfo: 16](#getfriendinfo-16)
+- [GetDirectory: 17](#getdirectory-17)
+- [Status: 19](#status-19)
+- [Table: 20](#table-20)
+- [DeviceInfo: 21](#deviceinfo-21)
+- [CheckTest: 23](#checktest-23)
+- [EnableTest: 24](#enabletest-24)
+- [DisableTest: 25](#disabletest-25)
+- [SendTestMsg: 26](#sendtestmsg-26)
+- [ActiveForwarder: 27](#activeforwarder-27)
+- [InactiveForwarder: 28](#inactiveforwarder-28)
+- [UploadImage: 29](#uploadimage-29)
+- [DeleteImage: 30](#deleteimage-30)
+- [BuildWebServer: 31](#buildwebserver-31)
+- [DestroyWebServer: 32](#destroywebserver-32)
+- [SendMsg: 33](#sendmsg-33)
 
 ### Info: 0
 鉴权, 不进行鉴权无法调用任何指令
