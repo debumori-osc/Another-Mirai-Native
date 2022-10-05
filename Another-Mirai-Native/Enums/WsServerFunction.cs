@@ -76,7 +76,7 @@
         /// <summary>
         /// 获取目录以及文件列表
         /// </summary>
-        GetDirectroy,
+        GetDirectory,
         /// <summary>
         /// 未授权连接
         /// </summary>
@@ -136,7 +136,7 @@
         /// <summary>
         /// 销毁本地Web服务器
         /// </summary>
-        DestoryWebServer,
+        DestroyWebServer,
         SendMsg
     }
     public enum WsClientType
