@@ -1,4 +1,6 @@
 # AnotherMiraiNative（AMN）
+[![ProjectBuild](https://github.com/Hellobaka/Another-Mirai-Native/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/Hellobaka/Another-Mirai-Native/actions/workflows/dotnet-desktop.yml)
+
 来了，又是一个酷Q兼容项目
 
 ## 特点
