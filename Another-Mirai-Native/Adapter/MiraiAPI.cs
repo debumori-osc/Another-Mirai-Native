@@ -28,12 +28,13 @@ namespace Another_Mirai_Native.Adapter
             }
             return json["nickname"].ToString();
         }
-        public static string GetMessageByMsgId(int messageId)
+        public static string GetMessageByMsgId(int messageId, long target)
         {
             object request = new
             {
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
-                id = messageId
+                messageId,
+                target
             };
             JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.messageFromId, request);
             if (json == null)

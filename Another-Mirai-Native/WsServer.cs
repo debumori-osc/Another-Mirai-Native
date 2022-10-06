@@ -828,7 +828,8 @@ namespace Another_Mirai_Native
                         break;
                     case MiraiApiType.recall:
                         int recall_msgId = json["data"]["args"]["msgId"].ToObject<int>();
-                        string recallMsg = MiraiAPI.GetMessageByMsgId(recall_msgId);
+                        long recall_target = json["data"]["args"]["target"].ToObject<int>();
+                        string recallMsg = MiraiAPI.GetMessageByMsgId(recall_msgId, recall_target);
                         if (string.IsNullOrEmpty(recallMsg)) recallMsg = "消息拉取失败";
                         logid = LogHelper.WriteLog(Enums.LogLevel.Info, plugin.appinfo.Name, "撤回消息", $"msgid={recall_msgId}, 内容={recallMsg}", "处理中...");
                         callResult = MiraiAPI.RecallMessage(recall_msgId, 0);

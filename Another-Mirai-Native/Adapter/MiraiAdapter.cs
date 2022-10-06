@@ -341,13 +341,13 @@ namespace Another_Mirai_Native.Adapter
                     break;
                 case MiraiEvents.GroupRecallEvent:
                     var groupRecall = raw.ToObject<GroupRecallEvent>();
-                    string groupRecallMsg = MiraiAPI.GetMessageByMsgId(groupRecall.messageId);
+                    string groupRecallMsg = MiraiAPI.GetMessageByMsgId(groupRecall.messageId, groupRecall.group.id);
                     if (string.IsNullOrEmpty(groupRecallMsg)) groupRecallMsg = "消息拉取失败";
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群撤回", $"群:{groupRecall.group.id}({groupRecall.group.name}) QQ:{groupRecall.authorId} 内容:{groupRecallMsg}", "处理中...");
                     break;
                 case MiraiEvents.FriendRecallEvent:
                     var friendRecall = raw.ToObject<FriendRecallEvent>();
-                    string friendRecallMsg = MiraiAPI.GetMessageByMsgId(friendRecall.messageId);
+                    string friendRecallMsg = MiraiAPI.GetMessageByMsgId(friendRecall.messageId, friendRecall.authorId);
                     if (string.IsNullOrEmpty(friendRecallMsg)) friendRecallMsg = "消息拉取失败";
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "私聊撤回", $"QQ:{friendRecall.authorId} 内容:{friendRecallMsg}", "处理中...");
                     break;
