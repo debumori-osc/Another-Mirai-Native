@@ -23,7 +23,7 @@ namespace CQP
         public static int CQ_sendGroupMsg(int authCode, long groupid, IntPtr msg)
         {
             string text = msg.ToString(GB18030);
-            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.sendGroupMessage, args = new { authCode, groupid, text } });
+            var r = Clinet.Instance.Send(WsServerFunction.CallMiraiAPI, new { type = MiraiApiType.sendGroupMessage, authCode, args = new { groupid, text } });
             if (r.Fail)
             {
                 return -1;
