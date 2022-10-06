@@ -25,6 +25,9 @@ jobs:
       
       - name: Restore NuGet packages
         run: nuget restore Another-Mirai-Native.sln 
+        
+      - name: Restore DllExport
+        run: .\DllExport -action Restore
 
       - name: Run MSBuild
         run: msbuild
