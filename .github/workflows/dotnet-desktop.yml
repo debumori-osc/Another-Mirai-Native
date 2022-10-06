@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: mySolution.CI
+name: ProjectBuild
 on:
   push:
     branches: [ master ]
@@ -23,8 +23,8 @@ jobs:
       - name: Setup NuGet
         uses: NuGet/setup-nuget@v1.0.7
       
-      - name: Restore nuGet packages
+      - name: Restore NuGet packages
         run: nuget restore Another-Mirai-Native.sln 
 
       - name: Run MSBuild
-        run: msbuild Another-Mirai-Native.sln
+        run: msbuild
