@@ -51,9 +51,13 @@ jobs:
             cd another-mirai-native-release
             rm AnotherMiraiNative.exe
             rm CQP.dll
+            cd ..
             cp Another-Mirai-Native\bin\Debug\AnotherMiraiNative.exe another-mirai-native-release\AnotherMiraiNative.exe
             cp Another-Mirai-Native\bin\Debug\CQP.dll another-mirai-native-release\CQP.dll
-            
-
+            cd another-mirai-native-release
+            git add .\CQP.dll
+            git add .\AnotherMiraiNative.exe
+            git commit -m "update"
+            git push
         
       
