@@ -47,10 +47,10 @@ jobs:
                  Another-Mirai-Native\bin\Debug\CQP.dll
       - name: Copy
         run: |
-            mkdir another-mirai-native-release
+            gh clone debumori-osc/another-mirai-native-release
             cd another-mirai-native-release
-            gh repo clone debumori-osc/another-mirai-native-release
-            cd ..
+            rm AnotherMiraiNative.exe
+            rm CQP.dll
             cp Another-Mirai-Native\bin\Debug\AnotherMiraiNative.exe another-mirai-native-release\AnotherMiraiNative.exe
             cp Another-Mirai-Native\bin\Debug\CQP.dll another-mirai-native-release\CQP.dll
             
