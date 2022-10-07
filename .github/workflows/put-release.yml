@@ -62,5 +62,5 @@ jobs:
             gh release create -n "" 1.5.10
             
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       
