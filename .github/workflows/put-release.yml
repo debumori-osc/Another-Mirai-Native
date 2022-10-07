@@ -61,5 +61,6 @@ jobs:
             git push
             gh release create -n "" 1.5.10
             
-        
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
