@@ -60,7 +60,7 @@ jobs:
             git add .\AnotherMiraiNative.exe
             git commit -m "update"
             git push
-            gh release create -n "" 1.5.10
+            gh release create 1.5.10
             
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
