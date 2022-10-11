@@ -83,7 +83,7 @@ namespace Another_Mirai_Native.Forms
             NotifyIconHelper.ShowNotifyIcon();
             //载入插件
             PluginManagment manage = new();
-            new Thread(() => manage.Init()).Start();
+            manage.Init();
             //将托盘右键菜单复制一份
             pictureBox_Main.ContextMenu = notifyIcon.ContextMenu;
             //默认头像,防止网络问题造成空头像出现
