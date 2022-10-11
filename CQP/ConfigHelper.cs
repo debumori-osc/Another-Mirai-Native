@@ -17,6 +17,7 @@ namespace CQP
         /// 配置文件路径
         /// </summary>
         public static string ConfigFileName = @"conf/Config.json";
+        public static object ReadConfigLock = new();
         /// <summary>
         /// 读取配置
         /// </summary>
@@ -27,11 +28,14 @@ namespace CQP
         {
             if (Directory.Exists("conf") is false)
                 Directory.CreateDirectory("conf");
-            if (File.Exists(ConfigFileName) is false)
-                File.WriteAllText(ConfigFileName, "{}");
-            var o = JObject.Parse(File.ReadAllText(ConfigFileName));
-            if (o.ContainsKey(sectionName))
-                return o[sectionName]!.ToObject<T>();
+            lock (ReadConfigLock)
+            {
+                if (File.Exists(ConfigFileName) is false)
+                    File.WriteAllText(ConfigFileName, "{}");
+                var o = JObject.Parse(File.ReadAllText(ConfigFileName));
+                if (o.ContainsKey(sectionName))
+                    return o[sectionName]!.ToObject<T>();
+            }
             if (defaultValue != null)
             {
                 SetConfig<T>(sectionName, defaultValue);
@@ -51,18 +55,21 @@ namespace CQP
         }
         public static void SetConfig<T>(string sectionName, T value)
         {
-            if (File.Exists(ConfigFileName) is false)
-                File.WriteAllText(ConfigFileName, "{}");
-            var o = JObject.Parse(File.ReadAllText(ConfigFileName));
-            if (o.ContainsKey(sectionName))
+            lock (ReadConfigLock)
             {
-                o[sectionName] = JToken.FromObject(value);
+                if (File.Exists(ConfigFileName) is false)
+                    File.WriteAllText(ConfigFileName, "{}");
+                var o = JObject.Parse(File.ReadAllText(ConfigFileName));
+                if (o.ContainsKey(sectionName))
+                {
+                    o[sectionName] = JToken.FromObject(value);
+                }
+                else
+                {
+                    o.Add(sectionName, JToken.FromObject(value));
+                }
+                File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
             }
-            else
-            {
-                o.Add(sectionName, JToken.FromObject(value));
-            }
-            File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
         }
         public static bool ConfigHasKey(string sectionName)
         {
