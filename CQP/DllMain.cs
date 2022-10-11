@@ -63,7 +63,7 @@ namespace CQP
         [DllExport(ExportName = "CQ_getCookiesV2", CallingConvention = CallingConvention.StdCall)]
         public static IntPtr CQ_getCookiesV2(int authCode, IntPtr domain)
         {
-            return IntPtr.Zero;
+            return "".ToNative();
         }
 
         [DllExport(ExportName = "CQ_getRecordV2", CallingConvention = CallingConvention.StdCall)]
@@ -73,9 +73,9 @@ namespace CQP
         }
 
         [DllExport(ExportName = "CQ_getCsrfToken", CallingConvention = CallingConvention.StdCall)]
-        public static int CQ_getCsrfToken(int authCode)
+        public static IntPtr CQ_getCsrfToken(int authCode)
         {
-            return -1;
+            return "".ToNative();
         }
 
         [DllExport(ExportName = "CQ_getAppDirectory", CallingConvention = CallingConvention.StdCall)]
@@ -252,7 +252,7 @@ namespace CQP
         [DllExport(ExportName = "CQ_setFatal", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_setFatal(int authCode, IntPtr errorMsg)
         {
-            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { authCode, args = new { priority = 40, msg = errorMsg.ToString(GB18030) } }, false);
+            var r = Clinet.Instance.Send(WsServerFunction.AddLog, new { authCode, priority = 40, msg = errorMsg.ToString(GB18030)  }, false);
             return 1;
         }
 
