@@ -63,6 +63,7 @@ namespace Another_Mirai_Native.Enums
         /// <summary>
         /// 插件禁用事件
         /// </summary>
-        Disable = 1004
+        Disable = 1004,
+        Menu
     }
 }

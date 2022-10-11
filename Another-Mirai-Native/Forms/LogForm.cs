@@ -162,6 +162,7 @@ namespace Another_Mirai_Native.Forms
                         NotifyIconHelper.Instance.ShowBalloonTip(2000, log.source, log.detail, ToolTipIcon.Warning);
                         break;
                     case LogLevel.Error:
+                    case LogLevel.Fatal:
                         NotifyIconHelper.Instance.ShowBalloonTip(2000, log.source, log.detail, ToolTipIcon.Error);
                         break;
                     default:
