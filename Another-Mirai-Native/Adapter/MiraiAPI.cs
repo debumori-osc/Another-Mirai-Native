@@ -389,6 +389,7 @@ namespace Another_Mirai_Native.Adapter
         {
             MemoryStream streamMain = new();
             BinaryWriter binaryWriterMain = new(streamMain);
+            if(memberList == null) return null;
             BinaryWriterExpand.Write_Ex(binaryWriterMain, memberList.Count);
             foreach (var item in memberList)
             {
@@ -455,8 +456,13 @@ namespace Another_Mirai_Native.Adapter
         public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject appendInfo, long groupId, long QQId)
         {
             if (appendInfo == null) return null;
+            if (groupMemArr == null) return null;
             JObject targetuser = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
-            if (targetuser == null) return null;
+            if (targetuser == null && QQId.ToString() != Helper.QQ) return null;
+            else if(QQId.ToString() == Helper.QQ)
+            {
+                targetuser = GetGroupMemberInfo(groupId, QQId);
+            }
             if(appendInfo.ContainsKey("code") && ((int)appendInfo["code"]) == 500)
             {
                 if(Cache.GroupMemberInfo.TryGetValue((groupId, QQId), out appendInfo) is false)
@@ -520,7 +526,7 @@ namespace Another_Mirai_Native.Adapter
             BinaryWriterExpand.Write_Ex(binaryWriter, 1);
             return Convert.ToBase64String(stream.ToArray());
         }
-        public static JObject GetGroupMemberInfo(long groupId, long QQId)
+        public static JObject GetGroupMemberProfile(long groupId, long QQId)
         {
             object request = new
             {
@@ -529,6 +535,24 @@ namespace Another_Mirai_Native.Adapter
                 memberId = QQId
             };
             JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberProfile, request);
+            if (json != null)
+            {
+                return json;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        public static JObject GetGroupMemberInfo(long groupId, long QQId)
+        {
+            object request = new
+            {
+                sessionKey = MiraiAdapter.Instance.SessionKey_Message,
+                target = groupId,
+                memberId = QQId
+            };
+            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberInfo_get, request);
             if (json != null)
             {
                 return json;
