@@ -28,7 +28,7 @@ namespace Another_Mirai_Native.Native
         public List<CQPlugin> Plugins { get; set; } = new();
         public List<CQPlugin> SavedPlugins { get; set; } = new();
         public Dictionary<IntPtr, AppDomain> AppDomains { get; set; } = new();
-        public bool Loading { get; set; } = false;
+        public bool Loading { get; set; } = true;
         private JObject PluginStatus;
         public PluginManagment()
         {
@@ -299,8 +299,11 @@ namespace Another_Mirai_Native.Native
             }
             Load();
             LogHelper.WriteLog("遍历启动事件……");
-            CallFunction(FunctionEnums.StartUp);
-            CallFunction(FunctionEnums.Enable);
+            new Thread(() =>
+            {
+                CallFunction(FunctionEnums.StartUp);
+                CallFunction(FunctionEnums.Enable);
+            }).Start();
             LogHelper.WriteLog("插件启动完成，开始处理消息逻辑……");
             Loading = false;
         }
