@@ -166,12 +166,12 @@ namespace Another_Mirai_Native.DB
         }
         public static (List<LogModel>, int) DetailQueryLogs(int priority, int pageSize, int pageIndex, string search, string sortName, bool desc, long dt1, long dt2)
         {
-            using(var db = GetInstance())
+            using (var db = GetInstance())
             {
                 List<LogModel> r = db.Queryable<LogModel>()
                     .Where(x => x.priority >= priority)
-                    .WhereIF(dt1 !=0 , x => x.time >= dt1 && x.time <= dt2 + 86400)
-                    .OrderByDescending(x=>x.time)
+                    .WhereIF(dt1 != 0, x => x.time >= dt1 && x.time <= dt2 + 86400)
+                    .OrderByIF(string.IsNullOrEmpty(sortName), "time desc")
                     .CustomOrderBy(sortName, desc).ToList();
                 if (!string.IsNullOrWhiteSpace(search))
                 {
@@ -195,7 +195,7 @@ namespace Another_Mirai_Native.DB
         /// <param name="key">需要排序的键</param>
         /// <param name="desc">是否降序</param>
         /// <typeparam name="T">调用的T</typeparam>
-        public static ISugarQueryable<T> CustomOrderBy<T>(this ISugarQueryable<T> arr, string key, bool desc) =>
-            arr.OrderByIF(!string.IsNullOrWhiteSpace(key), $"{key} {(desc ? "desc" : "asc")}");
+        public static ISugarQueryable<T> CustomOrderBy<T>(this ISugarQueryable<T> arr, string key, bool desc) 
+            => arr.OrderByIF(!string.IsNullOrWhiteSpace(key), $"{key} {(desc ? "desc" : "asc")}");
     }
 }

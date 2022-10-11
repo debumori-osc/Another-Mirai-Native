@@ -197,7 +197,10 @@ namespace Another_Mirai_Native
                 string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
                 LogHelper.UpdateLogStatus(logid, updatemsg);
             }
-
+            protected override void OnClose(CloseEventArgs e)
+            {
+                MiraiAdapter.Instance.OnMessageArrived -= MiraiAdapter_OnMessageArrived;
+            }
             private void Ws_SendMsg(JObject json)
             {
                 bool isGroup = ((bool)json["data"]["isGroup"]);
@@ -215,35 +218,35 @@ namespace Another_Mirai_Native
                     long qqId = ((long)json["data"]["qqId"]);
                     success = MiraiAPI.SendFriendMessage(qqId, parsedMsg) != 0;
                 }
-                Send(new ApiResult { Success = success });
+                Send(new ApiResult { Type = "SendMsg", Success = success });
             }
 
             private void Ws_GetFriendInfo(JObject json)
             {
                 long qqId = ((long)json["data"]["qqId"]);
                 var friendInfo = MiraiAPI.GetFriendInfo(qqId);
-                Send(new ApiResult { Data = friendInfo });
+                Send(new ApiResult { Type = "GetFriendInfo", Data = friendInfo });
             }
 
             private void Ws_GetMemberInfo(JObject json)
             {
                 long groupId = ((long)json["data"]["groupId"]);
                 long qqId = ((long)json["data"]["qqId"]);
-                var memberInfo = MiraiAPI.GetGroupMemberInfo(groupId, qqId);
-                Send(new ApiResult { Data = memberInfo });
+                var memberInfo = MiraiAPI.GetGroupMemberProfile(groupId, qqId);
+                Send(new ApiResult { Type = "GetMemberInfo", Data = memberInfo });
             }
 
             private void Ws_GetMemberList(JObject json)
             {
                 long groupId = ((long)json["data"]["groupId"]);
                 var memberList = MiraiAPI.GetGroupMemberList(groupId);
-                Send(new ApiResult { Data = memberList });
+                Send(new ApiResult { Type = "GetMemberList", Data = memberList });
             }
 
             private void Ws_GetGroupList()
             {
                 var groupList = MiraiAPI.GetGroupList();
-                Send(new ApiResult { Data = groupList });
+                Send(new ApiResult { Type = "GetGroupList", Data = groupList });
             }
 
             private void Ws_GetFriendList(JObject json)
@@ -258,7 +261,7 @@ namespace Another_Mirai_Native
                     }
                     friendList = arr;
                 }
-                Send(new ApiResult { Data = friendList });
+                Send(new ApiResult { Type = "GetFriendList", Data = friendList });
             }
 
             private void Ws_BuildWebServer()
@@ -275,7 +278,7 @@ namespace Another_Mirai_Native
                 }
                 catch (Exception e)
                 {
-                    Send(new ApiResult { Success = false, Msg = e.Message });
+                    Send(new ApiResult { Type = "BuildWebServer", Success = false, Msg = e.Message });
                 }
                 WebServerBuilder.Instance.ListeningPortChanged -= Instance_ListeningPortChanged;
                 WebServerBuilder.Instance.ListeningPortChanged += Instance_ListeningPortChanged;
@@ -409,6 +412,17 @@ namespace Another_Mirai_Native
 
             private void Ws_GetTable()
             {
+                if (ConfigHelper.GetConfig("Enable_UsageMonitor", false) is false)
+                {
+                    Send(new ApiResult
+                    {
+                        Type = "Table",
+                        Msg = "性能监测模块未启用",
+                        Success = false
+                    });
+                    return;
+                }
+
                 Send(new ApiResult { Type = "Table", Data = UsageMonitor.GetMinuteMonitor() });
             }
 
@@ -690,7 +704,7 @@ namespace Another_Mirai_Native
             /// </summary>
             private void WebUI_LogAdded(int logid, LogModel log)
             {
-                Send(new ApiResult { Type = "LogAdded", Data = new { logid, log } });
+                Send(new ApiResult { Type = "LogAdded", Data = log });
             }
             /// <summary>
             /// 连接角色鉴权
@@ -791,7 +805,7 @@ namespace Another_Mirai_Native
                         long memberProfile_groupid = json["data"]["args"]["groupId"].ToObject<long>();
                         long memberProfile_QQId = json["data"]["args"]["qqId"].ToObject<long>();
                         var memeberArr = MiraiAPI.GetGroupMemberList(memberProfile_groupid);
-                        callResult = MiraiAPI.ParseGroupMemberInfo2CQData(memeberArr, MiraiAPI.GetGroupMemberInfo(memberProfile_groupid, memberProfile_QQId), memberProfile_groupid, memberProfile_QQId);
+                        callResult = MiraiAPI.ParseGroupMemberInfo2CQData(memeberArr, MiraiAPI.GetGroupMemberProfile(memberProfile_groupid, memberProfile_QQId), memberProfile_groupid, memberProfile_QQId);
                         break;
                     case MiraiApiType.userProfile:
                         break;
@@ -997,7 +1011,7 @@ namespace Another_Mirai_Native
                         break;
                 }
                 Send(new ApiResult { Type = "HandleMiraiFunction", Data = new { callResult } });
-                // LogHelper.WriteLog(Enums.LogLevel.Debug, "debug", $"miraiApi: {apiType}, result: {callResult}", "");
+                LogHelper.WriteLog(Enums.LogLevel.Debug, "debug", $"miraiApi: {apiType}, result: {callResult}", "");
                 return logid;
             }
             public void Send(object objData)
