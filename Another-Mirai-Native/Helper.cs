@@ -23,11 +23,11 @@ namespace Another_Mirai_Native
         /// <summary>
         /// 框架登录中的QQ号
         /// </summary>
-        public static string QQ { get; set; }
+        public static string QQ { get; set; } = "0";
         /// <summary>
         /// 框架登录中的昵称
         /// </summary>
-        public static string NickName { get; set; }
+        public static string NickName { get; set; } = "";
         /// <summary>
         /// 连接MHA的URL
         /// </summary>

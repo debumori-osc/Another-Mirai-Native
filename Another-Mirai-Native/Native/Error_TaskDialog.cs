@@ -28,7 +28,7 @@ namespace Another_Mirai_Native.Native
             }
             TaskDialogOptions config = new()
             {
-                Title = $"Another-Mirai-Native {Application.ProductVersion}",
+                Title = $"Another-Mirai-Native {Application.ProductVersion} - {Helper.NickName}({Helper.QQ})",
                 MainInstruction = "Another-Mirai-Native 发生错误",
                 Content = content,
                 CommandButtons = buttons,
