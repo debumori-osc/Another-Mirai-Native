@@ -83,37 +83,45 @@ namespace CQP
             GC.Collect();
             if (ServerConnection.ReadyState == WebSocketState.Open)
             {
-                if (!queue)
+                try
                 {
-                    ServerConnection.Send(new { type, data }.ToJson());
-                    return null;
+                    if (!queue)
+                    {
+                        ServerConnection.Send(new { type, data }.ToJson());
+                        return null;
+                    }
+                    QueueObject queueObject = new() { request = new { type, data }.ToJson() };
+                    ApiQueue.Enqueue(queueObject);
+                    if (ApiQueue.Count == 1)
+                        ServerConnection.Send(queueObject.request);
+                    // 超时脱出
+                    int timoutCountMax = ConfigHelper.GetConfig("API_Timeout", 6000);
+                    int timoutCount = 0;
+                    while (queueObject.result == "")
+                    {
+                        if (timoutCount > timoutCountMax)
+                        {
+                            queueObject.result = new { Fail = true }.ToJson();
+                        }
+                        Thread.Sleep(10);
+                        if (ApiQueue.Peek() == queueObject)
+                        {
+                            timoutCount++; // 只有当前函数执行时才计时，防止所有排队函数均超时
+                        }
+                    }
+                    ApiQueue.Dequeue();
+                    if (ApiQueue.Count != 0)
+                        ServerConnection.Send(ApiQueue.Peek().request);
+                    var r = JsonConvert.DeserializeObject<ApiResult>(queueObject.result);
+                    if (r.Fail is false)
+                        r.json = JObject.FromObject(r.Data);
+                    return r;
                 }
-                QueueObject queueObject = new() { request = new { type, data }.ToJson() };
-                ApiQueue.Enqueue(queueObject);
-                if (ApiQueue.Count == 1)
-                    ServerConnection.Send(queueObject.request);
-                // 超时脱出
-                int timoutCountMax = ConfigHelper.GetConfig("API_Timeout", 6000);
-                int timoutCount = 0;
-                while (queueObject.result == "")
+                catch (Exception e)
                 {
-                    if (timoutCount > timoutCountMax)
-                    {
-                        queueObject.result = new { Fail = true }.ToJson();
-                    }
-                    Thread.Sleep(10);
-                    if (ApiQueue.Peek() == queueObject)
-                    {
-                        timoutCount++; // 只有当前函数执行时才计时，防止所有排队函数均超时
-                    }
+                    File.AppendAllLines("logs/cqp/log.txt", new string[] { $"[{DateTime.Now:G}] 异常: {e.Message}" });
+                    return new ApiResult { Fail = true };
                 }
-                ApiQueue.Dequeue();
-                if (ApiQueue.Count != 0)
-                    ServerConnection.Send(ApiQueue.Peek().request);
-                var r = JsonConvert.DeserializeObject<ApiResult>(queueObject.result);
-                if(r.Fail is false)
-                    r.json = JObject.FromObject(r.Data);
-                return r;
             }
             return null;
         }

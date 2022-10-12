@@ -18,6 +18,7 @@ namespace CQP
         /// </summary>
         public static string ConfigFileName = @"conf/Config.json";
         public static object ReadConfigLock = new();
+        public static object WriteConfigLock = new();
         /// <summary>
         /// 读取配置
         /// </summary>
@@ -26,49 +27,64 @@ namespace CQP
         /// <returns>目标类型的配置</returns>
         public static T GetConfig<T>(string sectionName, T defaultValue = default)
         {
-            if (Directory.Exists("conf") is false)
-                Directory.CreateDirectory("conf");
-            lock (ReadConfigLock)
+            try
             {
-                if (File.Exists(ConfigFileName) is false)
-                    File.WriteAllText(ConfigFileName, "{}");
-                var o = JObject.Parse(File.ReadAllText(ConfigFileName));
-                if (o.ContainsKey(sectionName))
-                    return o[sectionName]!.ToObject<T>();
+                if (Directory.Exists("conf") is false)
+                    Directory.CreateDirectory("conf");
+                lock (ReadConfigLock)
+                {
+                    if (File.Exists(ConfigFileName) is false)
+                        File.WriteAllText(ConfigFileName, "{}");
+                    var o = JObject.Parse(File.ReadAllText(ConfigFileName));
+                    if (o.ContainsKey(sectionName))
+                        return o[sectionName]!.ToObject<T>();
+                }
+                if (defaultValue != null)
+                {
+                    SetConfig<T>(sectionName, defaultValue);
+                    return defaultValue;
+                }
+                if (typeof(T) == typeof(string))
+                    return (T)(object)"";
+                if (typeof(T) == typeof(int))
+                    return (T)(object)0;
+                if (typeof(T) == typeof(long))
+                    return default;
+                if (typeof(T) == typeof(bool))
+                    return (T)(object)false;
+                if (typeof(T) == typeof(object))
+                    return (T)(object)new { };
+                throw new Exception("无法默认返回");
             }
-            if (defaultValue != null)
+            catch(Exception e)
             {
-                SetConfig<T>(sectionName, defaultValue);
+                File.AppendAllLines("logs/cqp/log.txt", new string[] { $"[{DateTime.Now:G}] 异常: {e.Message}" });
                 return defaultValue;
-            }
-            if (typeof(T) == typeof(string))
-                return (T)(object)"";
-            if (typeof(T) == typeof(int))
-                return (T)(object)0;
-            if (typeof(T) == typeof(long))
-                return default;
-            if (typeof(T) == typeof(bool))
-                return (T)(object)false;
-            if (typeof(T) == typeof(object))
-                return (T)(object)new { };
-            throw new Exception("无法默认返回");
+            }            
         }
         public static void SetConfig<T>(string sectionName, T value)
         {
-            lock (ReadConfigLock)
+            try
             {
-                if (File.Exists(ConfigFileName) is false)
-                    File.WriteAllText(ConfigFileName, "{}");
-                var o = JObject.Parse(File.ReadAllText(ConfigFileName));
-                if (o.ContainsKey(sectionName))
+                lock (WriteConfigLock)
                 {
-                    o[sectionName] = JToken.FromObject(value);
+                    if (File.Exists(ConfigFileName) is false)
+                        File.WriteAllText(ConfigFileName, "{}");
+                    var o = JObject.Parse(File.ReadAllText(ConfigFileName));
+                    if (o.ContainsKey(sectionName))
+                    {
+                        o[sectionName] = JToken.FromObject(value);
+                    }
+                    else
+                    {
+                        o.Add(sectionName, JToken.FromObject(value));
+                    }
+                    File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
                 }
-                else
-                {
-                    o.Add(sectionName, JToken.FromObject(value));
-                }
-                File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
+            }
+            catch(Exception e)
+            {
+                File.AppendAllLines("logs/cqp/log.txt", new string[] { $"[{DateTime.Now:G}] 异常: {e.Message}" });
             }
         }
         public static bool ConfigHasKey(string sectionName)
