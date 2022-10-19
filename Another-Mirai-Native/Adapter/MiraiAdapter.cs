@@ -127,6 +127,7 @@ namespace Another_Mirai_Native.Adapter
                     {
                         Thread.Sleep(1000);
                         HeartBeatTimeout++;
+                        if (ExitFlag) break;
                     }
                     HeartBeatTimeout = 0;
                     if (MessageSocket.ReadyState == WebSocketState.Open)
