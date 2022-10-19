@@ -13,7 +13,6 @@ namespace Another_Mirai_Native
     public partial class Login : Form
     {
         public static Login Instance { get; set; }
-        public static IntPtr Instance_Handle { get; set; }
         public bool CLILogin { get; set; } = false;
         public Login()
         {
@@ -82,7 +81,7 @@ namespace Another_Mirai_Native
 
         private void Login_Load(object sender, EventArgs e)
         {
-            if(string.IsNullOrEmpty(Helper.QQ))
+            if(Helper.QQ == "0")
             {
                 AutoLoginCheck.Checked = ConfigHelper.GetConfig<bool>("AutoLogin");
                 QQText.Text = ConfigHelper.GetConfig<string>("QQ");
@@ -120,43 +119,22 @@ namespace Another_Mirai_Native
             Directory.CreateDirectory(@"data/image");
             Directory.CreateDirectory(@"data/record");
            
-            Instance_Handle = this.Handle;
-
-            LoginBtn.Text = "初始化...";
-            LoginBtn.Enabled = false;
-            WsServer.Instance.CQPConnected += () => 
+            if (AutoLoginCheck.Checked)
             {
-                LoginBtn.BeginInvoke(new MethodInvoker(() =>
-                {
-                    LoginBtn.Text = "连接";
-                    LoginBtn.Enabled = true;
-
-                    if (AutoLoginCheck.Checked)
-                    {
-                        LoginBtn.PerformClick();
-                    }
-                }));
-            };
-            new Thread(() =>
+                LoginBtn.PerformClick();
+            }
+            if (File.Exists("CQP.dll") is false)
             {
-                CQP_Init();                
-            }).Start();
+                MessageBox.Show("CQP.dll文件缺失.");
+                Environment.Exit(0);
+            }
+            Dll.LoadLibrary("CQP.dll");
         }
 
         private void AuthKeyText_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
                 LoginBtn.PerformClick();
-        }
-        private void CQP_Init()
-        {
-            if(File.Exists("CQP.dll") is false)
-            {
-                MessageBox.Show("CQP.dll文件缺失.");
-                return;
-            }
-            Dll.LoadLibrary("CQP.dll");
-            Dll.ConnectServer();
         }
     }
 }
