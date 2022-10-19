@@ -21,6 +21,7 @@ namespace Another_Mirai_Native.Forms
     {
         public PluginTester()
         {
+            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
             Instance = this;
         }

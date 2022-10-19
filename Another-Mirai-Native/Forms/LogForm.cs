@@ -17,6 +17,7 @@ namespace Another_Mirai_Native.Forms
     {
         public LogForm()
         {
+            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
         }
         public static LogForm Instance { get; set; }

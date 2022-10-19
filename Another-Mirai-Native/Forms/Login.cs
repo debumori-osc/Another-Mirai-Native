@@ -17,6 +17,7 @@ namespace Another_Mirai_Native
         public bool CLILogin { get; set; } = false;
         public Login()
         {
+            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
             Instance = this;
         }
@@ -34,7 +35,7 @@ namespace Another_Mirai_Native
                 LoginBtn.Text = "连接中...";
                 LoginBtn.Enabled = false;
                 Helper.QQ = QQText.Text;
-                if(!CLILogin)
+                if (!CLILogin)
                 {
                     ConfigHelper.SetConfig("AutoLogin", AutoLoginCheck.Checked);
                     ConfigHelper.SetConfig("QQ", QQText.Text);
@@ -82,7 +83,7 @@ namespace Another_Mirai_Native
 
         private void Login_Load(object sender, EventArgs e)
         {
-            if(string.IsNullOrEmpty(Helper.QQ))
+            if (Helper.QQ == "0")
             {
                 AutoLoginCheck.Checked = ConfigHelper.GetConfig<bool>("AutoLogin");
                 QQText.Text = ConfigHelper.GetConfig<string>("QQ");
@@ -113,18 +114,18 @@ namespace Another_Mirai_Native
             }
             Directory.CreateDirectory("conf");
             Directory.CreateDirectory("logs");
-            Directory.CreateDirectory("data"); 
+            Directory.CreateDirectory("data");
             Directory.CreateDirectory(@"data/app");
             Directory.CreateDirectory(@"data/plugins");
             Directory.CreateDirectory(@"data/plugins/tmp");
             Directory.CreateDirectory(@"data/image");
             Directory.CreateDirectory(@"data/record");
-           
+
             Instance_Handle = this.Handle;
 
             LoginBtn.Text = "初始化...";
             LoginBtn.Enabled = false;
-            WsServer.Instance.CQPConnected += () => 
+            WsServer.Instance.CQPConnected += () =>
             {
                 LoginBtn.BeginInvoke(new MethodInvoker(() =>
                 {
@@ -139,7 +140,7 @@ namespace Another_Mirai_Native
             };
             new Thread(() =>
             {
-                CQP_Init();                
+                CQP_Init();
             }).Start();
         }
 
@@ -150,7 +151,7 @@ namespace Another_Mirai_Native
         }
         private void CQP_Init()
         {
-            if(File.Exists("CQP.dll") is false)
+            if (File.Exists("CQP.dll") is false)
             {
                 MessageBox.Show("CQP.dll文件缺失.");
                 return;
