@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CQP-NoWs", "CQP-NoWs\CQP.csproj", "{E5726F22-0147-408C-8B63-15D41E5B6167}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CQP", "CQP\CQP.csproj", "{E5726F22-0147-408C-8B63-15D41E5B6167}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebServerSupport", "WebServerSupport\WebServerSupport.csproj", "{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}"
 EndProject
