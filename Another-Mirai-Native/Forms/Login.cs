@@ -13,9 +13,11 @@ namespace Another_Mirai_Native
     public partial class Login : Form
     {
         public static Login Instance { get; set; }
+        public static IntPtr Instance_Handle { get; set; }
         public bool CLILogin { get; set; } = false;
         public Login()
         {
+            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
             Instance = this;
         }
@@ -33,7 +35,7 @@ namespace Another_Mirai_Native
                 LoginBtn.Text = "连接中...";
                 LoginBtn.Enabled = false;
                 Helper.QQ = QQText.Text;
-                if(!CLILogin)
+                if (!CLILogin)
                 {
                     ConfigHelper.SetConfig("AutoLogin", AutoLoginCheck.Checked);
                     ConfigHelper.SetConfig("QQ", QQText.Text);
@@ -81,7 +83,7 @@ namespace Another_Mirai_Native
 
         private void Login_Load(object sender, EventArgs e)
         {
-            if(Helper.QQ == "0")
+            if (Helper.QQ == "0")
             {
                 AutoLoginCheck.Checked = ConfigHelper.GetConfig<bool>("AutoLogin");
                 QQText.Text = ConfigHelper.GetConfig<string>("QQ");
@@ -112,29 +114,50 @@ namespace Another_Mirai_Native
             }
             Directory.CreateDirectory("conf");
             Directory.CreateDirectory("logs");
-            Directory.CreateDirectory("data"); 
+            Directory.CreateDirectory("data");
             Directory.CreateDirectory(@"data/app");
             Directory.CreateDirectory(@"data/plugins");
             Directory.CreateDirectory(@"data/plugins/tmp");
             Directory.CreateDirectory(@"data/image");
             Directory.CreateDirectory(@"data/record");
-           
-            if (AutoLoginCheck.Checked)
+
+            Instance_Handle = this.Handle;
+
+            LoginBtn.Text = "初始化...";
+            LoginBtn.Enabled = false;
+            WsServer.Instance.CQPConnected += () =>
             {
-                LoginBtn.PerformClick();
-            }
-            if (File.Exists("CQP.dll") is false)
+                LoginBtn.BeginInvoke(new MethodInvoker(() =>
+                {
+                    LoginBtn.Text = "连接";
+                    LoginBtn.Enabled = true;
+
+                    if (AutoLoginCheck.Checked)
+                    {
+                        LoginBtn.PerformClick();
+                    }
+                }));
+            };
+            new Thread(() =>
             {
-                MessageBox.Show("CQP.dll文件缺失.");
-                Environment.Exit(0);
-            }
-            Dll.LoadLibrary("CQP.dll");
+                CQP_Init();
+            }).Start();
         }
 
         private void AuthKeyText_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
                 LoginBtn.PerformClick();
+        }
+        private void CQP_Init()
+        {
+            if (File.Exists("CQP.dll") is false)
+            {
+                MessageBox.Show("CQP.dll文件缺失.");
+                return;
+            }
+            Dll.LoadLibrary("CQP.dll");
+            Dll.ConnectServer();
         }
     }
 }
