@@ -13,7 +13,6 @@ namespace Another_Mirai_Native
     public partial class Login : Form
     {
         public static Login Instance { get; set; }
-        public static IntPtr Instance_Handle { get; set; }
         public bool CLILogin { get; set; } = false;
         public Login()
         {
@@ -21,7 +20,7 @@ namespace Another_Mirai_Native
             InitializeComponent();
             Instance = this;
         }
-        private static MiraiAdapter adapter { get; set; }
+        private static MiraiAdapter Adapter { get; set; }
         private void LoginBtn_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(WSUrl.Text) || string.IsNullOrWhiteSpace(AuthKeyText.Text)
@@ -42,9 +41,9 @@ namespace Another_Mirai_Native
                     ConfigHelper.SetConfig("Ws_Url", WSUrl.Text);
                     ConfigHelper.SetConfig("Ws_AuthKey", AuthKeyText.Text);
                 }
-                adapter = new(WSUrl.Text, QQText.Text, AuthKeyText.Text);
-                adapter.ConnectedStateChanged += Adapter_ConnectedStateChanged;
-                if (!adapter.Connect())
+                Adapter = new(WSUrl.Text, QQText.Text, AuthKeyText.Text);
+                Adapter.ConnectedStateChanged += Adapter_ConnectedStateChanged;
+                if (!Adapter.Connect())
                 {
                     throw new Exception("无法与Mirai-api-http建立连接");
                 }
@@ -52,6 +51,7 @@ namespace Another_Mirai_Native
             catch (Exception exc)
             {
                 MessageBox.Show(exc.Message);
+                LoginBtn.Text = "连接";
                 LoginBtn.Enabled = true;
             }
         }
@@ -69,7 +69,7 @@ namespace Another_Mirai_Native
                     //不直接给Visable赋值是因为外部调用Show函数会覆盖对Visable的赋值
                     //所以在调用Show之后需要用配置恢复对Visable的变化值
                     if (ConfigHelper.ConfigHasKey("FloatWindow_Visible"))
-                        FloatWindow.Instance.Visible = ConfigHelper.GetConfig<bool>("FloatWindow_Visible");
+                        FloatWindow.Instance.Visible = ConfigHelper.GetConfig("FloatWindow_Visible", true);
                     else
                         ConfigHelper.SetConfig("FloatWindow_Visible", true);
                 }
@@ -85,10 +85,10 @@ namespace Another_Mirai_Native
         {
             if (Helper.QQ == "0")
             {
-                AutoLoginCheck.Checked = ConfigHelper.GetConfig<bool>("AutoLogin");
-                QQText.Text = ConfigHelper.GetConfig<string>("QQ");
-                WSUrl.Text = ConfigHelper.GetConfig<string>("Ws_Url");
-                AuthKeyText.Text = ConfigHelper.GetConfig<string>("Ws_AuthKey");
+                AutoLoginCheck.Checked = ConfigHelper.GetConfig("AutoLogin", false);
+                QQText.Text = ConfigHelper.GetConfig("QQ", "0");
+                WSUrl.Text = ConfigHelper.GetConfig("Ws_Url", "ws://127.0.0.1:8888");
+                AuthKeyText.Text = ConfigHelper.GetConfig("Ws_AuthKey", "");
                 Helper.QQ = QQText.Text;
                 Helper.WsURL = WSUrl.Text;
                 Helper.WsAuthKey = AuthKeyText.Text;
@@ -102,7 +102,7 @@ namespace Another_Mirai_Native
                 AutoLoginCheck.Checked = true;
             }
 
-            int wsServerPort = ConfigHelper.GetConfig<int>("Ws_ServerPort", 30303);
+            int wsServerPort = ConfigHelper.GetConfig("Ws_ServerPort", 30303);
             try
             {
                 WsServer.Init(wsServerPort);
@@ -121,43 +121,22 @@ namespace Another_Mirai_Native
             Directory.CreateDirectory(@"data/image");
             Directory.CreateDirectory(@"data/record");
 
-            Instance_Handle = this.Handle;
-
-            LoginBtn.Text = "初始化...";
-            LoginBtn.Enabled = false;
-            WsServer.Instance.CQPConnected += () =>
+            if (AutoLoginCheck.Checked)
             {
-                LoginBtn.BeginInvoke(new MethodInvoker(() =>
-                {
-                    LoginBtn.Text = "连接";
-                    LoginBtn.Enabled = true;
-
-                    if (AutoLoginCheck.Checked)
-                    {
-                        LoginBtn.PerformClick();
-                    }
-                }));
-            };
-            new Thread(() =>
-            {
-                CQP_Init();
-            }).Start();
-        }
-
-        private void AuthKeyText_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
                 LoginBtn.PerformClick();
-        }
-        private void CQP_Init()
-        {
+            }
             if (File.Exists("CQP.dll") is false)
             {
                 MessageBox.Show("CQP.dll文件缺失.");
                 return;
             }
             Dll.LoadLibrary("CQP.dll");
-            Dll.ConnectServer();
+        }
+
+        private void AuthKeyText_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                LoginBtn.PerformClick();
         }
     }
 }
