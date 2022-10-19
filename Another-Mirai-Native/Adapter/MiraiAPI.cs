@@ -365,7 +365,7 @@ namespace Another_Mirai_Native.Adapter
             }
             return Convert.ToBase64String(streamMain.ToArray());
         }
-        public static JArray GetFriendList()
+        public static JArray GetFriendList(bool reserved = false)
         {
             object request = new
             {
@@ -378,7 +378,16 @@ namespace Another_Mirai_Native.Adapter
             }
             if (((int)json["code"]) == 0)
             {
-               return json["data"] as JArray;
+                if (reserved)
+                {
+                    JArray arr = new ();
+                    foreach(var item in (json["data"] as JArray).Reverse())
+                    {
+                        arr.Add(item);
+                    }
+                    return arr;
+                }
+                else return json["data"] as JArray;
             }
             else
             {
