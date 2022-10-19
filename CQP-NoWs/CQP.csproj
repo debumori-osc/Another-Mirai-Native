@@ -197,29 +197,23 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
-    <Reference Include="websocket-sharp, Version=1.0.2.59611, Culture=neutral, PublicKeyToken=5660b08a1845a91e, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BinaryWriterExpand.cs" />
-    <Compile Include="Clinet.cs" />
     <Compile Include="ConfigHelper.cs" />
     <Compile Include="DllMain.cs" />
-    <Compile Include="Enums\FunctionEnums.cs" />
-    <Compile Include="Enums\LogLevel.cs" />
-    <Compile Include="Enums\MiraiApiType.cs" />
-    <Compile Include="Enums\MiraiEvents.cs" />
-    <Compile Include="Enums\MiraiMessageEvents.cs" />
-    <Compile Include="Enums\MiraiMessageType.cs" />
-    <Compile Include="Enums\WsServerFunction.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Kernel32.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WsServerFunction.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Another-Mirai-Native\Another-Mirai-Native.csproj">
+      <Project>{cbeb805f-e137-4649-82ef-da9647280fbe}</Project>
+      <Name>Another-Mirai-Native</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ImportGroup Label=".NET DllExport">
