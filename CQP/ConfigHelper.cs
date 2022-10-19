@@ -66,7 +66,7 @@ namespace CQP
         {
             try
             {
-                lock (WriteConfigLock)
+                lock (ReadConfigLock)
                 {
                     if (File.Exists(ConfigFileName) is false)
                         File.WriteAllText(ConfigFileName, "{}");
