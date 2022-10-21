@@ -159,8 +159,8 @@ namespace Another_Mirai_Native.Native
 
             if (CQPlugin.Enable)
             {
-                CQPlugin.dll.CallFunction(FunctionEnums.Exit);
                 CQPlugin.dll.CallFunction(FunctionEnums.Disable);
+                // CQPlugin.dll.CallFunction(FunctionEnums.Exit);
                 UnLoad(CQPlugin);
                 var appdomain = AppDomains.First(x => x.Key == CQPlugin.handle);
                 AppDomains.Remove(CQPlugin.handle);
@@ -171,8 +171,8 @@ namespace Another_Mirai_Native.Native
                 if (!Plugins.Any(x => x.appinfo.Name == CQPlugin.appinfo.Name))
                     Load(CQPlugin.path);
                 CQPlugin loadedPlugin = Plugins.FirstOrDefault(x => x.appinfo.Name == CQPlugin.appinfo.Name);
-                loadedPlugin.dll.CallFunction(FunctionEnums.Enable);
                 loadedPlugin.dll.CallFunction(FunctionEnums.StartUp);
+                loadedPlugin.dll.CallFunction(FunctionEnums.Enable);
                 loadedPlugin.Enable = true;
             }
             RefreshPluginList();
@@ -229,7 +229,7 @@ namespace Another_Mirai_Native.Native
             try
             {
                 CQPlugin.dll.CallFunction(FunctionEnums.Disable);
-                CQPlugin.dll.CallFunction(FunctionEnums.Exit);
+                // CQPlugin.dll.CallFunction(FunctionEnums.Exit);
                 CQPlugin.dll.UnLoad();
                 Plugins.Remove(CQPlugin);
                 LogHelper.WriteLog(LogLevel.InfoSuccess, "插件卸载", $"插件 {CQPlugin.appinfo.Name} 卸载成功");
@@ -270,8 +270,8 @@ namespace Another_Mirai_Native.Native
         {
             Loading = true;
             LogHelper.WriteLog("开始卸载插件...");
-            CallFunction(FunctionEnums.Exit);
             CallFunction(FunctionEnums.Disable);
+            // CallFunction(FunctionEnums.Exit);
             NotifyIconHelper.ClearAppMenu();
             foreach (var item in AppDomains)
             {
