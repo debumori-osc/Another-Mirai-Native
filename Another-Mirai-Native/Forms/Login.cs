@@ -16,7 +16,6 @@ namespace Another_Mirai_Native
         public bool CLILogin { get; set; } = false;
         public Login()
         {
-            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
             Instance = this;
         }

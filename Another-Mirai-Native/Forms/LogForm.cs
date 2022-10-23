@@ -17,7 +17,6 @@ namespace Another_Mirai_Native.Forms
     {
         public LogForm()
         {
-            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
         }
         public static LogForm Instance { get; set; }
@@ -249,6 +248,7 @@ namespace Another_Mirai_Native.Forms
         private void LogForm_SizeChanged(object sender, EventArgs e)
         {
             if (Size.Width < 815 || Size.Height < 259) return;
+            if (previewSize.Width == 0 && previewSize.Height == 0) return;
             int widthOffset = Size.Width - previewSize.Width, heightOffset = Size.Height - previewSize.Height;
             listView_LogMain.Size = new(listView_LogMain.Width + widthOffset, listView_LogMain.Height + heightOffset);
             leftPanel.Location = new(leftPanel.Left, leftPanel.Top + heightOffset);

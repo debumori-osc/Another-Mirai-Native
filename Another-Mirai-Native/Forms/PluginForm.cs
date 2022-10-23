@@ -19,7 +19,6 @@ namespace Another_Mirai_Native.Forms
         public static PluginForm Instance { get; set; }
         public PluginForm()
         {
-            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
             Instance = this;
         }

@@ -21,7 +21,6 @@ namespace Another_Mirai_Native.Forms
     {
         public FloatWindow()
         {
-            AutoScaleMode = AutoScaleMode.Dpi;
             InitializeComponent();
         }
         #region 拖动无窗体的控件
