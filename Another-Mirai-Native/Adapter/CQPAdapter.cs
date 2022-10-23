@@ -97,14 +97,18 @@ namespace Another_Mirai_Native.Adapter
         public static string GetAppDirectory(int authCode)
         {
             var plugin = PluginManagment.Instance.Plugins.FirstOrDefault(x => x.appinfo.AuthCode == authCode);
+            string path;
             if (plugin == null)
             {
-                return @"data\app\undentified";
+                path = @"data\app\undentified";
             }
-            string path = @$"data\app\{plugin.appinfo.Id}";
-            if (Directory.Exists(path) is false)
-                Directory.CreateDirectory(path);
-            return path;
+            else
+            {
+                path = @$"data\app\{plugin.appinfo.Id}";
+                if (Directory.Exists(path) is false)
+                    Directory.CreateDirectory(path);
+            }
+            return new DirectoryInfo(path).FullName + "\\";
         }
         public static long GetLoginQQ(int authCode)
         {
@@ -399,7 +403,7 @@ namespace Another_Mirai_Native.Adapter
             string imgDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image");
             var downloadTask = Helper.DownloadFile(url, imgFileName, imgDir);
             downloadTask.Wait();
-            
+
             return Path.Combine(imgDir, imgFileName);
         }
         public static string GetFriendList(int authCode, bool reserved)
