@@ -348,7 +348,7 @@ namespace Another_Mirai_Native.Adapter
                 return "";
             }
             var memeberArr = MiraiAPI.GetGroupMemberList(groupId);
-            return MiraiAPI.ParseGroupMemberInfo2CQData(memeberArr, MiraiAPI.GetGroupMemberProfile(groupId, qqId), groupId, qqId);
+            return MiraiAPI.ParseGroupMemberInfo2CQData(memeberArr, MiraiAPI.GetGroupMemberProfile(groupId, qqId), groupId, qqId) ?? "";
         }
 
         public static string GetGroupMemberList(int authCode, long groupId)
@@ -358,7 +358,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return "";
             }
-            return MiraiAPI.ParseMemberList2CQData(MiraiAPI.GetGroupMemberList(groupId), groupId);
+            return MiraiAPI.ParseMemberList2CQData(MiraiAPI.GetGroupMemberList(groupId), groupId) ?? "";
         }
 
         public static string GetGroupList(int authCode)
@@ -368,7 +368,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return "";
             }
-            return MiraiAPI.ParseGroupList2CQData(MiraiAPI.GetGroupList());
+            return MiraiAPI.ParseGroupList2CQData(MiraiAPI.GetGroupList()) ?? "";
         }
 
         public static string GetStrangerInfo(int authCode, long qqId, bool notCache)
@@ -413,7 +413,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return "";
             }
-            return MiraiAPI.ParseFriendList2CQData(MiraiAPI.GetFriendList(reserved));
+            return MiraiAPI.ParseFriendList2CQData(MiraiAPI.GetFriendList(reserved)) ?? "";
         }
         public static string GetGroupInfo(int authCode, long groupId, bool notCache)
         {
@@ -424,7 +424,7 @@ namespace Another_Mirai_Native.Adapter
             }
             var group = MiraiAPI.GetGroupList().FirstOrDefault(x => ((long)x["id"]) == groupId);
             var groupMemCount = MiraiAPI.GetGroupMemberList(groupId).Count;
-            return MiraiAPI.ParseGroupInfo2CQData(groupId, group["name"].ToString(), groupMemCount);
+            return MiraiAPI.ParseGroupInfo2CQData(groupId, group["name"].ToString(), groupMemCount) ?? "";
         }
     }
 }
