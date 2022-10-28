@@ -124,6 +124,7 @@ namespace Another_Mirai_Native.Forms
             Debounce.Tick += (a, b) =>
             {
                 ConfigHelper.SetConfig("FloatWindow_Location", this.Location.X + "," + this.Location.Y);
+                Debounce.Stop();
             };
             Debounce.Start();
         }
