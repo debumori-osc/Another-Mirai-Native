@@ -137,7 +137,10 @@
         /// 销毁本地Web服务器
         /// </summary>
         DestroyWebServer,
-        SendMsg
+        SendMsg,
+        GetGroupChatHistory,
+        GetFriendChatHistory,
+        GetChatList
     }
     public enum WsClientType
     {

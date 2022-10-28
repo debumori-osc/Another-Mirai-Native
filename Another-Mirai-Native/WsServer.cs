@@ -189,6 +189,12 @@ namespace Another_Mirai_Native
                     case WsServerFunction.SendMsg:
                         Ws_SendMsg(json);
                         break;
+                    case WsServerFunction.GetGroupChatHistory:
+                        Ws_GetGroupChatHistory(json);
+                        break;
+                    case WsServerFunction.GetFriendChatHistory:
+                        Ws_GetFriendChatHistory(json);
+                        break;
                     default:
                         break;
                 }
@@ -307,8 +313,31 @@ namespace Another_Mirai_Native
                 string fileName = Guid.NewGuid().ToString() + ".jpg";
                 Directory.CreateDirectory(path);
                 File.WriteAllBytes($"{path}\\{fileName}", Convert.FromBase64String(base64));
-                Send(new ApiResult { Data = fileName });
+                Send(new ApiResult { Type = "SendImage", Data = fileName });
             }
+            private void Ws_GetGroupChatHistory(JObject json)
+            {
+                long groupId = ((long)json["data"]["groupId"]);
+                int lastIndex = ((int)json["data"]["lastIndex"]);
+                var history = LogHelper.GetGroupChatHistory(groupId, lastIndex);
+                Send(new ApiResult { Type = "GetGroupChatHistory", Data = history });
+            }
+
+            private void Ws_GetFriendChatHistory(JObject json)
+            {
+                long qqId = ((long)json["data"]["qqId"]);
+                int lastIndex = ((int)json["data"]["lastIndex"]);
+                var history = LogHelper.GetGroupChatHistory(qqId, lastIndex);
+                Send(new ApiResult { Type = "GetFriendChatHistory", Data = history });
+            }
+
+            private void Ws_GetChatList()
+            {
+                var group = LogHelper.GetGroupChatDisplayList();
+                var friend = LogHelper.GetFriendChatDisplayList();
+                Send(new ApiResult { Type = "GetChatList", Data = group.Concat(friend).OrderByDescending(x => x.Time).ToList() });
+            }
+
             private string ParseRichText2CQCode(string text)
             {
                 if (text.Contains("<!IMG!>") is false) return text;
