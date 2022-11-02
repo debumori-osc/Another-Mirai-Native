@@ -12,6 +12,6 @@ namespace Another_Mirai_Native.Adapter
         public static Dictionary<long, (long, string)> FriendRequset { get; set; } = new();
         public static Dictionary<long, (long, string, long, string)> GroupRequset { get; set; } = new();
         public static Dictionary<long, JArray> GroupList { get; set; } = new();
-        public static Dictionary<(long, long), JObject> GroupMemberInfo { get; set; } = new();
+        public static Dictionary<(long, long), string> GroupMemberInfo { get; set; } = new();
     }
 }
