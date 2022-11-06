@@ -22,6 +22,11 @@ https://github.com/project-mirai/mirai-api-http#安装mirai-api-http
 - 如需公网访问，请将`ws-host`设置为`0.0.0.0`，服务器开放ws的监听端口
 
 ## 使用流程
+
+### 集成版本
+在[another-mirai-native-release](https://github.com/debumori-osc/another-mirai-native-release)可以下载到集成好环境的版本。
+
+### 手动安装
 1. 下载最老版本的[Release](https://github.com/Hellobaka/Another-Mirai-Native/releases/download/1.5.0/Release.zip)并解压
 2. 下载最新版本的[Release](https://github.com/Hellobaka/Another-Mirai-Native/releases/latest)，按照发行说明替换对应文件
 3. 启动`AnotherMiraiNative.exe`，填入对应的配置，关于`ws`与`Authkey`在上一节

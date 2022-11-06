@@ -462,29 +462,51 @@ namespace Another_Mirai_Native.Adapter
                 return null;
             }
         }
+        public static string GetGroupMemberInfoCache(long group, long qq)
+        {
+            if (Cache.GroupMemberInfo.TryGetValue((group, qq), out string result) is false)
+            {
+                LogHelper.WriteLog(LogLevel.Warning, "读取群成员信息缓存", "读取失败");
+                return null;
+            }
+            return result;
+        }
+        public static JArray GetGroupMemberListCache(long group)
+        {
+            if (Cache.GroupList.TryGetValue(group, out JArray result) is false)
+            {
+                LogHelper.WriteLog(LogLevel.Warning, "读取群成员信息缓存", "读取失败");
+                return null;
+            }
+            return result;
+        }
         public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject appendInfo, long groupId, long QQId)
         {
-            if (appendInfo == null) return null;
-            if (groupMemArr == null) return null;
+            if (appendInfo == null) 
+                return GetGroupMemberInfoCache(groupId, QQId);
+            if (groupMemArr == null)
+            {
+                groupMemArr = GetGroupMemberListCache(groupId);
+                if(groupMemArr == null)
+                {
+                    return GetGroupMemberInfoCache(groupId, QQId);
+                }
+            }
             JObject targetuser = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
-            if (targetuser == null && QQId.ToString() != Helper.QQ) return null;
+
+            if (targetuser == null && QQId.ToString() != Helper.QQ) 
+                return GetGroupMemberInfoCache(groupId, QQId);
             else if(QQId.ToString() == Helper.QQ)
             {
                 targetuser = GetGroupMemberInfo(groupId, QQId);
             }
             if(appendInfo.ContainsKey("code") && ((int)appendInfo["code"]) == 500)
-            {
-                if(Cache.GroupMemberInfo.TryGetValue((groupId, QQId), out appendInfo) is false)
-                {
-                    LogHelper.WriteLog(LogLevel.Warning, "读取群成员信息缓存", "读取失败");
-                    return null;
-                }
-            }
-            if (Cache.GroupList.ContainsKey(groupId)) Cache.GroupList[groupId] = groupMemArr;
-            else Cache.GroupList.Add(groupId, groupMemArr);
+                return GetGroupMemberInfoCache(groupId, QQId);
 
-            if (Cache.GroupMemberInfo.ContainsKey((groupId, QQId))) Cache.GroupMemberInfo[(groupId, QQId)] = appendInfo;
-            else Cache.GroupMemberInfo.Add((groupId, QQId),  appendInfo);
+            if (Cache.GroupList.ContainsKey(groupId)) 
+                Cache.GroupList[groupId] = groupMemArr;
+            else 
+                Cache.GroupList.Add(groupId, groupMemArr);
 
             int userPermission = 0, sex = 255;
             switch (targetuser["permission"].ToString())
@@ -533,7 +555,13 @@ namespace Another_Mirai_Native.Adapter
             BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["specialTitle"].ToString());
             BinaryWriterExpand.Write_Ex(binaryWriter, Helper.DateTime2TimeStamp(DateTime.Now.AddYears(10)));
             BinaryWriterExpand.Write_Ex(binaryWriter, 1);
-            return Convert.ToBase64String(stream.ToArray());
+
+            string result = Convert.ToBase64String(stream.ToArray());
+
+            if (Cache.GroupMemberInfo.ContainsKey((groupId, QQId))) Cache.GroupMemberInfo[(groupId, QQId)] = result;
+            else Cache.GroupMemberInfo.Add((groupId, QQId), result);
+
+            return result;
         }
         public static JObject GetGroupMemberProfile(long groupId, long QQId)
         {
