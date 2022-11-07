@@ -297,6 +297,12 @@ namespace Another_Mirai_Native.Native
                 PluginStatus.Add(new JProperty("Status", new JArray()));
                 File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
             }
+            Directory.CreateDirectory("libraries");
+            foreach(var item in new DirectoryInfo("libraries").GetFiles())
+            {
+                LogHelper.WriteLog($"载入第三方库: {item.Name}");
+                Dll.LoadLibrary(item.FullName);
+            }
             Load();
             LogHelper.WriteLog("遍历启动事件……");
             new Thread(() =>
