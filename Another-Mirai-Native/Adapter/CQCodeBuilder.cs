@@ -167,12 +167,13 @@ namespace Another_Mirai_Native.Adapter
                     else
                     {
                         // 若以上两个路径均不存在, 判断对应的cqimg文件是否存在
-                        if(!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath + ".cqimg")))
+                        picPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"data\image", picPath + ".cqimg");
+                        if (!File.Exists(picPath))
                         {
                             LogHelper.WriteLog(LogLevel.Warning, "发送图片", "文件不存在", "");
                             return null;
                         }
-                        string picTmp = File.ReadAllText(picPath + ".cqimg");      
+                        string picTmp = File.ReadAllText(picPath);      
                         // 分离cqimg文件中的url
                         picTmp = picTmp.Split('\n').Last().Replace("url=", "");
                         if (cqcode.Items.ContainsKey("flash"))
