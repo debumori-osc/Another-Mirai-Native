@@ -111,8 +111,7 @@ namespace Another_Mirai_Native.DB
             }
             if (!string.IsNullOrWhiteSpace(model.detail) && string.IsNullOrWhiteSpace(model.name))
             {
-                model.name = "异常捕获";
-                model.detail = model.name;
+                model.name = "空标题";
             }
             using (var db = GetInstance())
             {
