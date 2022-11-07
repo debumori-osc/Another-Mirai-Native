@@ -45,6 +45,8 @@ namespace Another_Mirai_Native.Forms
             QQID.Text = QQId.ToString();
 
             PluginTestHelper.Instance.EnableTest(TestingPlugin);
+            PluginTestHelper.Instance.OnPluginSendMsg -= PluginTestHelper_OnPluginSendMsg;
+            PluginTestHelper.Instance.OnPluginChanged -= Instance_OnPluginChanged;
             PluginTestHelper.Instance.OnPluginSendMsg += PluginTestHelper_OnPluginSendMsg;
             PluginTestHelper.Instance.OnPluginChanged += Instance_OnPluginChanged;
         }
@@ -206,6 +208,7 @@ namespace Another_Mirai_Native.Forms
                 {
                     ChatPanel.Size = new Size(ChatPanel.Size.Width, lastY + 10);
                 }
+                ChatPanel.ScrollControlIntoView(c);
             });           
         }
 
