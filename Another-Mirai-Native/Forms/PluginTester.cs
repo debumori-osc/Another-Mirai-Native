@@ -28,7 +28,6 @@ namespace Another_Mirai_Native.Forms
         public CQPlugin TestingPlugin { get; set; }
         private void PluginTester_Load(object sender, EventArgs e)
         {
-            return;
             if(TestingPlugin == null)
             {
                 MessageBox.Show("插件信息无效");
