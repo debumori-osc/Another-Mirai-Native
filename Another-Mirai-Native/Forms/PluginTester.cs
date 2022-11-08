@@ -28,6 +28,7 @@ namespace Another_Mirai_Native.Forms
         public CQPlugin TestingPlugin { get; set; }
         private void PluginTester_Load(object sender, EventArgs e)
         {
+            return;
             if(TestingPlugin == null)
             {
                 MessageBox.Show("插件信息无效");
@@ -208,7 +209,7 @@ namespace Another_Mirai_Native.Forms
                 {
                     ChatPanel.Size = new Size(ChatPanel.Size.Width, lastY + 10);
                 }
-                ChatPanel.ScrollControlIntoView(c);
+                ScrollPanel.ScrollControlIntoView(c);
             });           
         }
 
