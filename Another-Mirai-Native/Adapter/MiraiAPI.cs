@@ -22,7 +22,7 @@ namespace Another_Mirai_Native.Adapter
                 sessionKey = MiraiAdapter.Instance.SessionKey_Message,
             };
             JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.botProfile, request);
-            if(json == null)
+            if (json == null)
             {
                 return "";
             }
@@ -76,7 +76,7 @@ namespace Another_Mirai_Native.Adapter
             }
             else
             {
-                Debug.WriteLine(json["msg"].ToString());            
+                Debug.WriteLine(json["msg"].ToString());
                 return 0;
             }
         }
@@ -380,8 +380,8 @@ namespace Another_Mirai_Native.Adapter
             {
                 if (reserved)
                 {
-                    JArray arr = new ();
-                    foreach(var item in (json["data"] as JArray).Reverse())
+                    JArray arr = new();
+                    foreach (var item in (json["data"] as JArray).Reverse())
                     {
                         arr.Add(item);
                     }
@@ -398,7 +398,7 @@ namespace Another_Mirai_Native.Adapter
         {
             MemoryStream streamMain = new();
             BinaryWriter binaryWriterMain = new(streamMain);
-            if(memberList == null) return null;
+            if (memberList == null) return null;
             BinaryWriterExpand.Write_Ex(binaryWriterMain, memberList.Count);
             foreach (var item in memberList)
             {
@@ -441,7 +441,7 @@ namespace Another_Mirai_Native.Adapter
             }
             return Convert.ToBase64String(streamMain.ToArray());
         }
-        public static JArray GetGroupMemberList(long target) 
+        public static JArray GetGroupMemberList(long target)
         {
             object request = new
             {
@@ -482,86 +482,79 @@ namespace Another_Mirai_Native.Adapter
         }
         public static string ParseGroupMemberInfo2CQData(JArray groupMemArr, JObject appendInfo, long groupId, long QQId)
         {
-            if (appendInfo == null) 
-                return GetGroupMemberInfoCache(groupId, QQId);
-            if (groupMemArr == null)
+            try
             {
-                groupMemArr = GetGroupMemberListCache(groupId);
-                if(groupMemArr == null)
+                JObject targetuser = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
+
+                if (QQId.ToString() == Helper.QQ)
                 {
-                    return GetGroupMemberInfoCache(groupId, QQId);
+                    targetuser = GetGroupMemberInfo(groupId, QQId);
                 }
-            }
-            JObject targetuser = (JObject)groupMemArr.FirstOrDefault(x => ((long)x["id"]) == QQId);
 
-            if (targetuser == null && QQId.ToString() != Helper.QQ) 
+                if (Cache.GroupList.ContainsKey(groupId))
+                    Cache.GroupList[groupId] = groupMemArr;
+                else
+                    Cache.GroupList.Add(groupId, groupMemArr);
+
+                int userPermission = 0, sex = 255;
+                switch (targetuser["permission"].ToString())
+                {
+                    case "MEMBER":
+                        userPermission = 1;
+                        break;
+                    case "ADMINISTRATOR":
+                        userPermission = 2;
+                        break;
+                    case "OWNER":
+                        userPermission = 3;
+                        break;
+                    default:
+                        break;
+                }
+                switch (appendInfo["sex"]?.ToString())
+                {
+                    case "UNKNOWN":
+                        sex = 255;
+                        break;
+                    case "MALE":
+                        sex = 0;
+                        break;
+                    case "FEMALE":
+                        sex = 1;
+                        break;
+                    default:
+                        break;
+                }
+                MemoryStream stream = new();
+                BinaryWriter binaryWriter = new(stream);
+
+                BinaryWriterExpand.Write_Ex(binaryWriter, groupId);
+                BinaryWriterExpand.Write_Ex(binaryWriter, QQId);
+                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, sex);
+                BinaryWriterExpand.Write_Ex(binaryWriter, ((int)appendInfo["age"]));
+                BinaryWriterExpand.Write_Ex(binaryWriter, "中国");
+                BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["joinTimestamp"]);
+                BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["lastSpeakTimestamp"]);
+                BinaryWriterExpand.Write_Ex(binaryWriter, appendInfo["level"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, userPermission);
+                BinaryWriterExpand.Write_Ex(binaryWriter, 0);
+                BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["specialTitle"].ToString());
+                BinaryWriterExpand.Write_Ex(binaryWriter, Helper.DateTime2TimeStamp(DateTime.Now.AddYears(10)));
+                BinaryWriterExpand.Write_Ex(binaryWriter, 1);
+
+                string result = Convert.ToBase64String(stream.ToArray());
+
+                if (Cache.GroupMemberInfo.ContainsKey((groupId, QQId))) Cache.GroupMemberInfo[(groupId, QQId)] = result;
+                else Cache.GroupMemberInfo.Add((groupId, QQId), result);
+
+                return result;
+            }
+            catch
+            {
                 return GetGroupMemberInfoCache(groupId, QQId);
-            else if(QQId.ToString() == Helper.QQ)
-            {
-                targetuser = GetGroupMemberInfo(groupId, QQId);
             }
-            if(appendInfo.ContainsKey("code") && ((int)appendInfo["code"]) == 500)
-                return GetGroupMemberInfoCache(groupId, QQId);
-
-            if (Cache.GroupList.ContainsKey(groupId)) 
-                Cache.GroupList[groupId] = groupMemArr;
-            else 
-                Cache.GroupList.Add(groupId, groupMemArr);
-
-            int userPermission = 0, sex = 255;
-            switch (targetuser["permission"].ToString())
-            {
-                case "MEMBER":
-                    userPermission = 1;
-                    break;
-                case "ADMINISTRATOR":
-                    userPermission = 2;
-                    break;
-                case "OWNER":
-                    userPermission = 3;
-                    break;
-                default:
-                    break;
-            }
-            switch (appendInfo["sex"]?.ToString())
-            {
-                case "UNKNOWN":
-                    sex = 255;
-                    break;
-                case "MALE":
-                    sex = 0;
-                    break;
-                case "FEMALE":
-                    sex = 1;
-                    break;
-                default:
-                    break;
-            }
-            MemoryStream stream = new();
-            BinaryWriter binaryWriter = new(stream);
-
-            BinaryWriterExpand.Write_Ex(binaryWriter, groupId);
-            BinaryWriterExpand.Write_Ex(binaryWriter, QQId);
-            BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
-            BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["memberName"].ToString());
-            BinaryWriterExpand.Write_Ex(binaryWriter, sex);
-            BinaryWriterExpand.Write_Ex(binaryWriter, ((int)appendInfo["age"]));
-            BinaryWriterExpand.Write_Ex(binaryWriter, "中国");
-            BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["joinTimestamp"]);
-            BinaryWriterExpand.Write_Ex(binaryWriter, (int)targetuser["lastSpeakTimestamp"]);
-            BinaryWriterExpand.Write_Ex(binaryWriter, appendInfo["level"].ToString());
-            BinaryWriterExpand.Write_Ex(binaryWriter, userPermission);
-            BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-            BinaryWriterExpand.Write_Ex(binaryWriter, targetuser["specialTitle"].ToString());
-            BinaryWriterExpand.Write_Ex(binaryWriter, Helper.DateTime2TimeStamp(DateTime.Now.AddYears(10)));
-            BinaryWriterExpand.Write_Ex(binaryWriter, 1);
-
-            string result = Convert.ToBase64String(stream.ToArray());
-
-            if (Cache.GroupMemberInfo.ContainsKey((groupId, QQId))) Cache.GroupMemberInfo[(groupId, QQId)] = result;
-            else Cache.GroupMemberInfo.Add((groupId, QQId), result);
-
-            return result;
         }
         public static JObject GetGroupMemberProfile(long groupId, long QQId)
         {
