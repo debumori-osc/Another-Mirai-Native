@@ -136,7 +136,7 @@ namespace Another_Mirai_Native
             }
             catch (Exception exc)
             {
-                MessageBox.Show($"拉起菜单发生错误，错误信息:{exc.Message}\n{exc.StackTrace}", "菜单错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Error_TaskDialog.ShowErrorDialog($"菜单事件发生错误", $"错误信息:{exc.Message}\n{exc.StackTrace}", false);
             }
         }
 
@@ -144,7 +144,7 @@ namespace Another_Mirai_Native
         {
             string updateUrl = "https://gitee.com/Hellobaka/LoliconApiSetuBot/raw/master/New.json";
             JObject json = JObject.Parse(await Helper.GetString(updateUrl));
-            if (Convert.ToInt32(json["version"].ToString().Replace(".","")) > Convert.ToInt32(Application.ProductVersion.Replace(".", "")))
+            if (Convert.ToInt32(json["version"].ToString().Replace(".", "")) > Convert.ToInt32(Application.ProductVersion.Replace(".", "")))
             {
                 if (MessageBox.Show($"新版本：{json["version"]}\n更新时间：{json["time"]}\n更新内容：{json["update"]}\n点击确定前往下载", "新版本出现了", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                 {
