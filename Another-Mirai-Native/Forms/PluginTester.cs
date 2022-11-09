@@ -207,7 +207,7 @@ namespace Another_Mirai_Native.Forms
                 {
                     ChatPanel.Size = new Size(ChatPanel.Size.Width, lastY + 10);
                 }
-                ChatPanel.ScrollControlIntoView(c);
+                ScrollPanel.ScrollControlIntoView(c);
             });           
         }
 
