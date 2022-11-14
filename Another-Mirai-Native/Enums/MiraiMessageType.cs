@@ -187,7 +187,7 @@ namespace Another_Mirai_Native.Enums
                 public long time { get; set; }
                 public string senderName { get; set; }
                 public object[] messageChain { get; set; }
-                public long messageId { get; set; }
+                public long? messageId { get; set; }
             }
         }
 
