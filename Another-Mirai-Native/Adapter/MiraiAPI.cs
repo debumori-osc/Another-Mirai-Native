@@ -443,30 +443,26 @@ namespace Another_Mirai_Native.Adapter
         }
         public static JArray GetGroupMemberList(long target)
         {
-            object request = new
+            try
             {
-                sessionKey = MiraiAdapter.Instance.SessionKey_Message,
-                target
-            };
-            JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberList, request);
-            if (json == null)
-            {
-                return null;
-            }
-            if (((int)json["code"]) == 0)
-            {
+                object request = new
+                {
+                    sessionKey = MiraiAdapter.Instance.SessionKey_Message,
+                    target
+                };
+                JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.memberList, request);
                 return json["data"] as JArray;
             }
-            else
+            catch
             {
-                return null;
-            }
+                return GetGroupMemberListCache(target);
+            }           
         }
         public static string GetGroupMemberInfoCache(long group, long qq)
         {
             if (Cache.GroupMemberInfo.TryGetValue((group, qq), out string result) is false)
             {
-                LogHelper.WriteLog(LogLevel.Warning, "读取群成员信息缓存", "读取失败");
+                LogHelper.WriteLog(LogLevel.Debug, "读取群成员信息缓存", $"[{group}]({qq})读取失败");
                 return null;
             }
             return result;
@@ -475,7 +471,7 @@ namespace Another_Mirai_Native.Adapter
         {
             if (Cache.GroupList.TryGetValue(group, out JArray result) is false)
             {
-                LogHelper.WriteLog(LogLevel.Warning, "读取群成员信息缓存", "读取失败");
+                LogHelper.WriteLog(LogLevel.Debug, "读取群成员信息缓存", "读取失败");
                 return null;
             }
             return result;
