@@ -6,9 +6,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using static Another_Mirai_Native.WsServer;
 
 namespace Another_Mirai_Native.Adapter
 {
@@ -60,7 +57,7 @@ namespace Another_Mirai_Native.Adapter
                 return callResult;
             }
         }
-        public static int DeleteMsg(int authCode, int msgId)
+        public static int DeleteMsg(int authCode, long msgId)
         {
             Stopwatch sw = new();
             sw.Start();

@@ -28,7 +28,7 @@ namespace Another_Mirai_Native.Adapter
             }
             return json["nickname"].ToString();
         }
-        public static string GetMessageByMsgId(int messageId, long target)
+        public static string GetMessageByMsgId(long messageId, long target)
         {
             object request = new
             {
@@ -100,7 +100,7 @@ namespace Another_Mirai_Native.Adapter
             }
             return 0;
         }
-        public static int RecallMessage(int msgId, long target)
+        public static int RecallMessage(long msgId, long target)
         {
             object request = new
             {

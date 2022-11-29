@@ -24,7 +24,7 @@ namespace CQP
         }
 
         [DllExport(ExportName = "CQ_deleteMsg", CallingConvention = CallingConvention.StdCall)]
-        public static int CQ_deleteMsg(int authCode, int msgId)
+        public static int CQ_deleteMsg(int authCode, long msgId)
         {
             return CQPAdapter.DeleteMsg(authCode, msgId);
         }
