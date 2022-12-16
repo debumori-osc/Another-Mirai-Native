@@ -176,11 +176,18 @@ namespace Another_Mirai_Native
         }
         public static void Quit()
         {
-            PluginManagment.Instance.CallFunction(FunctionEnums.Disable);
-            PluginManagment.Instance.CallFunction(FunctionEnums.Exit);
-            PluginManagment.Instance.UnLoad();
-            HideNotifyIcon();
-            Environment.Exit(0);
+            try
+            {
+                PluginManagment.Instance.CallFunction(FunctionEnums.Disable);
+                PluginManagment.Instance.CallFunction(FunctionEnums.Exit);
+                PluginManagment.Instance.UnLoad();
+            }
+            catch { }
+            finally
+            {
+                HideNotifyIcon();
+                Environment.Exit(0);
+            }
         }
         public static void AddManageMenu()
         {

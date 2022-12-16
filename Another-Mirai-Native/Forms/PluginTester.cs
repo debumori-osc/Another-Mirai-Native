@@ -1,19 +1,15 @@
-﻿using Another_Mirai_Native.Native;
+﻿using Another_Mirai_Native.Adapter.CQCode.Model;
+using Another_Mirai_Native.Native;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Another_Mirai_Native.Adapter.CQCode.Model;
-using System.Diagnostics;
-using System.IO;
 
 namespace Another_Mirai_Native.Forms
 {
@@ -45,9 +41,7 @@ namespace Another_Mirai_Native.Forms
             QQID.Text = QQId.ToString();
 
             PluginTestHelper.Instance.EnableTest(TestingPlugin);
-            PluginTestHelper.Instance.OnPluginChanged -= Instance_OnPluginChanged;
             PluginTestHelper.Instance.OnPluginSendMsg += PluginTestHelper_OnPluginSendMsg;
-            PluginTestHelper.Instance.OnPluginChanged += Instance_OnPluginChanged;
         }
 
         private void Instance_OnPluginChanged(CQPlugin plugin)
@@ -219,6 +213,8 @@ namespace Another_Mirai_Native.Forms
                 {
                     msgIndex--;
                     MsgToSend.Text = msgSave[msgIndex];
+                    MsgToSend.SelectionStart = MsgToSend.Text.Length;
+                    MsgToSend.SelectionLength = 0;
                 }
             }
             else if (e.KeyCode == Keys.Down)
@@ -233,6 +229,8 @@ namespace Another_Mirai_Native.Forms
                     else
                     {
                         MsgToSend.Text = msgSave[msgIndex];
+                        MsgToSend.SelectionStart = MsgToSend.Text.Length;
+                        MsgToSend.SelectionLength = 0;
                     }
                 }
             }
@@ -240,7 +238,11 @@ namespace Another_Mirai_Native.Forms
 
         private void PluginTester_FormClosing(object sender, FormClosingEventArgs e)
         {
-            TestingPlugin.Testing = false;
+            try
+            {
+                TestingPlugin.Testing = false;
+            }
+            catch { }
         }
     }
 }
