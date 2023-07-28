@@ -11,7 +11,7 @@ namespace Another_Mirai_Native.Adapter
 {
     public static class CQPAdapter
     {
-        public static int SendGroupMessage(int authCode, long groupId, string msg)
+        public static int SendGroupMessage(int authCode, long groupId, string msg, int msgId = 0)
         {
             Stopwatch sw = new();
             sw.Start();
@@ -28,7 +28,7 @@ namespace Another_Mirai_Native.Adapter
             else
             {
                 int logid = LogHelper.WriteLog(LogLevel.InfoSend, plugin.appinfo.Name, "[↑]发送群聊消息", $"群:{groupId} 消息:{msg}", "处理中...");
-                int callResult = MiraiAPI.SendGroupMessage(groupId, msg);
+                int callResult = MiraiAPI.SendGroupMessage(groupId, msg, msgId);
                 sw.Stop();
                 LogHelper.UpdateLogStatus(logid, $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s");
                 return callResult;

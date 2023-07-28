@@ -9,6 +9,7 @@ using Another_Mirai_Native.Enums;
 using System.Runtime.InteropServices;
 using Another_Mirai_Native.DB;
 using System.Runtime.ExceptionServices;
+using System.Security;
 
 namespace Another_Mirai_Native.Native
 {
@@ -67,6 +68,8 @@ namespace Another_Mirai_Native.Native
         private IntPtr hLib;
         #endregion
 
+        [HandleProcessCorruptedStateExceptions]
+        [SecurityCritical]
         public IntPtr Load(string filepath)
         {
             if (hLib == null || hLib == (IntPtr)0)

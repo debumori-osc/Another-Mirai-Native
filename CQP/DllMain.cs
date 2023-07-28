@@ -16,6 +16,13 @@ namespace CQP
             return CQPAdapter.SendGroupMessage(authCode, groupid, text);
         }
 
+        [DllExport(ExportName = "CQ_sendGroupQuoteMsg", CallingConvention = CallingConvention.StdCall)]
+        public static int CQ_sendGroupQuoteMsg(int authCode, long groupid, int msgId, IntPtr msg)
+        {
+            string text = msg.ToString(GB18030);
+            return CQPAdapter.SendGroupMessage(authCode, groupid, text, msgId);
+        }
+
         [DllExport(ExportName = "CQ_sendPrivateMsg", CallingConvention = CallingConvention.StdCall)]
         public static int CQ_sendPrivateMsg(int authCode, long qqId, IntPtr msg)
         {

@@ -56,15 +56,29 @@ namespace Another_Mirai_Native.Adapter
         /// <param name="group"></param>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static int SendGroupMessage(long group, string message)
+        public static int SendGroupMessage(long group, string message, int quote = 0)
         {
             MiraiMessageBase[] msgChains = CQCodeBuilder.BuildMessageChains(message).ToArray();
-            object request = new
+            object request;
+            if (quote > 0)
             {
-                sessionKey = MiraiAdapter.Instance.SessionKey_Message,
-                target = group,
-                messageChain = msgChains
-            };
+                request = new
+                {
+                    sessionKey = MiraiAdapter.Instance.SessionKey_Message,
+                    target = group,
+                    quote = quote,
+                    messageChain = msgChains
+                };
+            }
+            else
+            {
+                request = new
+                {
+                    sessionKey = MiraiAdapter.Instance.SessionKey_Message,
+                    target = group,
+                    messageChain = msgChains
+                };
+            }
             JObject json = MiraiAdapter.Instance.CallMiraiAPI(MiraiApiType.sendGroupMessage, request);
             if (json == null)
             {
