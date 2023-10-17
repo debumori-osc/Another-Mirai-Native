@@ -127,7 +127,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int KickGroupMember(long groupId, long QQId)
         {
@@ -142,7 +142,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int MuteGroupMemeber(long groupId, long QQId, long time)
         {
@@ -158,7 +158,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int UnmuteGroupMemeber(long groupId, long QQId)
         {
@@ -173,7 +173,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int SetAdmin(long groupId, long QQId, bool set)
         {
@@ -189,7 +189,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int SetSpecialTitle(long groupId, long QQId, string title)
         {
@@ -208,7 +208,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int GroupMute(long groupId)
         {
@@ -222,7 +222,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int GroupUnmute(long groupId)
         {
@@ -236,7 +236,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int SetGroupCard(long groupId, long QQId, string newCard)
         {
@@ -255,7 +255,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int QuitGroup(long groupId)
         {
@@ -269,7 +269,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int HandleFriendRequest(long eventId, int operate, string message)
         {
@@ -285,7 +285,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int HandleGroupRequest(long eventId, int operate, string message)
         {
@@ -301,7 +301,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static int HandleInviteRequest(long eventId, int operate, string message)
         {
@@ -317,7 +317,7 @@ namespace Another_Mirai_Native.Adapter
             {
                 return 0;
             }
-            return (int)json["code"];
+            return (int)json["code"] == 0 ? 1 : 0;
         }
         public static string ParseGroupList2CQData(JArray groupList)
         {
