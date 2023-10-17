@@ -257,7 +257,7 @@ namespace Another_Mirai_Native.Adapter
                 return 0;
             }
             int logid = LogHelper.WriteLog(LogLevel.Info, plugin.appinfo.Name, "退出群", $"退出群{groupId}", "处理中...");
-            int callResult = MiraiAPI.GroupMute(groupId);
+            int callResult = MiraiAPI.QuitGroup(groupId);
             sw.Stop();
             LogHelper.UpdateLogStatus(logid, $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s");
 
