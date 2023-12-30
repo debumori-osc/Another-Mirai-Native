@@ -81,16 +81,9 @@ namespace Another_Mirai_Native
                     Environment.Exit(0);
                 }
             }
-            if(ConfigHelper.GetConfig<bool>("Enable_UsageMonitor", false))
-            {
-                UsageMonitor.CreateDB();
-                UsageMonitor.StartRecord();
-            }
-
             Application.ThreadException += Application_ThreadException;
             Application.ApplicationExit += (a, b) =>
             { 
-                UsageMonitor.ExitFlag = true; 
                 MiraiAdapter.ExitFlag = true; 
             };
             //未处理的异常捕获

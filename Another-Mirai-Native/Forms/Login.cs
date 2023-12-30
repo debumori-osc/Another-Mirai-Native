@@ -101,16 +101,6 @@ namespace Another_Mirai_Native
                 AutoLoginCheck.Checked = true;
             }
 
-            int wsServerPort = ConfigHelper.GetConfig("Ws_ServerPort", 30303);
-            try
-            {
-                WsServer.Init(wsServerPort);
-            }
-            catch
-            {
-                MessageBox.Show($"WebSocket服务器端口({wsServerPort})被占用，请更改为其他端口");
-                Environment.Exit(0);
-            }
             Directory.CreateDirectory("conf");
             Directory.CreateDirectory("logs");
             Directory.CreateDirectory("data");

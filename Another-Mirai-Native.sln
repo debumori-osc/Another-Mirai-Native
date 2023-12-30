@@ -12,8 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CQP", "CQP\CQP.csproj", "{E5726F22-0147-408C-8B63-15D41E5B6167}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebServerSupport", "WebServerSupport\WebServerSupport.csproj", "{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,22 +56,6 @@ Global
 		{E5726F22-0147-408C-8B63-15D41E5B6167}.RelWithDebInfo|Any CPU.Build.0 = Release|Any CPU
 		{E5726F22-0147-408C-8B63-15D41E5B6167}.RelWithDebInfo|x86.ActiveCfg = Release|Any CPU
 		{E5726F22-0147-408C-8B63-15D41E5B6167}.RelWithDebInfo|x86.Build.0 = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Debug|x86.Build.0 = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.MinSizeRel|Any CPU.ActiveCfg = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.MinSizeRel|Any CPU.Build.0 = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.MinSizeRel|x86.ActiveCfg = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.MinSizeRel|x86.Build.0 = Debug|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Release|x86.ActiveCfg = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.Release|x86.Build.0 = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.RelWithDebInfo|Any CPU.ActiveCfg = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.RelWithDebInfo|Any CPU.Build.0 = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.RelWithDebInfo|x86.ActiveCfg = Release|Any CPU
-		{2EC6A725-77F0-4031-97BB-B6F43FEE78EC}.RelWithDebInfo|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

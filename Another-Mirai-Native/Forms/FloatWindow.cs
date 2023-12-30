@@ -57,8 +57,6 @@ namespace Another_Mirai_Native.Forms
             if (File.Exists(LogHelper.GetLogFilePath()) is false)
             {
                 LogHelper.CreateDB();
-                UsageMonitor.CreateDB();
-                UsageMonitor.StartRecord();
             }
             Helper.NickName = MiraiAPI.GetBotNickName();
             //设置窗口透明色, 实现窗口背景透明
