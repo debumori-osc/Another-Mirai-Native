@@ -79,7 +79,8 @@ namespace Another_Mirai_Native.Enums
             public string type { get; set; } = "Face";
             public MiraiMessageType messageType { get; set; } = MiraiMessageType.Face;
             public int faceId { get; set; }
-            public string name { get; set; }
+            public string name { get; set; } = "";
+            public bool superFace { get; set; }
         }
 
         public class Plain : MiraiMessageBase
