@@ -25,11 +25,19 @@ namespace Another_Mirai_Native.Native
     public class PluginManagment
     {
         public static PluginManagment Instance { get; set; }
+
         public List<CQPlugin> Plugins { get; set; } = new();
+
         public List<CQPlugin> SavedPlugins { get; set; } = new();
+
+        public Dictionary<CQPlugin, JObject> PluginEvents { get; set; } = new();
+
         public Dictionary<IntPtr, AppDomain> AppDomains { get; set; } = new();
+
         public bool Loading { get; set; } = true;
+
         private JObject PluginStatus;
+
         public PluginManagment()
         {
             Instance = this;
@@ -38,6 +46,7 @@ namespace Another_Mirai_Native.Native
             else
                 PluginStatus = new JObject();
         }
+
         public List<CQPlugin> DistinctPluginList()
         {
             var pluginList = new List<CQPlugin>();
@@ -75,6 +84,7 @@ namespace Another_Mirai_Native.Native
             LogHelper.WriteLog(LogLevel.Info, "插件载入", $"一共加载了{count}个插件", $"√ {sw.ElapsedMilliseconds} ms");
             NotifyIconHelper.AddManageMenu();
         }
+
         /// <summary>
         /// 以绝对路径路径载入拥有同名json的dll插件
         /// </summary>
@@ -126,7 +136,7 @@ namespace Another_Mirai_Native.Native
                 , json["author"].ToString(), json["description"].ToString(), authcode);
             bool enabled = GetPluginState(appInfo);//获取插件启用状态
             //保存至插件列表
-            CQPlugin CQPlugin = (CQPlugin)newappDomain.CreateInstanceAndUnwrap(typeof(CQPlugin).Assembly.FullName
+            CQPlugin plugin = (CQPlugin)newappDomain.CreateInstanceAndUnwrap(typeof(CQPlugin).Assembly.FullName
                 , typeof(CQPlugin).FullName
                 , false
                 , BindingFlags.CreateInstance
@@ -134,7 +144,8 @@ namespace Another_Mirai_Native.Native
                 , new object[] { iLib, appInfo, json.ToString(), dll, enabled, filepath }
                 , null, null);
 
-            Plugins.Add(CQPlugin);
+            Plugins.Add(plugin);
+            PluginEvents.Add(plugin, json);
             if (SavedPlugins.Any(x => x.appinfo.Name == appInfo.Name) is false)
                 SavedPlugins.Add(new CQPlugin { appinfo = appInfo, json = json.ToString(), Enable = false, path = filepath });
             cq_start(Marshal.StringToHGlobalAnsi(destpath), authcode);
@@ -150,7 +161,7 @@ namespace Another_Mirai_Native.Native
         /// </summary>
         public void FlipPluginState(CQPlugin CQPlugin)
         {
-            string pluginId = CQPlugin.appinfo.Id; 
+            string pluginId = CQPlugin.appinfo.Id;
             var c = PluginStatus["Status"]
                             .Where(x => x["Name"].ToString() == pluginId)
                             .FirstOrDefault();
@@ -177,6 +188,7 @@ namespace Another_Mirai_Native.Native
             }
             RefreshPluginList();
         }
+
         public void RefreshPluginList()
         {
             MenuItem menu = NotifyIconHelper.Instance.ContextMenu.MenuItems.Find("PluginMenu", false).First();
@@ -220,20 +232,22 @@ namespace Another_Mirai_Native.Native
                     .Value<int>() == 1;
             }
         }
+
         /// <summary>
         /// 卸载插件，执行被卸载事件，从菜单移除此插件的菜单
         /// </summary>
-        /// <param name="CQPlugin"></param>
-        public void UnLoad(CQPlugin CQPlugin)
+        /// <param name="plugin"></param>
+        public void UnLoad(CQPlugin plugin)
         {
             try
             {
-                CQPlugin.dll.CallFunction(FunctionEnums.Disable);
+                plugin.dll.CallFunction(FunctionEnums.Disable);
                 // CQPlugin.dll.CallFunction(FunctionEnums.Exit);
-                CQPlugin.dll.UnLoad();
-                Plugins.Remove(CQPlugin);
-                LogHelper.WriteLog(LogLevel.InfoSuccess, "插件卸载", $"插件 {CQPlugin.appinfo.Name} 卸载成功");
-                CQPlugin = null;
+                plugin.dll.UnLoad();
+                Plugins.Remove(plugin);
+                PluginEvents.Remove(plugin);
+                LogHelper.WriteLog(LogLevel.InfoSuccess, "插件卸载", $"插件 {plugin.appinfo.Name} 卸载成功");
+                plugin = null;
                 GC.Collect();
             }
             catch (Exception e)
@@ -285,6 +299,7 @@ namespace Another_Mirai_Native.Native
             Loading = false;
             LogHelper.WriteLog("插件卸载完毕");
         }
+
         /// <summary>
         /// 成员初始化，用于删除上次运行的临时目录、加载插件以及执行启动事件
         /// </summary>
@@ -298,7 +313,7 @@ namespace Another_Mirai_Native.Native
                 File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
             }
             Directory.CreateDirectory("libraries");
-            foreach(var item in new DirectoryInfo("libraries").GetFiles())
+            foreach (var item in new DirectoryInfo("libraries").GetFiles())
             {
                 LogHelper.WriteLog($"载入第三方库: {item.Name}");
                 Dll.LoadLibrary(item.FullName);
@@ -313,34 +328,33 @@ namespace Another_Mirai_Native.Native
             LogHelper.WriteLog("插件启动完成，开始处理消息逻辑……");
             Loading = false;
         }
+
         [DllImport("CQP.dll", EntryPoint = "cq_start")]
         private static extern bool cq_start(IntPtr path, int authcode);
+
         [DllImport("CQP.dll", EntryPoint = "CQ_addLog")]
         private static extern int CQ_addLog(int authCode, int priority, IntPtr type, IntPtr msg);
+
         /// <summary>
         /// 核心方法调用，将前端处理的数据传递给插件对应事件处理，尝试捕获非托管插件的异常
         /// </summary>
-        /// <param name="ApiName">调用的事件名称，前端统一名称，或许应该写成枚举</param>
+        /// <param name="function">调用的事件名称，前端统一名称，或许应该写成枚举</param>
         /// <param name="args">参数表</param>
         [HandleProcessCorruptedStateExceptions]
         [SecurityCritical]
-        public CQPlugin CallFunction(FunctionEnums ApiName, params object[] args)
+        public CQPlugin CallFunction(FunctionEnums function, params object[] args)
         {
-            JObject json = new JObject
-            {
-                new JProperty("ApiName",JsonConvert.SerializeObject(ApiName)),
-                new JProperty("Args",JsonConvert.SerializeObject(args))
-            };
-            if ((ApiName != FunctionEnums.Disable && ApiName != FunctionEnums.Exit &&
-                ApiName != FunctionEnums.Enable && ApiName != FunctionEnums.StartUp)
+            if ((function != FunctionEnums.Disable && function != FunctionEnums.Exit &&
+                function != FunctionEnums.Enable && function != FunctionEnums.StartUp)
                 && Loading)
             {
                 LogHelper.WriteLog(LogLevel.Warning, "AMN框架", "插件逻辑处理", "插件模块处理中...", "x 不处理");
                 return null;
             }
             //遍历插件列表,遇到标记消息阻断则跳出
-            foreach (var item in Plugins)
+            foreach (var plugin in SelectPluginsHaveEvent(function).OrderBy(x => x.Item2))
             {
+                var item = plugin.Item1;
                 Dll dll = item.dll;
                 //先看此插件是否已禁用
                 if (item.Enable is false) continue;
@@ -351,7 +365,7 @@ namespace Another_Mirai_Native.Native
                 }
                 try
                 {
-                    int result = dll.CallFunction(ApiName, args);
+                    int result = dll.CallFunction(function, args);
                     //调用函数, 返回 1 表示消息阻塞, 跳出后续
                     if (result == 1)
                     {
@@ -360,15 +374,16 @@ namespace Another_Mirai_Native.Native
                 }
                 catch (Exception e)
                 {
-                    LogHelper.WriteLog(LogLevel.Error, "函数执行异常", $"插件 {item.appinfo.Name} {ApiName} 函数发生错误，错误信息:{e.Message} {e.StackTrace}");
+                    LogHelper.WriteLog(LogLevel.Error, "函数执行异常", $"插件 {item.appinfo.Name} {function} 函数发生错误，错误信息:{e.Message} {e.StackTrace}");
                     Thread thread = new(() =>
                     {
-                        var b = Error_TaskDialog.ShowErrorDialog($"错误模块：{item.appinfo.Name}\n{ApiName} 函数发生错误\n", $"错误信息:\n{e.Message} {e.StackTrace}");
+                        var b = Error_TaskDialog.ShowErrorDialog($"错误模块：{item.appinfo.Name}\n{function} 函数发生错误\n", $"错误信息:\n{e.Message} {e.StackTrace}");
                         switch (b)
                         {
                             case Error_TaskDialog.TaskDialogResult.ReloadApp:
                                 ReLoad();
                                 break;
+
                             case Error_TaskDialog.TaskDialogResult.Exit:
                                 NotifyIconHelper.HideNotifyIcon();
                                 Environment.Exit(0);
@@ -381,6 +396,31 @@ namespace Another_Mirai_Native.Native
             }
             return null;
         }
+
+        private List<(CQPlugin, int)> SelectPluginsHaveEvent(FunctionEnums function)
+        {
+            List<(CQPlugin, int)> plugins = new();
+            foreach (var item in PluginEvents.ToList())
+            {
+                var json = item.Value;
+                if (json.TryGetValue("event", out var j)
+                    && j != null
+                    && j is JArray events
+                    && events.Any(x => x.ContainsKey("id") && x["id"].Type == JTokenType.Integer
+                                    && x.ContainsKey("priority") && x["priority"].Type == JTokenType.Integer
+                                    && ((int)x["id"]) == (int)function))
+                {
+                    int priority = ((int)events.FirstOrDefault(x => ((int)x["id"]) == (int)function)["priority"]);
+                    plugins.Add((item.Key, priority));
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            return plugins;
+        }
+
         /// <summary>
         /// 重载应用
         /// </summary>
@@ -395,6 +435,7 @@ namespace Another_Mirai_Native.Native
             LogHelper.WriteLog("插件启动完成，开始处理消息逻辑……");
             this.Loading = false;
         }
+
         public static CQPlugin GetPluginByID(string id) => Instance.Plugins.FirstOrDefault(x => x.appinfo.Id == id);
     }
 }
