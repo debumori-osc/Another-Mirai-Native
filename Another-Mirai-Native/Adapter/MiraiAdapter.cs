@@ -15,7 +15,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
-using static Another_Mirai_Native.Adapter.MiraiAdapter;
 
 namespace Another_Mirai_Native.Adapter
 {
@@ -24,65 +23,19 @@ namespace Another_Mirai_Native.Adapter
     /// </summary>
     public class MiraiAdapter
     {
-        public static MiraiAdapter Instance { get; set; }
-
         /// <summary>
-        /// 与MHA通信的连接, 通常以ws开头
+        /// API等待队列
         /// </summary>
-        public string WsURL { get; set; }
-
-        /// <summary>
-        /// MHA配置中所定义的SecretKey
-        /// </summary>
-        public string AuthKey { get; set; }
-
-        /// <summary>
-        /// Mirai框架中登录中 且 希望控制逻辑的QQ号
-        /// </summary>
-        public string QQ { get; set; }
-
-        /// <summary>
-        /// 保存消息服务器的SessionKey
-        /// </summary>
-        public string SessionKey_Message { get; set; }
-
-        /// <summary>
-        /// 保存事件服务器的SessionKey
-        /// </summary>
-        public string SessionKey_Event { get; set; }
-
-        public static bool ExitFlag { get; set; }
-
-        /// <summary>
-        /// 重连次数
-        /// </summary>
-        public int reConnect { get; set; }
-
-        public bool CanReconnect { get; set; } = false;
-
-        public WebSocket MessageSocket;
-
-        public WebSocket EventSocket;
-
-        public delegate void MessageArrived(string json);
-
-        public event MessageArrived OnMessageArrived;
-
-        public Thread HeartBeatThread { get; set; }
-
-        public delegate void ConnectedStateChange(bool status, string msg);
-
-        /// <summary>
-        /// 连接状态变更事件
-        /// </summary>
-        public event ConnectedStateChange ConnectedStateChanged;
-
-        private static Encoding GB18030 = Encoding.GetEncoding("GB18030");
+        private Queue<QueueObject> ApiQueue = new();
 
         public MiraiAdapter(string url, string qq, string authkey)
         {
             Instance = this;
-            if (url.EndsWith("/")) url = url[..^1];
+            if (url.EndsWith("/"))
+            {
+                url = url[..^1];
+            }
+
             WsURL = url;
             AuthKey = authkey;
             QQ = qq;
@@ -117,52 +70,247 @@ namespace Another_Mirai_Native.Adapter
             }).Start();
         }
 
-        private void EventSocket_OnOpen(object sender, EventArgs e)
+        public delegate void ConnectedStateChange(bool status, string msg);
+
+        public delegate void MessageArrived(string json);
+
+        /// <summary>
+        /// 连接状态变更事件
+        /// </summary>
+        public event ConnectedStateChange ConnectedStateChanged;
+
+        public event MessageArrived OnMessageArrived;
+
+        public static bool ExitFlag { get; set; }
+
+        public static MiraiAdapter Instance { get; set; }
+
+        /// <summary>
+        /// MHA配置中所定义的SecretKey
+        /// </summary>
+        public string AuthKey { get; set; }
+
+        public bool CanReconnect { get; set; } = false;
+
+        public WebSocket EventSocket { get; set; }
+
+        public Thread HeartBeatThread { get; set; }
+
+        public WebSocket MessageSocket { get; set; }
+
+        /// <summary>
+        /// Mirai框架中登录中 且 希望控制逻辑的QQ号
+        /// </summary>
+        public string QQ { get; set; }
+
+        /// <summary>
+        /// 重连次数
+        /// </summary>
+        public int ReconnectCount { get; set; }
+
+        /// <summary>
+        /// 保存事件服务器的SessionKey
+        /// </summary>
+        public string SessionKey_Event { get; set; }
+
+        /// <summary>
+        /// 保存消息服务器的SessionKey
+        /// </summary>
+        public string SessionKey_Message { get; set; }
+
+        /// <summary>
+        /// 与MHA通信的连接, 通常以ws开头
+        /// </summary>
+        public string WsURL { get; set; }
+
+        private static Encoding Encoding_GB18030 { get; set; } = Encoding.GetEncoding("GB18030");
+
+        private long HeartBeatTimeout { get; set; } = 0;
+
+        private long HeartBeatTimeoutMax { get; set; } = 60;
+
+        public void ActiveDropConnection()
         {
-            CanReconnect = true;
-            LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
-            reConnect = 0;
+            EventSocket.Close();
+            MessageSocket.Close();
         }
 
-        private void MessageSocket_OnOpen(object sender, EventArgs e)
+        /// <summary>
+        /// 调用MiraiAPI
+        /// </summary>
+        /// <param name="type">API类别</param>
+        /// <param name="data">调用内容</param>
+        public JObject CallMiraiAPI(MiraiApiType type, object data)
         {
-            CanReconnect = true;
-            LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
-            reConnect = 0;
-        }
-
-        private long HeartBeatTimeout = 0;
-
-        private long HeartBeatTimeoutMax = 60;
-
-        private void StartHearbeat()
-        {
-            HeartBeatThread = new Thread(() =>
+            if (MessageSocket == null || MessageSocket.ReadyState != WebSocketState.Open)
             {
-                while (!ExitFlag)
+                LogHelper.WriteLog("连接已断开，无法发送请求");
+                return null;
+            }
+            string apiType = Enum.GetName(typeof(MiraiApiType), type);
+            string command = apiType, subCommand = "";
+            if (apiType.Contains("_"))// 子命令
+            {
+                var c = apiType.Split('_');
+                command = c[0];
+                subCommand = c[1];
+            }
+            if (ApiQueue == null)
+            {
+                ApiQueue = new();
+            }
+            QueueObject queueObject = new() { request = new { syncId = -1, command, subCommand, content = data }.ToJson() };
+            ApiQueue.Enqueue(queueObject);
+            if (ApiQueue.Count == 1)// 无需队列等待 直接发送请求
+            {
+                MessageSocket.Send(queueObject.request);
+            }
+            // 超时脱出
+            int timoutCountMax = ConfigHelper.GetConfig("API_Timeout", 6000);
+            int timoutCount = 0;
+            // 等待消息处理后将结果放置在对象中
+            while (queueObject.result == "")
+            {
+                if (timoutCount > timoutCountMax)// 超时
                 {
-                    while (HeartBeatTimeout < HeartBeatTimeoutMax)
-                    {
-                        Thread.Sleep(1000);
-                        HeartBeatTimeout++;
-                        if (ExitFlag) break;
-                    }
-                    HeartBeatTimeout = 0;
-                    if (MessageSocket.ReadyState == WebSocketState.Open)
-                        MessageSocket.Send("heartbeat");
-                    if (EventSocket.ReadyState == WebSocketState.Open)
-                        EventSocket.Send("heartbeat");
+                    queueObject.result = "err";
+                    break;
                 }
-            });
-            HeartBeatThread.Start();
+                Thread.Sleep(10);
+                if (ApiQueue.Peek() == queueObject)
+                {
+                    timoutCount++; // 只有当前函数执行时才计时，防止所有排队函数均超时
+                }
+            }
+            // 从队列排出
+            ApiQueue.Dequeue();
+            if (ApiQueue.Count != 0)// 将队列下一元素的请求发送
+            {
+                MessageSocket.Send(ApiQueue.Peek().request);
+            }
+
+            if (queueObject.result == "err")
+            {
+                return null;
+            }
+            return JObject.Parse(queueObject.result);// 返回请求结果
+        }
+
+        /// <summary>
+        /// 连接消息服务器与事件服务器
+        /// </summary>
+        /// <returns></returns>
+        public bool Connect()
+        {
+            try
+            {
+                MessageSocket.Connect();
+                EventSocket.Connect();
+                return MessageSocket.ReadyState == WebSocketState.Open && EventSocket.ReadyState == WebSocketState.Open;
+            }
+            catch { }
+            return false;
+        }
+
+        /// <summary>
+        /// 将消息分发给插件处理
+        /// </summary>
+        /// <param name="msgEvent">消息来源</param>
+        /// <param name="raw">原始json对象</param>
+        /// <param name="source"></param>
+        /// <param name="chainMsg">消息链</param>
+        /// <param name="msg">CQ码转码后文本</param>
+        private void DispatchMessage(MiraiMessageEvents msgEvent, JToken raw, MiraiMessageTypeDetail.Source source, List<MiraiMessageBase> chainMsg, string msg)
+        {
+            if (source == null)
+            {
+                LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "参数缺失", $"", "");
+                return;
+            }
+            new Task(() =>
+            {
+                Stopwatch sw = new();
+                sw.Start();
+                // 文件上传优先处理
+                if (chainMsg.Any(x => x.messageType == MiraiMessageType.File))
+                {
+                    var group = raw.ToObject<GroupMessage>();
+                    var file = (MiraiMessageTypeDetail.File)chainMsg.First(x => x.messageType == MiraiMessageType.File);
+                    MemoryStream stream = new();
+                    BinaryWriter binaryWriter = new(stream);
+                    BinaryWriterExpand.Write_Ex(binaryWriter, file.id);
+                    BinaryWriterExpand.Write_Ex(binaryWriter, file.name);
+                    BinaryWriterExpand.Write_Ex(binaryWriter, file.size);
+                    BinaryWriterExpand.Write_Ex(binaryWriter, 0);
+                    PluginManagment.Instance.CallFunction(FunctionEnums.Upload, 1, Helper.TimeStamp, group.sender.group.id, group.sender.id, Convert.ToBase64String(stream.ToArray()));
+                    sw.Stop();
+                    LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "文件上传", $"来源群:{group.sender.group.id}({group.sender.group.name}) 来源QQ:{group.sender.id}({group.sender.memberName}) " +
+                        $"文件名:{file.name} 大小:{file.size / 1000}KB FileID:{file.id}", $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s");
+                    return;
+                }
+                // utf8转GB18030
+                var b = Encoding.UTF8.GetBytes(msg);
+                msg = Encoding_GB18030.GetString(Encoding.Convert(Encoding.UTF8, Encoding_GB18030, b));
+                byte[] messageBytes = Encoding_GB18030.GetBytes(msg + "\0");
+                var messageIntptr = Marshal.AllocHGlobal(messageBytes.Length);
+                Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
+
+                int logid = 0;
+                CQPlugin handledPlugin = null;
+                switch (msgEvent)
+                {
+                    case MiraiMessageEvents.FriendMessage:
+                        var friend = raw.ToObject<FriendMessage>();
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到好友消息", $"QQ:{friend.sender.id}({friend.sender.nickname}) {msg}", "处理中...");
+                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.PrivateMsg, 11, source.id, friend.sender.id, messageIntptr, 0);
+                        break;
+
+                    case MiraiMessageEvents.GroupMessage:
+                        var group = raw.ToObject<GroupMessage>();
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到消息", $"群:{group.sender.group.id}({group.sender.group.name}) QQ:{group.sender.id}({group.sender.memberName}) {msg}", "处理中...");
+                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupMsg, 1, source.id, group.sender.group.id, group.sender.id, "", messageIntptr, 0);
+                        break;
+
+                    case MiraiMessageEvents.TempMessage:
+                        var temp = raw.ToObject<TempMessage>();
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到群临时消息", $"群:{temp.sender.group.id}({temp.sender.group.name}) QQ:{temp.sender.id}({temp.sender.memberName}) {msg}", "处理中...");
+                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.PrivateMsg, 2, source.id, temp.sender.id, messageIntptr, 0);
+                        break;
+
+                    case MiraiMessageEvents.StrangerMessage:
+                        var stranger = raw.ToObject<StrangerMessage>();
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到陌生人消息", $"QQ:{stranger.sender.id}({stranger.sender.nickname}) {msg}", "处理中...");
+                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.PrivateMsg, 1, source.id, stranger.sender.id, messageIntptr, 0);
+                        break;
+
+                    case MiraiMessageEvents.OtherClientMessage:
+                        var other = raw.ToObject<OtherClientMessage>();
+                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到其他设备消息", $"QQ:{other.sender.id}({other.sender.platform}) {msg}", "x 不处理");
+                        break;
+
+                    default:
+                        break;
+                }
+                sw.Stop();
+                string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
+                if (handledPlugin != null)
+                {
+                    updatemsg += $"(由 {handledPlugin.appinfo.Name} 结束消息处理)";
+                }
+                LogHelper.UpdateLogStatus(logid, updatemsg);
+            }).Start();
         }
 
         private void EventSocket_OnClose(object sender, CloseEventArgs e)
         {
-            if (CanReconnect is false) return;
+            if (CanReconnect is false)
+            {
+                return;
+            }
+
             SessionKey_Event = "";
-            reConnect++;
-            LogHelper.WriteLog($"与事件服务器断开连接...第 {reConnect} 次重连");
+            ReconnectCount++;
+            LogHelper.WriteLog($"与事件服务器断开连接...第 {ReconnectCount} 次重连");
             Thread.Sleep(3000);
 
             string event_connecturl = $"{WsURL}/event?verifyKey={AuthKey}&qq={QQ}";
@@ -173,13 +321,60 @@ namespace Another_Mirai_Native.Adapter
             EventSocket.Connect();
         }
 
+        private void EventSocket_OnMessage(object sender, MessageEventArgs e)
+        {
+            JObject json = JObject.Parse(e.Data);
+            if (json.ContainsKey("code") && ((int)json["code"]) == 400)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(SessionKey_Event))
+            {
+                if (json["data"]["code"].ToString() == "0")
+                {
+                    SessionKey_Event = json["data"]["session"].ToString();
+                    ConnectedStateChanged?.Invoke(true, "");
+                }
+                else
+                {
+                    if (json["data"].ContainsKey("msg"))
+                    {
+                        ConnectedStateChanged?.Invoke(false, json["data"]["msg"].ToString());
+                    }
+                    else
+                    {
+                        ConnectedStateChanged?.Invoke(false, "连接失败");
+                    }
+                    EventSocket.Close();
+                }
+                return;
+            }
+            if (json["data"].ContainsKey("code"))// 将结果写入队列第一个元素 并排出队列
+            {
+                ApiQueue.Peek().result = json["data"].ToString();
+                return;
+            }
+            ParseEvent(json);
+        }
+
+        private void EventSocket_OnOpen(object sender, EventArgs e)
+        {
+            CanReconnect = true;
+            LogHelper.WriteLog(Enums.LogLevel.Debug, "事件服务器", "连接到事件服务器");
+            ReconnectCount = 0;
+        }
+
         private void MessageSocket_OnClose(object sender, CloseEventArgs e)
         {
-            if (CanReconnect is false) return;
+            if (CanReconnect is false)
+            {
+                return;
+            }
 
             SessionKey_Message = "";
-            reConnect++;
-            LogHelper.WriteLog($"与消息服务器断开连接...第 {reConnect} 次重连");
+            ReconnectCount++;
+            LogHelper.WriteLog($"与消息服务器断开连接...第 {ReconnectCount} 次重连");
             Thread.Sleep(3000);
 
             string message_connecturl = $"{WsURL}/message?verifyKey={AuthKey}&qq={QQ}";
@@ -188,12 +383,6 @@ namespace Another_Mirai_Native.Adapter
             MessageSocket.OnClose += MessageSocket_OnClose;
             MessageSocket.OnOpen += MessageSocket_OnOpen;
             MessageSocket.Connect();
-        }
-
-        public void ActiveDropConnection()
-        {
-            EventSocket.Close();
-            MessageSocket.Close();
         }
 
         /// <summary>
@@ -245,41 +434,11 @@ namespace Another_Mirai_Native.Adapter
             ParseMessage(json);
         }
 
-        private void EventSocket_OnMessage(object sender, MessageEventArgs e)
+        private void MessageSocket_OnOpen(object sender, EventArgs e)
         {
-            JObject json = JObject.Parse(e.Data);
-            if (json.ContainsKey("code") && ((int)json["code"]) == 400)
-            {
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(SessionKey_Event))
-            {
-                if (json["data"]["code"].ToString() == "0")
-                {
-                    SessionKey_Event = json["data"]["session"].ToString();
-                    ConnectedStateChanged?.Invoke(true, "");
-                }
-                else
-                {
-                    if (json["data"].ContainsKey("msg"))
-                    {
-                        ConnectedStateChanged?.Invoke(false, json["data"]["msg"].ToString());
-                    }
-                    else
-                    {
-                        ConnectedStateChanged?.Invoke(false, "连接失败");
-                    }
-                    EventSocket.Close();
-                }
-                return;
-            }
-            if (json["data"].ContainsKey("code"))// 将结果写入队列第一个元素 并排出队列
-            {
-                ApiQueue.Peek().result = json["data"].ToString();
-                return;
-            }
-            ParseEvent(json);
+            CanReconnect = true;
+            LogHelper.WriteLog(Enums.LogLevel.Debug, "消息服务器", "连接到消息服务器");
+            ReconnectCount = 0;
         }
 
         /// <summary>
@@ -329,7 +488,10 @@ namespace Another_Mirai_Native.Adapter
                     var botGroupPermissionChange = raw.ToObject<BotGroupPermissionChangeEvent>();
                     int botGroupPermissionChangeStatus = 1;
                     if (botGroupPermissionChange.origin == "MEMBER")
+                    {
                         botGroupPermissionChangeStatus = 2;
+                    }
+
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "Bot权限变更", $"群:{botGroupPermissionChange.group.id}({botGroupPermissionChange.group.name}) 新权限为:{botGroupPermissionChange.current}", "处理中...");
                     handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.AdminChange, botGroupPermissionChangeStatus, Helper.TimeStamp, botGroupPermissionChange.group.id, Helper.QQ);
                     break;
@@ -379,28 +541,29 @@ namespace Another_Mirai_Native.Adapter
                 case MiraiEvents.GroupRecallEvent:
                     var groupRecall = raw.ToObject<GroupRecallEvent>();
                     string groupRecallMsg = MiraiAPI.GetMessageByMsgId(groupRecall.messageId, groupRecall.group.id);
-                    if (string.IsNullOrEmpty(groupRecallMsg)) groupRecallMsg = "消息拉取失败";
+                    if (string.IsNullOrEmpty(groupRecallMsg))
+                    {
+                        groupRecallMsg = "消息拉取失败";
+                    }
+
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群撤回", $"群:{groupRecall.group.id}({groupRecall.group.name}) QQ:{groupRecall.authorId} 内容:{groupRecallMsg}", "处理中...");
                     break;
 
                 case MiraiEvents.FriendRecallEvent:
                     var friendRecall = raw.ToObject<FriendRecallEvent>();
                     string friendRecallMsg = MiraiAPI.GetMessageByMsgId(friendRecall.messageId, friendRecall.authorId);
-                    if (string.IsNullOrEmpty(friendRecallMsg)) friendRecallMsg = "消息拉取失败";
+                    if (string.IsNullOrEmpty(friendRecallMsg))
+                    {
+                        friendRecallMsg = "消息拉取失败";
+                    }
+
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "私聊撤回", $"QQ:{friendRecall.authorId} 内容:{friendRecallMsg}", "处理中...");
                     break;
 
                 case MiraiEvents.NudgeEvent:
                     var nudge = raw.ToObject<NudgeEvent>();
                     string nudgeMsg = "";
-                    if (nudge.subject.kind == "Group")
-                    {
-                        nudgeMsg = $"群:{nudge.subject.id} QQ:{nudge.fromId}";
-                    }
-                    else
-                    {
-                        nudgeMsg = $"QQ:{nudge.fromId}";
-                    }
+                    nudgeMsg = nudge.subject.kind == "Group" ? $"群:{nudge.subject.id} QQ:{nudge.fromId}" : $"QQ:{nudge.fromId}";
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "戳一戳", $"{nudgeMsg} 内容:{nudge.action}bot{nudge.suffix}", "处理中...");
                     break;
 
@@ -467,7 +630,10 @@ namespace Another_Mirai_Native.Adapter
                     var memberPermissionChangeEvent = raw.ToObject<MemberPermissionChangeEvent>();
                     int memberPermissionChangeStatus = 1;
                     if (memberPermissionChangeEvent.origin == "MEMBER")
+                    {
                         memberPermissionChangeStatus = 2;
+                    }
+
                     logid = LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "群员权限变更", $"群:{memberPermissionChangeEvent.member.group.id}({memberPermissionChangeEvent.member.group.name}) QQ:{memberPermissionChangeEvent.member.id}({memberPermissionChangeEvent.member.memberName}) 新权限为:{memberPermissionChangeEvent.current}", "处理中...");
                     handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.AdminChange, memberPermissionChangeStatus, Helper.TimeStamp, memberPermissionChangeEvent.member.group.id, memberPermissionChangeEvent.member.id);
                     break;
@@ -550,109 +716,34 @@ namespace Another_Mirai_Native.Adapter
             DispatchMessage(events, msg["data"], source, chainMsg, parsedMsg);
         }
 
-        /// <summary>
-        /// 将消息分发给插件处理
-        /// </summary>
-        /// <param name="msgEvent">消息来源</param>
-        /// <param name="raw">原始json对象</param>
-        /// <param name="source"></param>
-        /// <param name="chainMsg">消息链</param>
-        /// <param name="msg">CQ码转码后文本</param>
-        private void DispatchMessage(MiraiMessageEvents msgEvent, JToken raw, MiraiMessageTypeDetail.Source source, List<MiraiMessageBase> chainMsg, string msg)
+        private void StartHearbeat()
         {
-            if (source == null)
+            HeartBeatThread = new Thread(() =>
             {
-                LogHelper.WriteLog(Enums.LogLevel.Info, "AMN框架", "参数缺失", $"", "");
-                return;
-            }
-            new Task(() =>
-            {
-                Stopwatch sw = new();
-                sw.Start();
-                // 文件上传优先处理
-                if (chainMsg.Any(x => x.messageType == MiraiMessageType.File))
+                while (!ExitFlag)
                 {
-                    var group = raw.ToObject<GroupMessage>();
-                    var file = (MiraiMessageTypeDetail.File)chainMsg.First(x => x.messageType == MiraiMessageType.File);
-                    MemoryStream stream = new();
-                    BinaryWriter binaryWriter = new(stream);
-                    BinaryWriterExpand.Write_Ex(binaryWriter, file.id);
-                    BinaryWriterExpand.Write_Ex(binaryWriter, file.name);
-                    BinaryWriterExpand.Write_Ex(binaryWriter, file.size);
-                    BinaryWriterExpand.Write_Ex(binaryWriter, 0);
-                    PluginManagment.Instance.CallFunction(FunctionEnums.Upload, 1, Helper.TimeStamp, group.sender.group.id, group.sender.id, Convert.ToBase64String(stream.ToArray()));
-                    sw.Stop();
-                    LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "文件上传", $"来源群:{group.sender.group.id}({group.sender.group.name}) 来源QQ:{group.sender.id}({group.sender.memberName}) " +
-                        $"文件名:{file.name} 大小:{file.size / 1000}KB FileID:{file.id}", $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s");
-                    return;
+                    while (HeartBeatTimeout < HeartBeatTimeoutMax)
+                    {
+                        Thread.Sleep(1000);
+                        HeartBeatTimeout++;
+                        if (ExitFlag)
+                        {
+                            break;
+                        }
+                    }
+                    HeartBeatTimeout = 0;
+                    if (MessageSocket.ReadyState == WebSocketState.Open)
+                    {
+                        MessageSocket.Send("heartbeat");
+                    }
+
+                    if (EventSocket.ReadyState == WebSocketState.Open)
+                    {
+                        EventSocket.Send("heartbeat");
+                    }
                 }
-                // utf8转GB18030
-                var b = Encoding.UTF8.GetBytes(msg);
-                msg = GB18030.GetString(Encoding.Convert(Encoding.UTF8, GB18030, b));
-                byte[] messageBytes = GB18030.GetBytes(msg + "\0");
-                var messageIntptr = Marshal.AllocHGlobal(messageBytes.Length);
-                Marshal.Copy(messageBytes, 0, messageIntptr, messageBytes.Length);
-
-                int logid = 0;
-                CQPlugin handledPlugin = null;
-                switch (msgEvent)
-                {
-                    case MiraiMessageEvents.FriendMessage:
-                        var friend = raw.ToObject<FriendMessage>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到好友消息", $"QQ:{friend.sender.id}({friend.sender.nickname}) {msg}", "处理中...");
-                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.PrivateMsg, 11, source.id, friend.sender.id, messageIntptr, 0);
-                        break;
-
-                    case MiraiMessageEvents.GroupMessage:
-                        var group = raw.ToObject<GroupMessage>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到消息", $"群:{group.sender.group.id}({group.sender.group.name}) QQ:{group.sender.id}({group.sender.memberName}) {msg}", "处理中...");
-                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.GroupMsg, 1, source.id, group.sender.group.id, group.sender.id, "", messageIntptr, 0);
-                        break;
-
-                    case MiraiMessageEvents.TempMessage:
-                        var temp = raw.ToObject<TempMessage>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到群临时消息", $"群:{temp.sender.group.id}({temp.sender.group.name}) QQ:{temp.sender.id}({temp.sender.memberName}) {msg}", "处理中...");
-                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.PrivateMsg, 2, source.id, temp.sender.id, messageIntptr, 0);
-                        break;
-
-                    case MiraiMessageEvents.StrangerMessage:
-                        var stranger = raw.ToObject<StrangerMessage>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到陌生人消息", $"QQ:{stranger.sender.id}({stranger.sender.nickname}) {msg}", "处理中...");
-                        handledPlugin = PluginManagment.Instance.CallFunction(FunctionEnums.PrivateMsg, 1, source.id, stranger.sender.id, messageIntptr, 0);
-                        break;
-
-                    case MiraiMessageEvents.OtherClientMessage:
-                        var other = raw.ToObject<OtherClientMessage>();
-                        logid = LogHelper.WriteLog(Enums.LogLevel.InfoReceive, "AMN框架", "[↓]收到其他设备消息", $"QQ:{other.sender.id}({other.sender.platform}) {msg}", "x 不处理");
-                        break;
-
-                    default:
-                        break;
-                }
-                sw.Stop();
-                string updatemsg = $"√ {sw.ElapsedMilliseconds / (double)1000:f2} s";
-                if (handledPlugin != null)
-                {
-                    updatemsg += $"(由 {handledPlugin.appinfo.Name} 结束消息处理)";
-                }
-                LogHelper.UpdateLogStatus(logid, updatemsg);
-            }).Start();
-        }
-
-        /// <summary>
-        /// 连接消息服务器与事件服务器
-        /// </summary>
-        /// <returns></returns>
-        public bool Connect()
-        {
-            try
-            {
-                MessageSocket.Connect();
-                EventSocket.Connect();
-                return MessageSocket.ReadyState == WebSocketState.Open && EventSocket.ReadyState == WebSocketState.Open;
-            }
-            catch { }
-            return false;
+            });
+            HeartBeatThread.Start();
         }
 
         /// <summary>
@@ -663,64 +754,12 @@ namespace Another_Mirai_Native.Adapter
             /// <summary>
             /// 向MHA发送的请求
             /// </summary>
-            public string request { get; set; }
+            public string request { get; set; } = "";
 
             /// <summary>
             /// 处理后的结果
             /// </summary>
             public string result { get; set; } = "";
-        }
-
-        /// <summary>
-        /// API等待队列
-        /// </summary>
-        private Queue<QueueObject> ApiQueue = new();
-
-        /// <summary>
-        /// 调用MiraiAPI
-        /// </summary>
-        /// <param name="type">API类别</param>
-        /// <param name="data">调用内容</param>
-        public JObject CallMiraiAPI(MiraiApiType type, object data)
-        {
-            string apiType = Enum.GetName(typeof(MiraiApiType), type);
-            string command = apiType, subCommand = "";
-            if (apiType.Contains("_"))// 子命令
-            {
-                var c = apiType.Split('_');
-                command = c[0];
-                subCommand = c[1];
-            }
-            QueueObject queueObject = new() { request = new { syncId = -1, command, subCommand, content = data }.ToJson() };
-            ApiQueue.Enqueue(queueObject);
-            if (ApiQueue.Count == 1)// 无需队列等待 直接发送请求
-                MessageSocket.Send(queueObject.request);
-            // 超时脱出
-            int timoutCountMax = ConfigHelper.GetConfig("API_Timeout", 6000);
-            int timoutCount = 0;
-            // 等待消息处理后将结果放置在对象中
-            while (queueObject.result == "")
-            {
-                if (timoutCount > timoutCountMax)// 超时
-                {
-                    queueObject.result = "err";
-                    break;
-                }
-                Thread.Sleep(10);
-                if (ApiQueue.Peek() == queueObject)
-                {
-                    timoutCount++; // 只有当前函数执行时才计时，防止所有排队函数均超时
-                }
-            }
-            // 从队列排出
-            ApiQueue.Dequeue();
-            if (ApiQueue.Count != 0)// 将队列下一元素的请求发送
-                MessageSocket.Send(ApiQueue.Peek().request);
-            if (queueObject.result == "err")
-            {
-                return null;
-            }
-            return JObject.Parse(queueObject.result);// 返回请求结果
         }
     }
 }
