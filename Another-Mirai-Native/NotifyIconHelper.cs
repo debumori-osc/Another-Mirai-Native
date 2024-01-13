@@ -46,8 +46,8 @@ namespace Another_Mirai_Native
 
             menu.MenuItems[1].Click += MenuItem_Click;
             menu.MenuItems[4].Click += MenuItem_Click;
-            menu.MenuItems[5].Click += MenuItem_Click;
             menu.MenuItems[6].Click += MenuItem_Click;
+            menu.MenuItems[7].Click += MenuItem_Click;
             menu.MenuItems[10].Click += MenuItem_Click;
             menu.MenuItems[12].Click += MenuItem_Click;
             menu.MenuItems[13].Click += MenuItem_Click;
