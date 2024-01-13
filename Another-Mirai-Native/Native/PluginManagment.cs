@@ -1,6 +1,5 @@
 ﻿using Another_Mirai_Native.DB;
 using Another_Mirai_Native.Enums;
-using Another_Mirai_Native.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,9 +11,7 @@ using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Another_Mirai_Native.Native
@@ -36,15 +33,24 @@ namespace Another_Mirai_Native.Native
 
         public bool Loading { get; set; } = true;
 
-        private JObject PluginStatus;
+        private List<PluginEnableStatus> PluginStatus { get; set; } = new();
 
         public PluginManagment()
         {
             Instance = this;
             if (File.Exists("conf/Status.json"))
-                PluginStatus = JObject.Parse(File.ReadAllText("conf/Status.json"));
-            else
-                PluginStatus = new JObject();
+            {
+                try
+                {
+                    PluginStatus = JsonConvert.DeserializeObject<List<PluginEnableStatus>>(File.ReadAllText("conf/Status.json"));
+                }
+                catch (Exception)
+                {
+                    PluginStatus = new List<PluginEnableStatus>();
+                    SavePluginEnableStatus();
+                    MessageBox.Show("插件启用状态配置格式异常，已重建配置。请重新配置欲启用的插件", "配置异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         public List<CQPlugin> DistinctPluginList()
@@ -68,17 +74,22 @@ namespace Another_Mirai_Native.Native
         public void Load()
         {
             Loading = true;
-            Stopwatch sw = new Stopwatch();
+            Stopwatch sw = new();
             sw.Start();
             string path = Path.Combine(Environment.CurrentDirectory, "data", "plugins");
             if (!Directory.Exists(path))
+            {
                 Directory.CreateDirectory(path);
+            }
+
             DirectoryInfo directoryInfo = new(path);
             int count = 0;
             foreach (var item in directoryInfo.GetFiles().Where(x => x.Extension == ".dll"))
             {
                 if (Load(item.FullName))
+                {
                     count++;
+                }
             }
             sw.Stop();
             LogHelper.WriteLog(LogLevel.Info, "插件载入", $"一共加载了{count}个插件", $"√ {sw.ElapsedMilliseconds} ms");
@@ -92,7 +103,7 @@ namespace Another_Mirai_Native.Native
         /// <returns>载入是否成功</returns>
         public bool Load(string filepath)
         {
-            FileInfo plugininfo = new FileInfo(filepath);
+            FileInfo plugininfo = new(filepath);
             if (!File.Exists(plugininfo.FullName.Replace(".dll", ".json")))
             {
                 LogHelper.WriteLog(LogLevel.Error, "插件载入", $"插件 {plugininfo.Name} 加载失败,原因:缺少json文件");
@@ -101,9 +112,11 @@ namespace Another_Mirai_Native.Native
 
             JObject json = JObject.Parse(File.ReadAllText(plugininfo.FullName.Replace(".dll", ".json")));
             int authcode = new Random().Next();
-            Dll dll = new Dll();
+            Dll dll = new();
             if (!Directory.Exists(@"data\plugins\tmp"))
+            {
                 Directory.CreateDirectory(@"data\plugins\tmp");
+            }
             //复制需要载入的插件至临时文件夹,可直接覆盖原dll便于插件重载
             string destpath = @"data\plugins\tmp\" + plugininfo.Name;
             File.Copy(plugininfo.FullName, destpath, true);
@@ -147,7 +160,10 @@ namespace Another_Mirai_Native.Native
             Plugins.Add(plugin);
             PluginEvents.Add(plugin, json);
             if (SavedPlugins.Any(x => x.appinfo.Name == appInfo.Name) is false)
+            {
                 SavedPlugins.Add(new CQPlugin { appinfo = appInfo, json = json.ToString(), Enable = false, path = filepath });
+            }
+
             cq_start(Marshal.StringToHGlobalAnsi(destpath), authcode);
             //将它的窗口写入托盘右键菜单
             NotifyIconHelper.LoadMenu(json);
@@ -159,34 +175,46 @@ namespace Another_Mirai_Native.Native
         /// <summary>
         /// 翻转插件启用状态
         /// </summary>
-        public void FlipPluginState(CQPlugin CQPlugin)
+        public void FlipPluginState(CQPlugin plugin)
         {
-            string pluginId = CQPlugin.appinfo.Id;
-            var c = PluginStatus["Status"]
-                            .Where(x => x["Name"].ToString() == pluginId)
-                            .FirstOrDefault();
-            c["Enabled"] = c["Enabled"].Value<int>() == 1 ? 0 : 1;
-            File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
+            string pluginId = plugin.appinfo.Id;
 
-            if (CQPlugin.Enable)
+            if (plugin.Enable)
             {
-                CQPlugin.dll.CallFunction(FunctionEnums.Disable);
+                plugin.dll.CallFunction(FunctionEnums.Disable);
                 // CQPlugin.dll.CallFunction(FunctionEnums.Exit);
-                UnLoad(CQPlugin);
-                var appdomain = AppDomains.First(x => x.Key == CQPlugin.handle);
-                AppDomains.Remove(CQPlugin.handle);
+                UnLoad(plugin);
+                var appdomain = AppDomains.First(x => x.Key == plugin.handle);
+                AppDomains.Remove(plugin.handle);
                 AppDomain.Unload(appdomain.Value);
             }
             else
             {
-                if (!Plugins.Any(x => x.appinfo.Name == CQPlugin.appinfo.Name))
-                    Load(CQPlugin.path);
-                CQPlugin loadedPlugin = Plugins.FirstOrDefault(x => x.appinfo.Name == CQPlugin.appinfo.Name);
+                if (!Plugins.Any(x => x.appinfo.Name == plugin.appinfo.Name))
+                {
+                    Load(plugin.path);
+                }
+
+                CQPlugin loadedPlugin = Plugins.FirstOrDefault(x => x.appinfo.Name == plugin.appinfo.Name);
                 loadedPlugin.dll.CallFunction(FunctionEnums.StartUp);
                 loadedPlugin.dll.CallFunction(FunctionEnums.Enable);
                 loadedPlugin.Enable = true;
             }
             RefreshPluginList();
+            var enabledConfig = PluginStatus.FirstOrDefault(x => x.Name == pluginId);
+            if (enabledConfig == null)
+            {
+                PluginStatus.Add(new PluginEnableStatus
+                {
+                    Name = pluginId,
+                    Enabled = plugin.Enable,
+                });
+            }
+            else
+            {
+                enabledConfig.Enabled = plugin.Enable;
+            }
+            SavePluginEnableStatus();
         }
 
         public void RefreshPluginList()
@@ -206,31 +234,23 @@ namespace Another_Mirai_Native.Native
         /// <param name="appInfo">需要获取的Appinfo</param>
         private bool GetPluginState(AppInfo appInfo)
         {
-            //没有states键,新建一个
-            if (PluginStatus["Status"] is not JArray statesArray)
+            var enabledConfig = PluginStatus.FirstOrDefault(x => x.Name == appInfo.Id);
+            bool enabled = false;
+            if (enabledConfig == null)
             {
-                var b = new JProperty("Status", new JArray());
-                PluginStatus.Add(b);
-                File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
-                statesArray = PluginStatus["Status"] as JArray;
-            }
-            //没有此插件的配置,新建一个并返回false
-            if (!statesArray.Any(x => x["Name"].ToString() == appInfo.Id))
-            {
-                JObject CQPlugin = new()
+                PluginStatus.Add(new PluginEnableStatus
                 {
-                    new JProperty("Name", appInfo.Id),
-                    new JProperty("Enabled", 1)
-                };
-                statesArray.Add(CQPlugin);
-                File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
-                return false;
+                    Name = appInfo.Id,
+                    Enabled = false,
+                });
+                SavePluginEnableStatus();
+                enabled = false;
             }
             else
             {
-                return statesArray.Where(x => x["Name"].ToString() == appInfo.Id).First()["Enabled"]
-                    .Value<int>() == 1;
+                enabled = enabledConfig.Enabled;
             }
+            return enabled;
         }
 
         /// <summary>
@@ -306,12 +326,10 @@ namespace Another_Mirai_Native.Native
         public void Init()
         {
             if (Directory.Exists(@"data\plugins\tmp"))
-                Directory.Delete(@"data\plugins\tmp", true);
-            if (PluginStatus.Count == 0)
             {
-                PluginStatus.Add(new JProperty("Status", new JArray()));
-                File.WriteAllText(@"conf\Status.json", PluginStatus.ToString());
+                Directory.Delete(@"data\plugins\tmp", true);
             }
+
             Directory.CreateDirectory("libraries");
             foreach (var item in new DirectoryInfo("libraries").GetFiles())
             {
@@ -332,9 +350,6 @@ namespace Another_Mirai_Native.Native
         [DllImport("CQP.dll", EntryPoint = "cq_start")]
         private static extern bool cq_start(IntPtr path, int authcode);
 
-        [DllImport("CQP.dll", EntryPoint = "CQ_addLog")]
-        private static extern int CQ_addLog(int authCode, int priority, IntPtr type, IntPtr msg);
-
         /// <summary>
         /// 核心方法调用，将前端处理的数据传递给插件对应事件处理，尝试捕获非托管插件的异常
         /// </summary>
@@ -344,8 +359,8 @@ namespace Another_Mirai_Native.Native
         [SecurityCritical]
         public CQPlugin CallFunction(FunctionEnums function, params object[] args)
         {
-            if ((function != FunctionEnums.Disable && function != FunctionEnums.Exit &&
-                function != FunctionEnums.Enable && function != FunctionEnums.StartUp)
+            if (function != FunctionEnums.Disable && function != FunctionEnums.Exit &&
+                function != FunctionEnums.Enable && function != FunctionEnums.StartUp
                 && Loading)
             {
                 LogHelper.WriteLog(LogLevel.Warning, "AMN框架", "插件逻辑处理", "插件模块处理中...", "x 不处理");
@@ -357,7 +372,11 @@ namespace Another_Mirai_Native.Native
                 var item = plugin.Item1;
                 Dll dll = item.dll;
                 //先看此插件是否已禁用
-                if (item.Enable is false) continue;
+                if (item.Enable is false)
+                {
+                    continue;
+                }
+
                 if (item.Testing)
                 {
                     Debug.WriteLine($"{item.appinfo.Name} 插件测试中，忽略消息投递");
@@ -408,9 +427,9 @@ namespace Another_Mirai_Native.Native
                     && j is JArray events
                     && events.Any(x => x.ContainsKey("id") && x["id"].Type == JTokenType.Integer
                                     && x.ContainsKey("priority") && x["priority"].Type == JTokenType.Integer
-                                    && ((int)x["id"]) == (int)function))
+                                    && ((int)x["id"]) == (int)function)) // 获取是否存在事件id 若存在则获取事件优先级
                 {
-                    int priority = ((int)events.FirstOrDefault(x => ((int)x["id"]) == (int)function)["priority"]);
+                    int priority = (int)events.FirstOrDefault(x => ((int)x["id"]) == (int)function)["priority"];
                     plugins.Add((item.Key, priority));
                 }
                 else
@@ -436,6 +455,17 @@ namespace Another_Mirai_Native.Native
             this.Loading = false;
         }
 
-        public static CQPlugin GetPluginByID(string id) => Instance.Plugins.FirstOrDefault(x => x.appinfo.Id == id);
+        private void SavePluginEnableStatus()
+        {
+            Directory.CreateDirectory("conf");
+            File.WriteAllText("conf\\Status.json", JsonConvert.SerializeObject(PluginStatus, Formatting.Indented));
+        }
+    }
+
+    public class PluginEnableStatus
+    {
+        public string Name { get; set; } = "";
+
+        public bool Enabled { get; set; }
     }
 }
