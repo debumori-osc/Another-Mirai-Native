@@ -71,7 +71,6 @@ namespace Another_Mirai_Native.DB
             {
                 string DBPath = GetLogFilePath();
                 db.DbMaintenance.CreateDatabase(DBPath);
-                db.CodeFirst.InitTables(typeof(ChatHistory));
                 db.CodeFirst.InitTables(typeof(LogModel));
             }
             WriteLog(LogLevel.InfoSuccess, "运行日志", $"日志数据库初始化完毕{DateTime.Now:yyMMdd}。");
@@ -188,37 +187,7 @@ namespace Another_Mirai_Native.DB
                 return db.SqlQueryable<LogModel>("select * from log order by id desc limit 1").First();
             }
         }
-        public static List<ChatHistory> GetGroupChatHistory(long groupId, int lastIndex = 0, int count = 30)
-        {
-            using (var db = GetInstance())
-            {
-                return db.Queryable<ChatHistory>().Where(x => x.GroupId == groupId && x.id > lastIndex).Take(count).ToList();
-            }
-        }
 
-        public static List<ChatHistory> GetFriendChatHistory(long qqId, int lastIndex = 0, int count = 30)
-        {
-            using (var db = GetInstance())
-            {
-                return db.Queryable<ChatHistory>().Where(x => x.GroupId == -1 && x.QQId == qqId && x.id > lastIndex).Take(count).ToList();
-            }
-        }
-
-        public static List<ChatHistory> GetFriendChatDisplayList()
-        {
-            using (var db = GetInstance())
-            {
-                return db.Queryable<ChatHistory>().Where(x => x.GroupId == -1).ToList().GroupBy(x=>new {x.QQId}).Select(x=>x.Last()).ToList();
-            }
-        }
-
-        public static List<ChatHistory> GetGroupChatDisplayList()
-        {
-            using (var db = GetInstance())
-            {
-                return db.Queryable<ChatHistory>().Where(x => x.GroupId != -1).ToList().GroupBy(x => new { x.GroupId }).Select(x => x.Last()).ToList();
-            }
-        }
         /// <summary>
         /// 日志键排序用
         /// </summary>

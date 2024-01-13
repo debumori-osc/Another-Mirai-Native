@@ -41,6 +41,7 @@ namespace Another_Mirai_Native
                     ConfigHelper.SetConfig("Ws_AuthKey", AuthKeyText.Text);
                 }
                 Adapter = new(WSUrl.Text, QQText.Text, AuthKeyText.Text);
+                Adapter.ConnectedStateChanged -= Adapter_ConnectedStateChanged;
                 Adapter.ConnectedStateChanged += Adapter_ConnectedStateChanged;
                 if (!Adapter.Connect())
                 {
