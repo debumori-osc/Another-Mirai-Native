@@ -17,6 +17,7 @@ namespace Another_Mirai_Native
         /// 配置文件路径
         /// </summary>
         public static string ConfigFileName = @"conf/Config.json";
+        private static object writeLock = new object();
         /// <summary>
         /// 读取配置
         /// </summary>
@@ -62,7 +63,10 @@ namespace Another_Mirai_Native
             {
                 o.Add(sectionName, JToken.FromObject(value));
             }
-            File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
+            lock (writeLock)
+            {
+                File.WriteAllText(ConfigFileName, o.ToString(Newtonsoft.Json.Formatting.Indented));
+            }
         }
         public static bool ConfigHasKey(string sectionName)
         {
