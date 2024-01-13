@@ -178,7 +178,7 @@ namespace Another_Mirai_Native.Native
         public void FlipPluginState(CQPlugin plugin)
         {
             string pluginId = plugin.appinfo.Id;
-
+            bool enabled = plugin.Enable;
             if (plugin.Enable)
             {
                 plugin.dll.CallFunction(FunctionEnums.Disable);
@@ -207,12 +207,12 @@ namespace Another_Mirai_Native.Native
                 PluginStatus.Add(new PluginEnableStatus
                 {
                     Name = pluginId,
-                    Enabled = plugin.Enable,
+                    Enabled = !enabled,
                 });
             }
             else
             {
-                enabledConfig.Enabled = plugin.Enable;
+                enabledConfig.Enabled = !enabled;
             }
             SavePluginEnableStatus();
         }
