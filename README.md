@@ -1,3 +1,5 @@
+本项目不再维护，请前往新仓库 https://github.com/Hellobaka/Another-Mirai-Native2
+
 # AnotherMiraiNative（AMN）
 [![ProjectBuild](https://github.com/Hellobaka/Another-Mirai-Native/actions/workflows/dotnet-desktop.yml/badge.svg)](https://github.com/Hellobaka/Another-Mirai-Native/actions/workflows/dotnet-desktop.yml)
 
